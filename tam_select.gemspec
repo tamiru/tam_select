@@ -3,10 +3,10 @@ require_relative "lib/tam_select/version"
 Gem::Specification.new do |spec|
   spec.name = "tam_select"
   spec.version = TamSelect::VERSION
-  spec.authors = ["Winner Systems"]
-  spec.email = ["developers@example.com"]
-  spec.summary = "Tailwind CSS 4 select component for Rails 8, Turbo and Stimulus"
-  spec.description = "An accessible searchable, multi-select and remote-data select component that preserves the native Rails select as the source of truth."
+  spec.authors = ["Tamiru Hailu"]
+  spec.email = ["tamiruhailu@gmail.com"]
+  spec.summary = "An accessible select component for Ruby on Rails"
+  spec.description = "Tam Select provides searchable, multi-select, remote-data, and user-created option support for Ruby on Rails applications using Simple Form, Stimulus, Turbo, and Tailwind CSS."
   spec.homepage = "https://github.com/tamiru/tam_select"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.2.0"
