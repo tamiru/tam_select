@@ -1,6 +1,6 @@
 {
   "name": "tam-select",
-  "version": "0.1.0",
+  "version": "1.1.0",
   "description": "Accessible, searchable select component for Ruby on Rails, Simple Form, Stimulus, Turbo, and Tailwind CSS",
   "type": "module",
   "main": "./src/tam-select.js",

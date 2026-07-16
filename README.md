@@ -1,7 +1,7 @@
 the # Tam Select
 
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Gem Version](https://img.shields.io/badge/version-0.1.1-blue.svg)](https://github.com/tamiru/tam_select)
+[![Gem Version](https://img.shields.io/badge/version-1.1.0-blue.svg)](https://github.com/tamiru/tam_select)
 
 **Tam Select** is an accessible, searchable select component for Ruby on Rails, built for Simple Form, Stimulus, Turbo, and Tailwind CSS. It keeps the native `<select>` as the source of truth, so Rails form submission, validation, selected values, and browser autofill continue to work.
 
@@ -36,6 +36,7 @@ app/javascript/tam_select/tam_select.js
 app/javascript/controllers/tam_select_controller.js
 app/inputs/tam_select_input.rb
 app/controllers/concerns/tam_select_paginatable.rb
+app/controllers/concerns/tam_select_remote.rb
 app/controllers/tam_select_remote_controller.rb
 app/helpers/tam_select_helper.rb
 ```
@@ -157,14 +158,14 @@ Keep the currently selected record in the initial collection so edit forms can d
       prompt: "Select region",
       input_html: {
         tam_options: {
-          remoteUrl: region_options_path(format: :json),
+          remoteUrl: tam_select_options_regions_path(format: :json),
           minQueryLength: 1,
           debounce: 250
         }
       } %>
 ```
 
-The generic controller and route required by this example are described in [Generic remote controller](#generic-remote-controller).
+The concern and route required by this example are described in [Add remote search to an existing controller](#add-remote-search-to-an-existing-controller).
 
 ### Multiple selection
 
@@ -206,6 +207,53 @@ Options are passed under `input_html[:tam_options]`. Common options include `sea
 The generator installs `TamSelectPaginatable` as a Rails response helper. A complete Region controller is available in [`examples/regions_controller.rb`](examples/regions_controller.rb).
 
 Secure remote endpoints exactly like other Rails JSON endpoints. Scope records by the current user's permissions and never trust a submitted value merely because it appeared in the dropdown.
+
+### Add remote search to an existing controller
+
+Include `TamSelectRemote` and declare the allowed model and searchable fields. This adds the public `tam_select_options` action to the controller:
+
+```ruby
+# app/controllers/regions_controller.rb
+class RegionsController < ApplicationController
+  include TamSelectRemote
+
+  tam_select_remote(
+    model: Region,
+    label: :name,
+    value: :id,
+    search_by: %i[name code],
+    scope: -> { Region.order(:name) },
+    per_page: 20
+  )
+end
+```
+
+The optional `scope` lambda runs in the controller context, so it can use `current_user`, `current_account`, or an authorization policy.
+
+```ruby
+# config/routes.rb
+resources :regions do
+  get :tam_select_options, on: :collection, defaults: { format: :json }
+end
+```
+
+Point Simple Form to that collection action:
+
+```erb
+<%= form.input :region_id,
+      as: :tam_select,
+      collection: [form.object.region].compact,
+      label_method: :name,
+      value_method: :id,
+      input_html: {
+        tam_options: {
+          remoteUrl: tam_select_options_regions_path(format: :json),
+          minQueryLength: 1
+        }
+      } %>
+```
+
+Typing sends `GET /regions/tam_select_options.json?q=addis&page=1` and receives the standard Tam Select JSON payload.
 
 ### Generic remote controller
 

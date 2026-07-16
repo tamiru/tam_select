@@ -18,6 +18,7 @@ module TamSelect
 
       def copy_controller_concern
         copy_file "lib/generators/tam_select/templates/tam_select_paginatable.rb", "app/controllers/concerns/tam_select_paginatable.rb"
+        copy_file "lib/generators/tam_select/templates/tam_select_remote.rb", "app/controllers/concerns/tam_select_remote.rb"
       end
 
       def copy_remote_controller
