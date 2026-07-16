@@ -35,6 +35,7 @@ app/javascript/tam_select/tam_select.js
 app/javascript/controllers/tam_select_controller.js
 app/inputs/tam_select_input.rb
 app/controllers/concerns/tam_select_paginatable.rb
+app/controllers/tam_select_remote_controller.rb
 app/helpers/tam_select_helper.rb
 ```
 
@@ -152,6 +153,47 @@ For a many-to-many field, add `multiple: true` to `input_html`.
 The generator installs `TamSelectPaginatable` as a Rails response helper. A complete Region controller is available in [`examples/regions_controller.rb`](examples/regions_controller.rb).
 
 Secure remote endpoints exactly like other Rails JSON endpoints. Scope records by the current user's permissions and never trust a submitted value merely because it appeared in the dropdown.
+
+### Generic remote controller
+
+The installer generates `TamSelectRemoteController`. Create a small subclass for each allowed remote source:
+
+```ruby
+# app/controllers/region_options_controller.rb
+class RegionOptionsController < TamSelectRemoteController
+  tam_select model: Region, label: :name, search_by: %i[name code]
+
+  private
+
+  # Override this method when records require authorization or tenant scoping.
+  def tam_select_scope(config)
+    current_account.regions.order(:name)
+  end
+end
+```
+
+Expose the JSON endpoint and pass it to the input:
+
+```ruby
+# config/routes.rb
+get "region_options", to: "region_options#index", defaults: { format: :json }
+```
+
+```erb
+<%= form.input :region_id,
+      as: :tam_select,
+      collection: [form.object.region].compact,
+      label_method: :name,
+      value_method: :id,
+      input_html: {
+        tam_options: {
+          remoteUrl: region_options_path,
+          minQueryLength: 1
+        }
+      } %>
+```
+
+Do not accept a model name from request parameters. Declaring each source in a controller subclass prevents clients from querying arbitrary application models.
 
 ## Core JavaScript
 
