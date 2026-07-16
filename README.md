@@ -1,23 +1,27 @@
-# tam_select
+# Tam Select
 
-`tam-select` is a dependency-light, accessible select enhancement built with Tailwind CSS 4 classes. It keeps the native `<select>` as the source of truth, so Rails form submission, validation, selected values, and browser autofill continue to work.
+[![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-## Install as a Rails gem
+`tam-select` is a dependency-light, accessible select enhancement built with Tailwind CSS 4. It keeps the native `<select>` as the source of truth, so Rails form submission, validation, selected values, and browser autofill continue to work.
 
-For a local checkout:
+## Requirements
+
+- Ruby 3.2 or newer
+- Rails 8
+- Stimulus 3.2 or newer
+- Tailwind CSS 4
+- Simple Form when using the `TamSelectInput` integration
+
+## Rails installation
+
+Add the gem directly from GitHub:
 
 ```ruby
 # Gemfile
-gem "tam_select", path: "vendor/tam-select"
+gem "tam_select", github: "tamiru/tam_select"
 ```
 
-For a Git repository:
-
-```ruby
-gem "tam_select", github: "winner-systems/tam_select"
-```
-
-Then install the integration files:
+Install the dependency and generate the Rails integration files:
 
 ```bash
 bundle install
@@ -35,11 +39,11 @@ app/controllers/concerns/tam_select_paginatable.rb
 
 Commit these generated files with the Rails application. This makes customization straightforward and allows Tailwind CSS 4 to scan the component without resolving a Ruby gem directory at build time.
 
-To build and publish the gem:
+Add the generated JavaScript to Tailwind's source detection in `app/assets/tailwind/application.css`:
 
-```bash
-gem build tam_select.gemspec
-gem push tam_select-0.1.0.gem
+```css
+@import "tailwindcss";
+@source "../../javascript/tam_select/**/*.js";
 ```
 
 ## Features
@@ -55,18 +59,12 @@ gem push tam_select-0.1.0.gem
 - Public API and bubbling custom events
 - No jQuery, Tom Select, Select2, Preline, or Floating UI dependency
 
-## Optional npm installation
+## JavaScript installation
 
-The same repository remains npm-compatible for non-Rails applications. Until published to npm, install it by path:
-
-```bash
-npm install ./vendor/tam-select
-```
-
-After publication, installation becomes:
+For a non-Rails application, install directly from GitHub:
 
 ```bash
-npm install tam-select
+npm install github:tamiru/tam_select
 ```
 
 ## Tailwind CSS 4
@@ -79,15 +77,15 @@ Add the package source to `app/assets/tailwind/application.css` so Tailwind gene
 @source "../../../node_modules/tam-select/rails/**/*.js";
 ```
 
-If `tam-select` lives under `vendor/tam-select`, scan that path instead:
+When the Rails generator is used, scan the generated component source:
 
 ```css
-@source "../../../vendor/tam-select/src/**/*.js";
+@source "../../javascript/tam_select/**/*.js";
 ```
 
-## Rails 8 + Stimulus
+## Rails and Stimulus
 
-Copy `rails/app/javascript/controllers/tam_select_controller.js` into your application's controller directory. Stimulus normally discovers it automatically. If controllers are registered manually:
+The install generator copies the Stimulus controller into your application, where Stimulus normally discovers it automatically. If controllers are registered manually:
 
 ```js
 import TamSelectController from "./tam_select_controller"
@@ -113,7 +111,7 @@ Stimulus destroys generated markup when Turbo removes the select and recreates i
 
 ## Simple Form
 
-Copy `rails/app/inputs/tam_select_input.rb` to `app/inputs/tam_select_input.rb`, then use:
+The install generator creates `app/inputs/tam_select_input.rb`. Use it like any other Simple Form input:
 
 ```erb
 <%= form.input :region_id,
@@ -150,7 +148,7 @@ For a many-to-many field, add `multiple: true` to `input_html`.
 }
 ```
 
-Copy `TamSelectPaginatable` from `rails/app/controllers/concerns` for a Rails response helper. A complete Region controller is in `examples/regions_controller.rb`.
+The generator installs `TamSelectPaginatable` as a Rails response helper. A complete Region controller is available in [`examples/regions_controller.rb`](examples/regions_controller.rb).
 
 Secure remote endpoints exactly like other Rails JSON endpoints. Scope records by the current user's permissions and never trust a submitted value merely because it appeared in the dropdown.
 
@@ -205,8 +203,12 @@ Standard native `change` events are also dispatched for Rails and other controll
 ## Development
 
 ```bash
+bundle install
+bundle exec rake test
 npm test
 npm run check
 ```
 
-Version `0.1.0` is a strong application-ready foundation. Before publishing broadly, add browser-level tests with Playwright covering screen readers, mobile Safari, IME text entry, nested Turbo Frames, and very large datasets.
+## License
+
+Tam Select is available under the [MIT License](LICENSE).
