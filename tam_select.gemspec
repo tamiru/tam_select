@@ -7,7 +7,7 @@ Gem::Specification.new do |spec|
   spec.email = ["developers@example.com"]
   spec.summary = "Tailwind CSS 4 select component for Rails 8, Turbo and Stimulus"
   spec.description = "An accessible searchable, multi-select and remote-data select component that preserves the native Rails select as the source of truth."
-  spec.homepage = "https://github.com/winner-systems/tam_select"
+  spec.homepage = "https://github.com/tamiru/tam_select"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.2.0"
 

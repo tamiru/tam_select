@@ -20,6 +20,10 @@ module TamSelect
         copy_file "lib/generators/tam_select/templates/tam_select_paginatable.rb", "app/controllers/concerns/tam_select_paginatable.rb"
       end
 
+      def copy_helper
+        copy_file "lib/generators/tam_select/templates/tam_select_helper.rb", "app/helpers/tam_select_helper.rb"
+      end
+
       def show_tailwind_instruction
         say "\ntam_select installed.", :green
         say "Tailwind CSS 4 scans app/javascript automatically in most Rails setups."

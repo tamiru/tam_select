@@ -35,6 +35,7 @@ app/javascript/tam_select/tam_select.js
 app/javascript/controllers/tam_select_controller.js
 app/inputs/tam_select_input.rb
 app/controllers/concerns/tam_select_paginatable.rb
+app/helpers/tam_select_helper.rb
 ```
 
 Commit these generated files with the Rails application. This makes customization straightforward and allows Tailwind CSS 4 to scan the component without resolving a Ruby gem directory at build time.
