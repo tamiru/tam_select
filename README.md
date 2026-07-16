@@ -1,4 +1,4 @@
-the # Tam Select
+# Tam Select
 
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Gem Version](https://img.shields.io/badge/version-1.1.0-blue.svg)](https://github.com/tamiru/tam_select)
@@ -255,51 +255,10 @@ Point Simple Form to that collection action:
 
 Typing sends `GET /regions/tam_select_options.json?q=addis&page=1` and receives the standard Tam Select JSON payload.
 
-### Generic remote controller
-
-The installer generates `TamSelectRemoteController`. Create a small subclass for each allowed remote source:
-
-```ruby
-# app/controllers/region_options_controller.rb
-class RegionOptionsController < TamSelectRemoteController
-  tam_select model: Region, label: :name, search_by: %i[name code]
-
-  private
-
-  # Override this method when records require authorization or tenant scoping.
-  def tam_select_scope(config)
-    current_account.regions.order(:name)
-  end
-end
-```
-
-Expose the JSON endpoint and pass it to the input:
-
-```ruby
-# config/routes.rb
-get "region_options", to: "region_options#index", defaults: { format: :json }
-```
-
-```erb
-<%= form.input :region_id,
-      as: :tam_select,
-      collection: [form.object.region].compact,
-      label_method: :name,
-      value_method: :id,
-      input_html: {
-        tam_options: {
-          remoteUrl: region_options_path(format: :json),
-          minQueryLength: 1
-        }
-      } %>
-```
-
-Do not accept a model name from request parameters. Declaring each source in a controller subclass prevents clients from querying arbitrary application models.
-
 The browser sends requests such as:
 
 ```text
-GET /region_options.json?q=addis&page=1
+GET /regions/tam_select_options.json?q=addis&page=1
 Accept: application/json
 ```
 
@@ -307,7 +266,7 @@ Test an endpoint independently with:
 
 ```bash
 curl -H "Accept: application/json" \
-  "http://localhost:3000/region_options.json?q=addis&page=1"
+  "http://localhost:3000/regions/tam_select_options.json?q=addis&page=1"
 ```
 
 A `406 Not Acceptable` response means the route or controller rejected JSON. Keep `defaults: { format: :json }` on the route, use a `.json` URL, and ensure the controller does not restrict responses to HTML only.
