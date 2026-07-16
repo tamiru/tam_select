@@ -1,6 +1,7 @@
-# Tam Select
+the # Tam Select
 
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Gem Version](https://img.shields.io/badge/version-0.1.1-blue.svg)](https://github.com/tamiru/tam_select)
 
 **Tam Select** is an accessible, searchable select component for Ruby on Rails, built for Simple Form, Stimulus, Turbo, and Tailwind CSS. It keeps the native `<select>` as the source of truth, so Rails form submission, validation, selected values, and browser autofill continue to work.
 
@@ -47,6 +48,23 @@ Add the generated JavaScript to Tailwind's source detection in `app/assets/tailw
 @import "tailwindcss";
 @source "../../javascript/tam_select/**/*.js";
 ```
+
+### Updating
+
+The Rails integration files are copied into your application, so updating the gem does not update them automatically. Commit local customizations first, then run:
+
+```bash
+bundle update tam_select
+bin/rails generate tam_select:install
+```
+
+Rails prompts before replacing changed files. To replace every generated file without prompting, use:
+
+```bash
+bin/rails generate tam_select:install --force
+```
+
+Review `git diff` afterward because `--force` overwrites application-specific customizations.
 
 ## Features
 
@@ -124,7 +142,7 @@ The install generator creates `app/inputs/tam_select_input.rb`. Use it like any 
       prompt: "Select region",
       input_html: {
         tam_options: {
-          remoteUrl: regions_path,
+          remoteUrl: region_options_path(format: :json),
           minQueryLength: 1
         }
       } %>
@@ -187,13 +205,29 @@ get "region_options", to: "region_options#index", defaults: { format: :json }
       value_method: :id,
       input_html: {
         tam_options: {
-          remoteUrl: region_options_path,
+          remoteUrl: region_options_path(format: :json),
           minQueryLength: 1
         }
       } %>
 ```
 
 Do not accept a model name from request parameters. Declaring each source in a controller subclass prevents clients from querying arbitrary application models.
+
+The browser sends requests such as:
+
+```text
+GET /region_options.json?q=addis&page=1
+Accept: application/json
+```
+
+Test an endpoint independently with:
+
+```bash
+curl -H "Accept: application/json" \
+  "http://localhost:3000/region_options.json?q=addis&page=1"
+```
+
+A `406 Not Acceptable` response means the route or controller rejected JSON. Keep `defaults: { format: :json }` on the route, use a `.json` URL, and ensure the controller does not restrict responses to HTML only.
 
 ## Core JavaScript
 
