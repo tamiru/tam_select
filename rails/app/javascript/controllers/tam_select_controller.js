@@ -1,0 +1,31 @@
+import { Controller } from "@hotwired/stimulus"
+import TamSelect from "tam-select"
+
+export default class extends Controller {
+  static values = {
+    options: { type: Object, default: {} }
+  }
+
+  connect() {
+    this.instance = TamSelect.getInstance(this.element) || new TamSelect(this.element, this.optionsValue)
+  }
+
+  disconnect() {
+    this.instance?.destroy()
+    this.instance = null
+  }
+
+  optionsValueChanged() {
+    if (!this.instance) return
+    this.instance.destroy()
+    this.instance = new TamSelect(this.element, this.optionsValue)
+  }
+
+  refresh() {
+    this.instance?.refresh()
+  }
+
+  clear() {
+    this.instance?.clear()
+  }
+}

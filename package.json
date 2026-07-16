@@ -1,0 +1,24 @@
+{
+  "name": "tam-select",
+  "version": "0.1.0",
+  "description": "Accessible Tailwind CSS 4 select component with Rails 8, Turbo and Stimulus integration",
+  "type": "module",
+  "main": "./src/tam-select.js",
+  "exports": {
+    ".": "./src/tam-select.js",
+    "./rails-controller": "./rails/app/javascript/controllers/tam_select_controller.js"
+  },
+  "files": ["src", "rails", "README.md", "LICENSE"],
+  "scripts": {
+    "test": "node --test",
+    "check": "node --check src/tam-select.js && node --check rails/app/javascript/controllers/tam_select_controller.js"
+  },
+  "keywords": ["select", "tailwindcss", "stimulus", "turbo", "rails", "combobox"],
+  "license": "MIT",
+  "peerDependencies": {
+    "@hotwired/stimulus": ">=3.2.0"
+  },
+  "peerDependenciesMeta": {
+    "@hotwired/stimulus": { "optional": true }
+  }
+}
