@@ -131,7 +131,9 @@ Stimulus destroys generated markup when Turbo removes the select and recreates i
 
 ## Simple Form
 
-The install generator creates `app/inputs/tam_select_input.rb`. Use it like any other Simple Form input:
+The install generator creates `app/inputs/tam_select_input.rb`. Use `as: :tam_select` with any Simple Form collection input.
+
+### Local collection
 
 ```erb
 <%= form.input :region_id,
@@ -139,16 +141,49 @@ The install generator creates `app/inputs/tam_select_input.rb`. Use it like any 
       collection: Region.order(:name),
       label_method: :name,
       value_method: :id,
+      prompt: "Select region" %>
+```
+
+### Remote collection
+
+Keep the currently selected record in the initial collection so edit forms can display its label before the AJAX request completes:
+
+```erb
+<%= form.input :region_id,
+      as: :tam_select,
+      collection: [form.object.region].compact,
+      label_method: :name,
+      value_method: :id,
       prompt: "Select region",
       input_html: {
         tam_options: {
           remoteUrl: region_options_path(format: :json),
-          minQueryLength: 1
+          minQueryLength: 1,
+          debounce: 250
         }
       } %>
 ```
 
-For a many-to-many field, add `multiple: true` to `input_html`.
+The generic controller and route required by this example are described in [Generic remote controller](#generic-remote-controller).
+
+### Multiple selection
+
+```erb
+<%= form.input :skill_ids,
+      as: :tam_select,
+      collection: Skill.order(:name),
+      label_method: :name,
+      value_method: :id,
+      input_html: {
+        multiple: true,
+        tam_options: {
+          searchable: true,
+          closeAfterSelect: false
+        }
+      } %>
+```
+
+Options are passed under `input_html[:tam_options]`. Common options include `searchable`, `creatable`, `clearable`, `placeholder`, `searchPlaceholder`, `remoteUrl`, `minQueryLength`, and `debounce`. See [Main options](#main-options) for defaults.
 
 ## Remote API contract
 
