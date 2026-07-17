@@ -7,11 +7,14 @@ module TamSelectRemote
   end
 
   class_methods do
-    def tam_select_remote(model:, label:, value: :id, search_by: nil, scope: nil, per_page: 20)
+    def tam_select_remote(model:, label:, value: :id, detail: nil, meta: nil, image: nil, search_by: nil, scope: nil, per_page: 20)
       self.tam_select_remote_config = {
         model: model,
         label: label,
         value: value,
+        detail: detail,
+        meta: meta,
+        image: image,
         search_by: Array(search_by || label),
         scope: scope,
         per_page: per_page
@@ -27,6 +30,9 @@ module TamSelectRemote
       records,
       label: config[:label],
       value: config[:value],
+      detail: config[:detail],
+      meta: config[:meta],
+      image: config[:image],
       per_page: config[:per_page]
     )
   end

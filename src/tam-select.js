@@ -1,18 +1,25 @@
 const DEFAULT_CLASSES = {
-  wrapper: "tam-select relative w-full",
-  control: "flex min-h-10 w-full cursor-text flex-wrap items-center gap-1.5 rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm transition focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100",
-  controlDisabled: "cursor-not-allowed bg-zinc-100 opacity-60 dark:bg-zinc-800",
-  input: "min-w-16 flex-1 border-0 bg-transparent p-0 text-sm text-zinc-900 outline-none placeholder:text-zinc-400 focus:ring-0 dark:text-zinc-100 dark:placeholder:text-zinc-500",
+  wrapper: "tam-select relative w-full text-zinc-900 [color-scheme:light] dark:text-zinc-100 dark:[color-scheme:dark]",
+  control: "flex min-h-11 w-full cursor-text flex-wrap items-center gap-2 rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm transition-colors hover:border-zinc-400 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:shadow-black/20 dark:hover:border-zinc-600 dark:focus-within:border-blue-400 dark:focus-within:ring-blue-400/20",
+  controlDisabled: "cursor-not-allowed bg-zinc-100 opacity-60 dark:bg-zinc-800 dark:text-zinc-400",
+  input: "min-w-16 flex-1 border-0 bg-transparent p-0 text-left text-sm text-zinc-900 outline-none placeholder:text-zinc-400 focus:ring-0 dark:text-zinc-100 dark:placeholder:text-zinc-500",
+  searchIcon: "size-4 shrink-0 text-zinc-400 dark:text-zinc-500",
   placeholder: "pointer-events-none text-zinc-400 dark:text-zinc-500",
   tag: "inline-flex max-w-full items-center gap-1 rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-200 dark:bg-blue-950/50 dark:text-blue-300 dark:ring-blue-800",
   tagRemove: "rounded p-0.5 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:hover:bg-blue-900",
-  clear: "ml-auto rounded p-1 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:hover:bg-zinc-800 dark:hover:text-zinc-200",
+  clear: "ml-auto rounded p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-700 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-zinc-500 dark:hover:bg-zinc-800 dark:hover:text-zinc-200 dark:focus:ring-blue-400",
   chevron: "ml-1 size-4 shrink-0 text-zinc-400 transition-transform",
   chevronOpen: "rotate-180",
-  dropdown: "absolute z-50 mt-1 max-h-72 w-full overflow-auto rounded-lg border border-zinc-200 bg-white p-1 shadow-xl ring-1 ring-black/5 dark:border-zinc-700 dark:bg-zinc-900",
-  option: "flex cursor-pointer items-center justify-between gap-3 rounded-md px-3 py-2 text-sm text-zinc-700 outline-none dark:text-zinc-200",
-  optionActive: "bg-zinc-100 dark:bg-zinc-800",
-  optionSelected: "bg-blue-50 font-medium text-blue-700 dark:bg-blue-950/50 dark:text-blue-300",
+  dropdown: "absolute z-50 mt-1.5 max-h-72 w-full overflow-auto rounded-lg border border-zinc-200 bg-white p-1.5 shadow-xl ring-1 ring-black/5 dark:border-zinc-700 dark:bg-zinc-900 dark:shadow-black/40 dark:ring-white/10",
+  option: "flex min-h-11 cursor-pointer items-center justify-between gap-3 rounded-md px-3 py-2 text-sm text-zinc-700 outline-none transition-colors dark:text-zinc-200",
+  optionContent: "flex min-w-0 flex-1 items-center gap-3",
+  optionText: "flex min-w-0 flex-1 flex-col",
+  optionLabel: "font-normal",
+  optionDetail: "text-xs font-normal text-zinc-500 dark:text-zinc-400",
+  optionImage: "size-9 shrink-0 rounded-full bg-zinc-100 object-cover dark:bg-zinc-800",
+  optionMeta: "shrink-0 rounded bg-zinc-100 px-1.5 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300",
+  optionActive: "bg-zinc-100 text-zinc-950 dark:bg-zinc-800 dark:text-white",
+  optionSelected: "bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300",
   optionDisabled: "cursor-not-allowed opacity-50",
   message: "px-3 py-6 text-center text-sm text-zinc-500 dark:text-zinc-400",
   spinner: "size-4 animate-spin rounded-full border-2 border-zinc-300 border-t-blue-600",
@@ -20,6 +27,7 @@ const DEFAULT_CLASSES = {
 }
 
 const ICONS = {
+  search: '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path stroke-linecap="round" d="m14.5 14.5 3 3m-1.25-8.25a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z"/></svg>',
   chevron: '<svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 7.22a.75.75 0 011.06 0L10 10.94l3.72-3.72a.75.75 0 111.06 1.06l-4.25 4.25a.75.75 0 01-1.06 0L5.22 8.28a.75.75 0 010-1.06z" clip-rule="evenodd"/></svg>',
   close: '<svg viewBox="0 0 20 20" fill="currentColor" class="size-3" aria-hidden="true"><path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z"/></svg>',
   check: '<svg viewBox="0 0 20 20" fill="currentColor" class="size-4" aria-hidden="true"><path fill-rule="evenodd" d="M16.7 5.3a1 1 0 010 1.4l-8 8a1 1 0 01-1.4 0l-4-4a1 1 0 011.4-1.4L8 12.6l7.3-7.3a1 1 0 011.4 0z" clip-rule="evenodd"/></svg>'
@@ -61,6 +69,7 @@ export class TamSelect {
       minQueryLength: 0,
       valueField: "value",
       labelField: "label",
+      imageField: "image",
       itemsPath: "items",
       paginationPath: "pagination",
       classes: {},
@@ -107,6 +116,9 @@ export class TamSelect {
 
     this.values = document.createElement("div")
     this.values.className = "contents"
+    this.searchIcon = document.createElement("span")
+    this.searchIcon.className = this.classes.searchIcon
+    this.searchIcon.innerHTML = ICONS.search
     this.input = document.createElement("input")
     this.input.type = "text"
     this.input.className = this.classes.input
@@ -132,7 +144,7 @@ export class TamSelect {
     this.dropdown.setAttribute("role", "listbox")
     if (this.multiple) this.dropdown.setAttribute("aria-multiselectable", "true")
 
-    this.control.append(this.values, this.input, this.clearButton, this.chevron)
+    this.control.append(this.values, this.searchIcon, this.input, this.clearButton, this.chevron)
     this.wrapper.append(this.control, this.dropdown)
     this.select.after(this.wrapper)
     this.applyDisabled()
@@ -171,7 +183,16 @@ export class TamSelect {
   readNativeOptions() {
     this.items = Array.from(this.select.options)
       .filter(option => option.value !== "" || option.selected)
-      .map(option => ({ value: option.value, label: option.textContent.trim(), disabled: option.disabled, selected: option.selected, option }))
+      .map(option => ({
+        value: option.value,
+        label: option.textContent.trim(),
+        detail: option.dataset.detail || null,
+        meta: option.dataset.meta || null,
+        image: option.dataset.image || null,
+        disabled: option.disabled,
+        selected: option.selected,
+        option
+      }))
     this.filterLocal(false)
   }
 
@@ -179,7 +200,7 @@ export class TamSelect {
 
   filterLocal(render = true) {
     const needle = normalize(this.query)
-    this.filtered = this.items.filter(item => !needle || normalize(item.label).includes(needle))
+    this.filtered = this.items.filter(item => !needle || [item.label, item.detail, item.meta].some(value => normalize(value).includes(needle)))
     this.activeIndex = this.filtered.findIndex(item => !item.disabled)
     if (render) this.renderDropdown()
   }
@@ -189,12 +210,10 @@ export class TamSelect {
     this.values.replaceChildren()
     if (this.multiple) selected.forEach(item => this.values.append(this.makeTag(item)))
     else if (selected.length) {
-      const label = document.createElement("span")
-      label.className = "min-w-0 flex-1 truncate"
-      label.textContent = selected[0].label
-      this.values.append(label)
+      this.values.append(this.makeItemContent(selected[0], true))
     }
     const hasValue = selected.length > 0
+    this.searchIcon.classList.toggle("hidden", !this.options.searchable || (hasValue && !this.opened))
     this.input.classList.toggle("hidden", !this.multiple && hasValue && !this.opened)
     this.input.placeholder = hasValue ? "" : this.options.placeholder
     this.clearButton.classList.toggle("hidden", !this.options.clearable || !hasValue || this.select.disabled)
@@ -247,10 +266,14 @@ export class TamSelect {
     option.setAttribute("role", "option")
     option.setAttribute("aria-selected", String(Boolean(item.selected)))
     option.setAttribute("aria-disabled", String(Boolean(item.disabled)))
-    const label = document.createElement("span")
-    label.className = "min-w-0 flex-1 truncate"
-    label.textContent = item.label
-    option.append(label)
+    const content = this.makeItemContent(item)
+    option.append(content)
+    if (item.meta) {
+      const meta = document.createElement("span")
+      meta.className = this.classes.optionMeta
+      meta.textContent = item.meta
+      option.append(meta)
+    }
     if (item.selected) {
       const check = document.createElement("span")
       check.innerHTML = ICONS.check
@@ -259,6 +282,34 @@ export class TamSelect {
     option.addEventListener("pointermove", () => { this.activeIndex = index; this.updateActiveOption() })
     option.addEventListener("click", () => { if (!item.disabled) this.toggleItem(item) })
     return option
+  }
+
+  makeItemContent(item, selected = false) {
+    const content = document.createElement("span")
+    content.className = this.classes.optionContent
+    if (selected) content.classList.add("min-w-0", "flex-1")
+    if (item.image) {
+      const image = document.createElement("img")
+      image.className = this.classes.optionImage
+      image.src = item.image
+      image.alt = ""
+      image.loading = "lazy"
+      content.append(image)
+    }
+    const text = document.createElement("span")
+    text.className = this.classes.optionText
+    const label = document.createElement("span")
+    label.className = `${this.classes.optionLabel} truncate`
+    label.textContent = item.label
+    text.append(label)
+    if (item.detail) {
+      const detail = document.createElement("span")
+      detail.className = `${this.classes.optionDetail} truncate`
+      detail.textContent = item.detail
+      text.append(detail)
+    }
+    content.append(text)
+    return content
   }
 
   makeCreateOption() {
@@ -361,12 +412,29 @@ export class TamSelect {
   addItem(raw) {
     const value = String(raw.value ?? raw[this.options.valueField])
     const existing = this.items.find(item => String(item.value) === value)
-    if (existing) return existing
+    if (existing) {
+      const image = raw.image ?? raw[this.options.imageField]
+      Object.assign(existing, raw, {
+        detail: raw.detail ?? existing.detail,
+        meta: raw.meta ?? existing.meta,
+        image: image ?? existing.image
+      })
+      if (existing.option) {
+        if (existing.detail != null) existing.option.dataset.detail = String(existing.detail)
+        if (existing.meta != null) existing.option.dataset.meta = String(existing.meta)
+        if (existing.image != null) existing.option.dataset.image = String(existing.image)
+      }
+      return existing
+    }
     const label = String(raw.label ?? raw[this.options.labelField] ?? value)
     const option = new Option(label, value, Boolean(raw.selected), Boolean(raw.selected))
     option.dataset.tamSelectGenerated = ""
+    if (raw.detail != null) option.dataset.detail = String(raw.detail)
+    if (raw.meta != null) option.dataset.meta = String(raw.meta)
+    const image = raw.image ?? raw[this.options.imageField]
+    if (image != null) option.dataset.image = String(image)
     this.select.add(option)
-    const item = { ...raw, value, label, option, selected: option.selected, disabled: Boolean(raw.disabled) }
+    const item = { ...raw, value, label, image: image == null ? null : String(image), option, selected: option.selected, disabled: Boolean(raw.disabled) }
     option.disabled = item.disabled
     this.items.push(item)
     this.filterLocal(false)

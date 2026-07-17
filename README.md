@@ -1,7 +1,7 @@
 # Tam Select
 
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Gem Version](https://img.shields.io/badge/version-1.1.0-blue.svg)](https://github.com/tamiru/tam_select)
+[![Gem Version](https://img.shields.io/badge/version-1.2.0-blue.svg)](https://github.com/tamiru/tam_select)
 
 **Tam Select** is an accessible, searchable select component for Ruby on Rails, built for Simple Form, Stimulus, Turbo, and Tailwind CSS. It keeps the native `<select>` as the source of truth, so Rails form submission, validation, selected values, and browser autofill continue to work.
 
@@ -73,6 +73,7 @@ Review `git diff` afterward because `--force` overwrites application-specific cu
 - Local search and user-created tags
 - Remote JSON search with debouncing and incremental pagination
 - Loading, empty, and error states
+- Polished search control with clear, search, selected, and open-state affordances
 - Keyboard navigation: arrows, Enter, Escape, Tab, and Backspace
 - Combobox/listbox ARIA semantics
 - Light and dark Tailwind themes
@@ -102,6 +103,18 @@ When the Rails generator is used, scan the generated component source:
 
 ```css
 @source "../../javascript/tam_select/**/*.js";
+```
+
+Tam Select includes adaptive light and dark styles for every state. It follows a `dark` class on the document or any ancestor and also sets the appropriate native `color-scheme`:
+
+```js
+document.documentElement.classList.toggle("dark")
+```
+
+For Tailwind CSS 4 class-based theming, define the variant in the application stylesheet if it is not already present:
+
+```css
+@custom-variant dark (&:where(.dark, .dark *));
 ```
 
 ## Rails and Stimulus
@@ -193,8 +206,8 @@ Options are passed under `input_html[:tam_options]`. Common options include `sea
 ```json
 {
   "items": [
-    { "value": "1", "label": "Addis Ababa" },
-    { "value": "2", "label": "Afar" }
+    { "value": "1", "label": "Hana Bekele", "detail": "Admission no. UG/1024/26", "meta": "Active", "image": "/avatars/hana.jpg" },
+    { "value": "2", "label": "Afar", "detail": "Semera", "meta": "AF" }
   ],
   "pagination": {
     "page": 1,
@@ -221,6 +234,8 @@ class RegionsController < ApplicationController
     model: Region,
     label: :name,
     value: :id,
+    detail: :description,
+    meta: :code,
     search_by: %i[name code],
     scope: -> { Region.order(:name) },
     per_page: 20
@@ -254,6 +269,39 @@ Point Simple Form to that collection action:
 ```
 
 Typing sends `GET /regions/tam_select_options.json?q=addis&page=1` and receives the standard Tam Select JSON payload.
+
+Remote items may include optional `detail`, `meta`, and `image` fields. Tam Select renders the primary label with the detail on a second line and an optional circular image on the left. The selected value keeps the same image, label, and detail, including an initial value rendered before remote search completes. `meta` remains a badge on the right.
+
+This works well for program and student searches. For example, return the program name as `label` and admission as `detail`:
+
+```ruby
+tam_select_remote(
+  model: Estudent::Program,
+  label: :name,
+  detail: ->(program) { program.admission.to_s },
+  search_by: %i[name],
+  scope: -> { Estudent::Program.includes(admission: %i[admission_type enrollment_type enrollment_mode]).order(:name) }
+)
+```
+
+For student search, add the admission number and photo URL:
+
+```ruby
+tam_select_remote(
+  model: Estudent::Student,
+  label: ->(student) { student.full_name },
+  detail: ->(student) { "Admission no. #{student.applicant.registration_number}" },
+  image: ->(student) { url_for(student.applicant.person.avatar) if student.applicant.person.avatar.attached? },
+  search_by: %i[id_number],
+  scope: -> { Estudent::Student.includes(applicant: { person: { avatar_attachment: :blob } }) }
+)
+```
+
+For a local native select, provide the same values as option data attributes:
+
+```erb
+<option value="1" data-detail="Admission no. UG/1024/26" data-meta="Active" data-image="/avatars/hana.jpg">Hana Bekele</option>
+```
 
 The browser sends requests such as:
 
@@ -304,6 +352,7 @@ instance.destroy()
 | `minQueryLength` | `0` | Characters required before requesting |
 | `valueField` | `value` | Remote item value key |
 | `labelField` | `label` | Remote item label key |
+| `imageField` | `image` | Remote item image URL key |
 | `classes` | `{}` | Overrides any Tailwind class group |
 
 ## Events
