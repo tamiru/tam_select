@@ -4,7 +4,6 @@ Gem::Specification.new do |spec|
   spec.name = "tam_select"
   spec.version = TamSelect::VERSION
   spec.authors = ["Tamiru Hailu"]
-  spec.email = ["tamiruhailu@gmail.com"]
   spec.summary = "An accessible select component for Ruby on Rails"
   spec.description = "Tam Select provides searchable, multi-select, remote-data, and user-created option support for Ruby on Rails applications using Simple Form, Stimulus, Turbo, and Tailwind CSS."
   spec.homepage = "https://github.com/tamiru/tam_select"
@@ -18,7 +17,7 @@ Gem::Specification.new do |spec|
   }
 
   spec.files = Dir.chdir(__dir__) do
-    Dir["{app,lib,src,examples}/**/*", "LICENSE", "README.md", "Rakefile"]
+    Dir["{lib,rails,src,examples}/**/*", "LICENSE", "README.md", "Rakefile", "package.json"]
   end
   spec.require_paths = ["lib"]
 

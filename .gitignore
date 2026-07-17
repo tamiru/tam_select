@@ -1,3 +1,5 @@
 *:Zone.Identifier
 .idea/
 *.gem
+node_modules/
+test/tmp/

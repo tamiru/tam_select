@@ -1,24 +1,48 @@
 {
   "name": "tam-select",
-  "version": "1.2.0",
+  "version": "1.2.3",
   "description": "Accessible, searchable select component for Ruby on Rails, Simple Form, Stimulus, Turbo, and Tailwind CSS",
+  "homepage": "https://github.com/tamiru/tam_select",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tamiru/tam_select.git"
+  },
   "type": "module",
   "main": "./src/tam-select.js",
   "exports": {
     ".": "./src/tam-select.js",
     "./rails-controller": "./rails/app/javascript/controllers/tam_select_controller.js"
   },
-  "files": ["src", "rails", "README.md", "LICENSE"],
+  "files": [
+    "src",
+    "rails",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
-    "test": "node --test",
+    "test": "node --test test/*.test.js",
     "check": "node --check src/tam-select.js && node --check rails/app/javascript/controllers/tam_select_controller.js"
   },
-  "keywords": ["select", "tailwindcss", "stimulus", "turbo", "rails", "combobox"],
+  "keywords": [
+    "select",
+    "tailwindcss",
+    "stimulus",
+    "turbo",
+    "rails",
+    "combobox"
+  ],
   "license": "MIT",
   "peerDependencies": {
     "@hotwired/stimulus": ">=3.2.0"
   },
   "peerDependenciesMeta": {
-    "@hotwired/stimulus": { "optional": true }
+    "@hotwired/stimulus": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@hotwired/stimulus": "^3.2.2",
+    "esbuild": "^0.28.1",
+    "jsdom": "^29.1.1"
   }
 }

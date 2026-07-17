@@ -1,7 +1,7 @@
 # Tam Select
 
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Gem Version](https://img.shields.io/badge/version-1.2.0-blue.svg)](https://github.com/tamiru/tam_select)
+[![Gem Version](https://img.shields.io/badge/version-1.2.3-blue.svg)](https://github.com/tamiru/tam_select)
 
 **Tam Select** is an accessible, searchable select component for Ruby on Rails, built for Simple Form, Stimulus, Turbo, and Tailwind CSS. It keeps the native `<select>` as the source of truth, so Rails form submission, validation, selected values, and browser autofill continue to work.
 
@@ -29,19 +29,52 @@ bundle install
 bin/rails generate tam_select:install
 ```
 
-The generator installs:
+The generator installs the core module, Stimulus controller, Rails helpers, and remote-search concerns:
 
 ```text
 app/javascript/tam_select/tam_select.js
 app/javascript/controllers/tam_select_controller.js
-app/inputs/tam_select_input.rb
 app/controllers/concerns/tam_select_paginatable.rb
 app/controllers/concerns/tam_select_remote.rb
 app/controllers/tam_select_remote_controller.rb
 app/helpers/tam_select_helper.rb
 ```
 
+When Simple Form is present, it also installs `app/inputs/tam_select_input.rb`. Simple Form is optional; applications without it receive a short skip message and continue with standard Rails form helpers.
+
 Commit these generated files with the Rails application. This makes customization straightforward and allows Tailwind CSS 4 to scan the component without resolving a Ruby gem directory at build time.
+
+### Rails 8 importmap
+
+The default Rails 8 importmap setup needs no manual JavaScript package installation. The generator adds this pin to `config/importmap.rb`:
+
+```ruby
+pin "tam_select", to: "tam_select/tam_select.js"
+```
+
+The generated Stimulus controller imports `TamSelect` from `"tam_select"`. Running the generator again updates an old pin when necessary and never adds a duplicate. Rails' normal `pin_all_from "app/javascript/controllers", under: "controllers"` line discovers the generated controller.
+
+### jsbundling-rails and esbuild
+
+The same generated controller works with esbuild when the bare `tam_select` import is aliased to the generated core file. Add the alias flag to the existing `build` script in `package.json`:
+
+```json
+{
+  "scripts": {
+    "build": "esbuild app/javascript/*.* --bundle --sourcemap --format=esm --outdir=app/assets/builds --public-path=/assets --alias:tam_select=./app/javascript/tam_select/tam_select.js"
+  }
+}
+```
+
+This uses the local file installed by the generator. For non-Rails bundler use, install the npm package from GitHub and import its published package name instead:
+
+```bash
+npm install github:tamiru/tam_select
+```
+
+```js
+import TamSelect from "tam-select"
+```
 
 Add the generated JavaScript to Tailwind's source detection in `app/assets/tailwind/application.css`:
 
@@ -50,7 +83,7 @@ Add the generated JavaScript to Tailwind's source detection in `app/assets/tailw
 @source "../../javascript/tam_select/**/*.js";
 ```
 
-### Updating
+### Upgrading
 
 The Rails integration files are copied into your application, so updating the gem does not update them automatically. Commit local customizations first, then run:
 
@@ -67,27 +100,21 @@ bin/rails generate tam_select:install --force
 
 Review `git diff` afterward because `--force` overwrites application-specific customizations.
 
+Versions before this release generated a relative controller import. After upgrading, confirm the controller uses `import TamSelect from "tam_select"` and that the importmap pin or esbuild alias above is present.
+
 ## Features
 
 - Single and multiple selection
 - Local search and user-created tags
 - Remote JSON search with debouncing and incremental pagination
 - Loading, empty, and error states
-- Polished search control with clear, search, selected, and open-state affordances
+- Select2-style closed selection and open search states with clear active, selected, disabled, loading, empty, and error feedback
 - Keyboard navigation: arrows, Enter, Escape, Tab, and Backspace
 - Combobox/listbox ARIA semantics
 - Light and dark Tailwind themes
 - Rails 8, Turbo, Turbo Frames, Stimulus, and Simple Form integration
 - Public API and bubbling custom events
 - No jQuery, Tom Select, Select2, Preline, or Floating UI dependency
-
-## JavaScript installation
-
-For a non-Rails application, install directly from GitHub:
-
-```bash
-npm install github:tamiru/tam_select
-```
 
 ## Tailwind CSS 4
 
@@ -117,7 +144,7 @@ For Tailwind CSS 4 class-based theming, define the variant in the application st
 @custom-variant dark (&:where(.dark, .dark *));
 ```
 
-## Rails and Stimulus
+## Standard Rails forms and Stimulus
 
 The install generator copies the Stimulus controller into your application, where Stimulus normally discovers it automatically. If controllers are registered manually:
 
@@ -143,9 +170,28 @@ Use a normal Rails select:
 
 Stimulus destroys generated markup when Turbo removes the select and recreates it on reconnection.
 
+For multiple selection, Rails must receive an array field and the native select must include `multiple: true`:
+
+```erb
+<%= form.select :skill_ids,
+      options_from_collection_for_select(Skill.order(:name), :id, :name, form.object.skill_ids),
+      {},
+      multiple: true,
+      data: {
+        controller: "tam-select",
+        tam_select_options_value: {
+          searchable: true,
+          closeAfterSelect: false,
+          placeholder: "Add skills…"
+        }.to_json
+      } %>
+```
+
+The original `<select>` remains the source of truth. This preserves form names in nested forms, submitted values, prompts, `required`, validation metadata, and native `change` events.
+
 ## Simple Form
 
-The install generator creates `app/inputs/tam_select_input.rb`. Use `as: :tam_select` with any Simple Form collection input.
+When the `simple_form` gem is installed, the generator creates `app/inputs/tam_select_input.rb`. Use `as: :tam_select` with any Simple Form collection input. The input forwards Simple Form's prompt, selected values, multiple flag, error classes, ARIA attributes, and nested builder context to the native collection select.
 
 ### Local collection
 
@@ -270,6 +316,8 @@ Point Simple Form to that collection action:
 
 Typing sends `GET /regions/tam_select_options.json?q=addis&page=1` and receives the standard Tam Select JSON payload.
 
+When `pagination.has_more` is true, scrolling near the bottom requests `next_page`. Earlier pages keep their order, duplicate values are collapsed, and a later response can update an existing item's label, metadata, image, or disabled state. A new query aborts the old request and never displays cached results from the previous query.
+
 Remote items may include optional `detail`, `meta`, and `image` fields. Tam Select renders the primary label with the detail on a second line and an optional circular image on the left. The selected value keeps the same image, label, and detail, including an initial value rendered before remote search completes. `meta` remains a badge on the right.
 
 This works well for program and student searches. For example, return the program name as `label` and admission as `detail`:
@@ -319,10 +367,42 @@ curl -H "Accept: application/json" \
 
 A `406 Not Acceptable` response means the route or controller rejected JSON. Keep `defaults: { format: :json }` on the route, use a `.json` URL, and ensure the controller does not restrict responses to HTML only.
 
+## Creatable values
+
+Set `creatable: true` for tag-style input. The Create action is part of the same keyboard list as normal results, so ArrowUp and ArrowDown can highlight it and Enter creates it.
+
+```erb
+<%= form.select :category_ids,
+      options_from_collection_for_select(Category.order(:name), :id, :name),
+      {},
+      multiple: true,
+      data: {
+        controller: "tam-select",
+        tam_select_options_value: {
+          creatable: true,
+          closeAfterSelect: false,
+          placeholder: "Add categories…"
+        }.to_json
+      } %>
+```
+
+Values and labels are compared with normalized, case-insensitive, accent-insensitive text before creation, preventing duplicate entries such as `Café` and `cafe`. A successful creation dispatches `tam-select:create`.
+
+## Keyboard and accessibility behavior
+
+- ArrowDown and ArrowUp open the list, move through the rendered entries, and skip disabled options.
+- Enter selects the highlighted option or activates the highlighted Create action.
+- Escape closes the list and returns focus to the combobox; Tab closes without trapping focus.
+- Backspace removes the last tag from a multiple select when the search input is empty.
+- Searchable controls use an input combobox; non-searchable controls use a focusable button combobox.
+- Rails labels, descriptions, required state, disabled state, and invalid state are mirrored from the native select.
+
 ## Core JavaScript
 
+For a generated Rails/importmap installation, use the pinned module name:
+
 ```js
-import TamSelect from "tam-select"
+import TamSelect from "tam_select"
 
 const instance = new TamSelect(document.querySelector("#student_region_id"), {
   searchable: true,
@@ -332,10 +412,14 @@ const instance = new TamSelect(document.querySelector("#student_region_id"), {
 })
 
 instance.setValue("2")
+instance.open()
+instance.close()
 instance.clear()
 instance.refresh()
 instance.destroy()
 ```
+
+When consuming the npm package directly, import from `"tam-select"` instead.
 
 ## Main options
 
@@ -345,6 +429,8 @@ instance.destroy()
 | `creatable` | `false` | Allows typed values to become options |
 | `clearable` | `true` | Displays the clear control |
 | `closeAfterSelect` | Single only | Keeps multiple dropdowns open |
+| `placeholder` | Native prompt or `Select…` | Closed-control placeholder |
+| `searchPlaceholder` | `Search…` | Search-input placeholder |
 | `remoteUrl` | `null` | JSON search endpoint |
 | `queryParam` | `q` | Remote search parameter |
 | `pageParam` | `page` | Remote page parameter |
@@ -353,6 +439,7 @@ instance.destroy()
 | `valueField` | `value` | Remote item value key |
 | `labelField` | `label` | Remote item label key |
 | `imageField` | `image` | Remote item image URL key |
+| `matcher` | `null` | Optional `(item, query) => boolean` local matcher |
 | `classes` | `{}` | Overrides any Tailwind class group |
 
 ## Events
@@ -361,12 +448,16 @@ Listen on the original select. Every event bubbles:
 
 ```js
 select.addEventListener("tam-select:change", ({ detail }) => console.log(detail.value))
+select.addEventListener("tam-select:open", () => console.log("opened"))
+select.addEventListener("tam-select:close", () => console.log("closed"))
 select.addEventListener("tam-select:load", ({ detail }) => console.log(detail.items))
 select.addEventListener("tam-select:create", ({ detail }) => console.log(detail.item))
 select.addEventListener("tam-select:error", ({ detail }) => console.error(detail.error))
 ```
 
 Standard native `change` events are also dispatched for Rails and other controllers.
+
+The supported public methods are `open()`, `close()`, `setValue(value)`, `clear()`, `refresh()`, and `destroy()`. Read the current native-compatible selection through `instance.value`, and recover an existing instance with `TamSelect.getInstance(select)`.
 
 ## Development
 
