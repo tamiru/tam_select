@@ -53,14 +53,37 @@ class InstallGeneratorTest < Rails::Generators::TestCase
     refute_includes importmap, "old/path.js"
   end
 
-  test "continues safely when importmap is absent for jsbundling applications" do
+  test "configures the esbuild alias when importmap is absent" do
     FileUtils.rm_f(File.join(destination_root, "config/importmap.rb"))
+    File.write(File.join(destination_root, "package.json"), <<~JSON)
+      {
+        "scripts": {
+          "build": "esbuild app/javascript/*.* --bundle --outdir=app/assets/builds"
+        }
+      }
+    JSON
 
     run_generator
 
     assert_no_file "config/importmap.rb"
     assert_file "app/javascript/controllers/tam_select_controller.js", /from "tam_select"/
     assert_file "app/javascript/tam_select/tam_select.js"
+    assert_file "package.json", /--alias:tam_select=.\/app\/javascript\/tam_select\/tam_select\.js/
+
+    package = JSON.parse(File.read(File.join(destination_root, "package.json")))
+    assert_includes package.dig("scripts", "build"), "--alias:tam_select="
+  end
+
+  test "running twice leaves exactly one esbuild alias" do
+    FileUtils.rm_f(File.join(destination_root, "config/importmap.rb"))
+    File.write(File.join(destination_root, "package.json"), <<~JSON)
+      { "scripts": { "build": "esbuild app/javascript/*.* --bundle" } }
+    JSON
+
+    2.times { run_generator }
+
+    package = JSON.parse(File.read(File.join(destination_root, "package.json")))
+    assert_equal 1, package.dig("scripts", "build").scan("--alias:tam_select=").length
   end
 
   test "generates the Simple Form input only when Simple Form is installed" do

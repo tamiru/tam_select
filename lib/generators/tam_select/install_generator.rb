@@ -15,7 +15,7 @@ module TamSelect
       def configure_importmap
         importmap = "config/importmap.rb"
         unless File.exist?(destination_path(importmap))
-          say "Importmap was not detected. For jsbundling/esbuild, alias tam_select to app/javascript/tam_select/tam_select.js.", :yellow
+          configure_esbuild
           return
         end
 
@@ -59,6 +59,27 @@ module TamSelect
       end
 
       private
+
+      def configure_esbuild
+        package_json = "package.json"
+        unless File.exist?(destination_path(package_json))
+          say "Importmap and package.json were not detected; configure the tam_select JavaScript import manually.", :yellow
+          return
+        end
+
+        contents = File.read(destination_path(package_json))
+        alias_flag = "--alias:tam_select=./app/javascript/tam_select/tam_select.js"
+        return if contents.include?(alias_flag)
+
+        build_script = /(\"build\"\s*:\s*\")([^\"]*\besbuild\b[^\"]*)(\")/
+        if contents.match?(build_script)
+          gsub_file package_json, build_script do |match|
+            %(#{match.delete_suffix('"')} #{alias_flag}")
+          end
+        else
+          say "An esbuild script was not detected; add #{alias_flag} to the JavaScript build command.", :yellow
+        end
+      end
 
       def destination_path(relative_path)
         File.join(destination_root, relative_path)

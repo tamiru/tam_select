@@ -12,7 +12,7 @@ const DEFAULT_CLASSES = {
   tag: "relative z-10 inline-flex max-w-full items-center gap-1 rounded-lg bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-200 transition-colors dark:bg-blue-950/50 dark:text-blue-300 dark:ring-blue-800",
   tagRemove: "rounded p-0.5 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:hover:bg-blue-900",
   clear: "relative z-20 ml-auto rounded p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-700 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-zinc-500 dark:hover:bg-zinc-800 dark:hover:text-zinc-200 dark:focus:ring-blue-400",
-  chevron: "pointer-events-none relative z-10 ml-1 size-4 shrink-0 text-zinc-400 transition-transform",
+  chevron: "pointer-events-none relative z-10 ml-auto size-4 shrink-0 text-zinc-400 transition-transform",
   chevronOpen: "rotate-180",
   dropdown: "absolute z-50 mt-1.5 max-h-72 w-full origin-top overflow-auto rounded-xl border border-zinc-200 bg-white p-1.5 shadow-2xl ring-1 ring-black/5 dark:border-zinc-700 dark:bg-zinc-900 dark:shadow-black/50 dark:ring-white/10",
   option: "flex min-h-11 cursor-pointer items-center justify-between gap-3 rounded-lg px-3 py-2 text-sm text-zinc-700 outline-none transition-colors duration-100 dark:text-zinc-200",

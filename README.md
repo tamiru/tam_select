@@ -56,7 +56,7 @@ The generated Stimulus controller imports `TamSelect` from `"tam_select"`. Runni
 
 ### jsbundling-rails and esbuild
 
-The same generated controller works with esbuild when the bare `tam_select` import is aliased to the generated core file. Add the alias flag to the existing `build` script in `package.json`:
+The same generated controller works with esbuild when the bare `tam_select` import is aliased to the generated core file. When Importmap is absent, the installer detects an existing esbuild `build` script in `package.json` and appends the alias automatically:
 
 ```json
 {
@@ -65,6 +65,8 @@ The same generated controller works with esbuild when the bare `tam_select` impo
   }
 }
 ```
+
+The update is idempotent, so rerunning the installer does not duplicate the alias. If `package.json` or an esbuild build script is not present, the installer prints the exact alias flag to add manually.
 
 This uses the local file installed by the generator. For non-Rails bundler use, install the npm package from GitHub and import its published package name instead:
 
@@ -109,6 +111,7 @@ Versions before this release generated a relative controller import. After upgra
 - Remote JSON search with debouncing and incremental pagination
 - Loading, empty, and error states
 - Select2-style closed selection and open search states with clear active, selected, disabled, loading, empty, and error feedback
+- Right-aligned select chevron that remains pinned to the control edge for short and default labels
 - Keyboard navigation: arrows, Enter, Escape, Tab, and Backspace
 - Combobox/listbox ARIA semantics
 - Light and dark Tailwind themes
