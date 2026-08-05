@@ -24,6 +24,7 @@ class TamSelectInput < SimpleForm::Inputs::CollectionSelectInput
       searchable: options.fetch(:searchable, true),
       creatable: options.fetch(:creatable, false),
       clearable: options.fetch(:clearable, true),
+      theme: options.fetch(:theme, "auto"),
       placeholder: options[:placeholder] || options[:prompt] || "Select…"
     }
   end

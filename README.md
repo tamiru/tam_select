@@ -1,7 +1,7 @@
 # Tam Select
 
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Gem Version](https://img.shields.io/badge/version-1.2.3-blue.svg)](https://github.com/tamiru/tam_select)
+[![Gem Version](https://img.shields.io/badge/version-1.2.5-blue.svg)](https://github.com/tamiru/tam_select)
 
 **Tam Select** is an accessible, searchable select component for Ruby on Rails, built for Simple Form, Stimulus, Turbo, and Tailwind CSS. It keeps the native `<select>` as the source of truth, so Rails form submission, validation, selected values, and browser autofill continue to work.
 
@@ -107,7 +107,7 @@ Versions before this release generated a relative controller import. After upgra
 ## Features
 
 - Single and multiple selection
-- Local search and user-created tags
+- Ranked, typo-tolerant local search with highlighted matches and user-created tags
 - Remote JSON search with debouncing and incremental pagination
 - Loading, empty, and error states
 - Select2-style closed selection and open search states with clear active, selected, disabled, loading, empty, and error feedback
@@ -140,6 +140,36 @@ Tam Select includes adaptive light and dark styles for every state. It follows a
 ```js
 document.documentElement.classList.toggle("dark")
 ```
+
+### DaisyUI styling
+
+If the application uses [DaisyUI](https://daisyui.com/), enable its semantic
+color and component classes with the `daisyui` theme preset:
+
+```erb
+<%= form.select :region_id,
+      options_from_collection_for_select(Region.order(:name), :id, :name),
+      { prompt: "Select region" },
+      data: {
+        controller: "tam-select",
+        tam_select_options_value: { theme: "daisyui" }.to_json
+      } %>
+```
+
+The preset keeps the native select hidden as the source of truth and styles the
+search control, dropdown, badges, focus state, validation state, and selected
+options to match DaisyUI. It can be combined with `classes` for local changes.
+
+The closed single-select control uses DaisyUI's `input` component class, so its
+height, inline padding, border, radius, typography, focus outline, disabled
+state, and `input-error` validation state match a standard `input w-full` field.
+Multiple selects keep the same minimum height and grow only when tags wrap.
+All colors use DaisyUI semantic tokens, so changing `data-theme` updates the
+component without rebuilding or reconnecting it.
+
+Generated Rails helpers use `theme: "auto"`. A native select carrying DaisyUI's
+`input` or `select` class automatically receives this preset; other selects keep
+the default Tam Select appearance. An explicit `theme` option always wins.
 
 For Tailwind CSS 4 class-based theming, define the variant in the application stylesheet if it is not already present:
 
@@ -247,6 +277,31 @@ The concern and route required by this example are described in [Add remote sear
 ```
 
 Options are passed under `input_html[:tam_options]`. Common options include `searchable`, `creatable`, `clearable`, `placeholder`, `searchPlaceholder`, `remoteUrl`, `minQueryLength`, and `debounce`. See [Main options](#main-options) for defaults.
+
+## Advanced local search
+
+Local searches rank exact, prefix, word, and substring matches before fuzzy
+matches. Search remains accent-insensitive, works across `label`, `detail`, and
+`meta`, highlights matching text, and announces the number of results to screen
+readers. For example, `oromai` can still find `Oromia`, while an exact `Oromia`
+label ranks above an option that only mentions Oromia in its detail.
+
+The behavior is configurable without replacing the matcher:
+
+```erb
+input_html: {
+  tam_options: {
+    fuzzySearch: true,
+    highlightMatches: true,
+    sortByRelevance: true,
+    searchFields: %w[label detail meta]
+  }
+}
+```
+
+Set `fuzzySearch`, `highlightMatches`, or `sortByRelevance` to `false` when a
+screen needs strict matching or native option order. A custom `matcher` still
+takes precedence over built-in filtering.
 
 ## Remote API contract
 
@@ -439,10 +494,16 @@ When consuming the npm package directly, import from `"tam-select"` instead.
 | `pageParam` | `page` | Remote page parameter |
 | `debounce` | `250` | Remote request delay in milliseconds |
 | `minQueryLength` | `0` | Characters required before requesting |
+| `fuzzySearch` | `true` | Tolerates small typing mistakes in local search |
+| `highlightMatches` | `true` | Highlights direct query matches in results |
+| `sortByRelevance` | `true` | Ranks stronger local matches first |
+| `searchFields` | `label`, `detail`, `meta` | Item fields included in local search |
+| `resultsText` | Result count | Function or text announced after filtering |
 | `valueField` | `value` | Remote item value key |
 | `labelField` | `label` | Remote item label key |
 | `imageField` | `image` | Remote item image URL key |
 | `matcher` | `null` | Optional `(item, query) => boolean` local matcher |
+| `theme` | `"default"` (`"auto"` in Rails helpers) | Visual preset; use `"daisyui"` or class detection with `"auto"` |
 | `classes` | `{}` | Overrides any Tailwind class group |
 
 ## Events

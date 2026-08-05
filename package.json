@@ -1,6 +1,6 @@
 {
   "name": "tam-select",
-  "version": "1.2.4",
+  "version": "1.2.5",
   "description": "Accessible, searchable select component for Ruby on Rails, Simple Form, Stimulus, Turbo, and Tailwind CSS",
   "homepage": "https://github.com/tamiru/tam_select",
   "repository": {

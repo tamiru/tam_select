@@ -1,6 +1,7 @@
 const DEFAULT_CLASSES = {
   wrapper: "tam-select relative w-full text-zinc-900 [color-scheme:light] dark:text-zinc-100 dark:[color-scheme:dark]",
   control: "relative flex min-h-11 w-full cursor-text flex-wrap items-center gap-2 rounded-xl border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm transition duration-150 hover:border-zinc-400 focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-500/10 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:shadow-black/20 dark:hover:border-zinc-600 dark:focus-within:border-blue-400 dark:focus-within:ring-blue-400/10",
+  controlMultiple: "",
   controlOpen: "border-blue-500 ring-4 ring-blue-500/10 dark:border-blue-400 dark:ring-blue-400/10",
   controlInvalid: "border-red-500 ring-4 ring-red-500/10 dark:border-red-400 dark:ring-red-400/10",
   controlDisabled: "cursor-not-allowed bg-zinc-100 opacity-60 dark:bg-zinc-800 dark:text-zinc-400",
@@ -25,9 +26,45 @@ const DEFAULT_CLASSES = {
   optionActive: "bg-blue-600 text-white shadow-sm [&_*]:text-white dark:bg-blue-500 dark:text-white",
   optionSelected: "bg-blue-50 font-medium text-blue-700 dark:bg-blue-950/60 dark:text-blue-300",
   optionDisabled: "cursor-not-allowed opacity-50",
+  highlight: "rounded-sm bg-amber-200/80 px-0.5 text-inherit dark:bg-amber-400/30",
+  status: "sr-only",
   message: "px-3 py-6 text-center text-sm text-zinc-500 dark:text-zinc-400",
   spinner: "size-4 animate-spin rounded-full border-2 border-zinc-300 border-t-blue-600",
   error: "px-3 py-3 text-sm text-red-600 dark:text-red-400"
+}
+
+// DaisyUI's semantic color classes are used when the host application has
+// DaisyUI installed.
+const THEME_CLASSES = {
+  daisyui: {
+    wrapper: "tam-select relative w-full text-base-content",
+    control: "input relative w-full cursor-text rounded-field text-base-content",
+    controlMultiple: "h-auto min-h-10 flex-wrap py-1.5",
+    controlOpen: "",
+    controlInvalid: "input-error",
+    controlDisabled: "cursor-not-allowed bg-base-200 opacity-50",
+    input: "min-w-16 flex-1 bg-transparent p-0 text-left text-base-content outline-none placeholder:text-base-content/50 focus:outline-none focus:ring-0",
+    inputClosed: "absolute inset-0 z-0 h-full w-full cursor-pointer rounded-field opacity-0",
+    trigger: "absolute inset-0 z-0 h-full w-full cursor-pointer rounded-field border-0 bg-transparent p-0 focus:outline-none disabled:cursor-not-allowed",
+    searchIcon: "size-4 shrink-0 text-base-content/50",
+    placeholder: "pointer-events-none text-base-content/50",
+    tag: "badge badge-primary relative z-10 max-w-full gap-1",
+    tagRemove: "rounded-btn p-0.5 hover:bg-primary-focus focus:outline-none focus:ring-2 focus:ring-primary",
+    clear: "relative z-20 ml-auto rounded-btn p-1 text-base-content/50 transition-colors hover:bg-base-200 hover:text-base-content focus:outline-none focus:ring-2 focus:ring-primary",
+    chevron: "pointer-events-none relative z-10 ml-auto size-4 shrink-0 text-base-content/50 transition-transform",
+    dropdown: "absolute z-50 mt-1.5 max-h-72 w-full origin-top overflow-auto rounded-box border border-base-300 bg-base-100 p-2 shadow-xl",
+    option: "flex min-h-11 cursor-pointer items-center justify-between gap-3 rounded-btn px-3 py-2 text-sm text-base-content outline-none transition-colors duration-100",
+    optionDetail: "text-xs font-normal text-base-content/60",
+    optionImage: "size-9 shrink-0 rounded-full bg-base-200 object-cover",
+    optionMeta: "badge badge-ghost shrink-0",
+    optionActive: "bg-primary text-primary-content",
+    optionSelected: "bg-primary/10 font-medium text-primary",
+    optionDisabled: "cursor-not-allowed opacity-50",
+    highlight: "rounded-sm bg-warning/30 px-0.5 text-inherit",
+    message: "px-3 py-6 text-center text-sm text-base-content/60",
+    spinner: "loading loading-spinner loading-sm text-primary",
+    error: "px-3 py-3 text-sm text-error"
+  }
 }
 
 const ICONS = {
@@ -38,7 +75,26 @@ const ICONS = {
 }
 
 const uid = () => `tam-select-${Math.random().toString(36).slice(2, 10)}`
-const normalize = value => String(value ?? "").normalize("NFKD").replace(/\p{Mark}/gu, "").toLocaleLowerCase().trim()
+const fold = value => String(value ?? "").normalize("NFKD").replace(/\p{Mark}/gu, "").toLocaleLowerCase()
+const normalize = value => fold(value).trim()
+const wordTokens = value => normalize(value).split(/[^\p{Letter}\p{Number}]+/u).filter(Boolean)
+const boundedDistance = (left, right, maximum) => {
+  if (Math.abs(left.length - right.length) > maximum) return maximum + 1
+  let previous = Array.from({ length: right.length + 1 }, (_, index) => index)
+  for (let leftIndex = 1; leftIndex <= left.length; leftIndex += 1) {
+    const current = [leftIndex]
+    let rowMinimum = current[0]
+    for (let rightIndex = 1; rightIndex <= right.length; rightIndex += 1) {
+      const substitution = previous[rightIndex - 1] + (left[leftIndex - 1] === right[rightIndex - 1] ? 0 : 1)
+      const distance = Math.min(previous[rightIndex] + 1, current[rightIndex - 1] + 1, substitution)
+      current.push(distance)
+      rowMinimum = Math.min(rowMinimum, distance)
+    }
+    if (rowMinimum > maximum) return maximum + 1
+    previous = current
+  }
+  return previous[right.length]
+}
 const toggleClasses = (element, classNames, force) => {
   String(classNames).split(/\s+/).filter(Boolean).forEach(className => element.classList.toggle(className, force))
 }
@@ -73,17 +129,26 @@ export class TamSelect {
       pageParam: "page",
       debounce: 250,
       minQueryLength: 0,
+      fuzzySearch: true,
+      highlightMatches: true,
+      sortByRelevance: true,
+      searchFields: ["label", "detail", "meta"],
+      resultsText: count => `${count} result${count === 1 ? "" : "s"} available`,
       valueField: "value",
       labelField: "label",
       imageField: "image",
       itemsPath: "items",
       paginationPath: "pagination",
       matcher: null,
+      theme: "default",
       classes: {},
       headers: {},
       ...options
     }
-    this.classes = { ...DEFAULT_CLASSES, ...this.options.classes }
+    const inferredTheme = ["input", "select"].some(className => select.classList.contains(className)) ? "daisyui" : "default"
+    this.theme = this.options.theme === "auto" ? inferredTheme : this.options.theme
+    const themeClasses = THEME_CLASSES[this.theme] || {}
+    this.classes = { ...DEFAULT_CLASSES, ...themeClasses, ...this.options.classes }
     this.multiple = select.multiple
     this.searchable = Boolean(this.options.searchable || this.options.creatable)
     this.items = []
@@ -128,7 +193,10 @@ export class TamSelect {
     this.wrapper.dataset.tamSelectRoot = ""
 
     this.control = document.createElement("div")
-    this.control.className = this.classes.control
+    this.control.className = [
+      this.classes.control,
+      this.multiple && this.classes.controlMultiple
+    ].filter(Boolean).join(" ")
 
     this.values = document.createElement("div")
     this.values.id = this.valuesId
@@ -178,9 +246,15 @@ export class TamSelect {
     this.dropdown.setAttribute("role", "listbox")
     if (this.multiple) this.dropdown.setAttribute("aria-multiselectable", "true")
 
+    this.status = document.createElement("div")
+    this.status.className = this.classes.status
+    this.status.setAttribute("role", "status")
+    this.status.setAttribute("aria-live", "polite")
+    this.status.setAttribute("aria-atomic", "true")
+
     const focusControl = this.searchable ? [this.searchIcon, this.input] : [this.trigger]
     this.control.append(this.values, ...focusControl, this.clearButton, this.chevron)
-    this.wrapper.append(this.control, this.dropdown)
+    this.wrapper.append(this.control, this.dropdown, this.status)
     this.select.after(this.wrapper)
     this.labelElements = this.findLabelElements()
     this.applyDisabled()
@@ -289,15 +363,60 @@ export class TamSelect {
 
   matchesLocalItem(item) {
     if (typeof this.options.matcher === "function") return Boolean(this.options.matcher(item, this.query))
-    const terms = normalize(this.query).split(/\s+/).filter(Boolean)
-    if (!terms.length) return true
-    const searchableText = normalize([item.label, item.detail, item.meta].filter(Boolean).join(" "))
-    return terms.every(term => searchableText.includes(term))
+    return Number.isFinite(this.searchScore(item))
   }
 
   filterLocal(render = true) {
-    this.updateVisibleItems(this.items.filter(item => this.matchesLocalItem(item)))
+    let matches
+    if (typeof this.options.matcher === "function") {
+      matches = this.items.filter(item => this.matchesLocalItem(item))
+    } else {
+      matches = this.items
+        .map((item, index) => ({ item, index, score: this.searchScore(item) }))
+        .filter(match => Number.isFinite(match.score))
+      if (this.options.sortByRelevance && normalize(this.query)) {
+        matches.sort((left, right) => left.score - right.score || left.index - right.index)
+      }
+      matches = matches.map(match => match.item)
+    }
+    this.updateVisibleItems(matches)
     if (render) this.renderDropdown()
+  }
+
+  searchScore(item) {
+    const terms = normalize(this.query).split(/\s+/).filter(Boolean)
+    if (!terms.length) return 0
+    const configuredFields = Array.isArray(this.options.searchFields) ? this.options.searchFields : ["label", "detail", "meta"]
+    const fields = configuredFields
+      .map((name, index) => ({ text: normalize(item[name]), weight: index * 0.25 }))
+      .filter(field => field.text)
+
+    let total = 0
+    for (const term of terms) {
+      let best = Infinity
+      fields.forEach(field => {
+        const tokens = wordTokens(field.text)
+        let score = Infinity
+        if (field.text === term) score = 0
+        else if (field.text.startsWith(term)) score = 0.5
+        else if (tokens.includes(term)) score = 1
+        else if (tokens.some(token => token.startsWith(term))) score = 1.5
+        else {
+          const position = field.text.indexOf(term)
+          if (position >= 0) score = 2 + position / Math.max(field.text.length, 1)
+        }
+
+        if (!Number.isFinite(score) && this.options.fuzzySearch && term.length >= 3) {
+          const maximum = term.length >= 6 ? 2 : 1
+          const distance = tokens.reduce((closest, token) => Math.min(closest, boundedDistance(term, token, maximum)), maximum + 1)
+          if (distance <= maximum) score = 4 + distance
+        }
+        best = Math.min(best, score + field.weight)
+      })
+      if (!Number.isFinite(best)) return Infinity
+      total += best
+    }
+    return total
   }
 
   updateVisibleItems(candidateItems, preserveActive = true) {
@@ -376,6 +495,7 @@ export class TamSelect {
     if (this.options.remoteUrl && remaining > 0) {
       const text = typeof this.options.inputTooShortText === "function" ? this.options.inputTooShortText(remaining) : this.options.inputTooShortText
       this.renderMessage(text)
+      this.updateStatus(text)
       return this.syncActiveDescendant()
     }
     if (this.error) {
@@ -384,10 +504,12 @@ export class TamSelect {
       error.setAttribute("role", "alert")
       error.textContent = this.error
       this.dropdown.append(error)
+      this.updateStatus(this.error)
       return this.syncActiveDescendant()
     }
     if (this.loading && this.loadingPage === 1) {
       this.renderMessage(this.options.loadingText, true)
+      this.updateStatus(this.options.loadingText)
       return this.syncActiveDescendant()
     }
 
@@ -395,6 +517,11 @@ export class TamSelect {
     if (!this.visibleItems.length) this.renderMessage(this.options.noResultsText)
     if (this.loading && this.loadingPage > 1) this.renderMessage(this.options.loadingText, true)
     else if (this.hasMore) this.renderMessage(this.options.loadMoreText)
+    const resultCount = this.visibleItems.filter(entry => entry.type === "item").length
+    const statusText = resultCount || this.visibleItems.length
+      ? (typeof this.options.resultsText === "function" ? this.options.resultsText(resultCount) : this.options.resultsText)
+      : this.options.noResultsText
+    this.updateStatus(statusText)
     this.syncActiveDescendant()
   }
 
@@ -421,7 +548,7 @@ export class TamSelect {
       if (item.meta) {
         const meta = document.createElement("span")
         meta.className = this.classes.optionMeta
-        meta.textContent = item.meta
+        this.renderHighlightedText(meta, item.meta)
         option.append(meta)
       }
       if (item.selected) {
@@ -452,16 +579,78 @@ export class TamSelect {
     text.className = this.classes.optionText
     const label = document.createElement("span")
     label.className = `${this.classes.optionLabel} truncate`
-    label.textContent = item.label
+    if (selected) label.textContent = item.label
+    else this.renderHighlightedText(label, item.label)
     text.append(label)
     if (item.detail) {
       const detail = document.createElement("span")
       detail.className = `${this.classes.optionDetail} truncate`
-      detail.textContent = item.detail
+      if (selected) detail.textContent = item.detail
+      else this.renderHighlightedText(detail, item.detail)
       text.append(detail)
     }
     content.append(text)
     return content
+  }
+
+  renderHighlightedText(element, value) {
+    const text = String(value ?? "")
+    const terms = normalize(this.query).split(/\s+/).filter(Boolean)
+    if (!this.options.highlightMatches || !terms.length) {
+      element.textContent = text
+      return
+    }
+
+    const positions = []
+    let offset = 0
+    let normalizedText = ""
+    for (const character of text) {
+      const start = offset
+      offset += character.length
+      const normalizedCharacter = fold(character)
+      normalizedText += normalizedCharacter
+      for (let index = 0; index < normalizedCharacter.length; index += 1) positions.push({ start, end: offset })
+    }
+
+    const ranges = []
+    terms.forEach(term => {
+      let from = 0
+      while (from < normalizedText.length) {
+        const index = normalizedText.indexOf(term, from)
+        if (index < 0) break
+        const first = positions[index]
+        const last = positions[index + term.length - 1]
+        if (first && last) ranges.push([first.start, last.end])
+        from = index + Math.max(term.length, 1)
+      }
+    })
+    if (!ranges.length) {
+      element.textContent = text
+      return
+    }
+
+    ranges.sort((left, right) => left[0] - right[0] || left[1] - right[1])
+    const merged = []
+    ranges.forEach(range => {
+      const previous = merged.at(-1)
+      if (previous && range[0] <= previous[1]) previous[1] = Math.max(previous[1], range[1])
+      else merged.push([...range])
+    })
+
+    let cursor = 0
+    merged.forEach(([start, end]) => {
+      if (start > cursor) element.append(document.createTextNode(text.slice(cursor, start)))
+      const mark = document.createElement("mark")
+      mark.className = this.classes.highlight
+      mark.textContent = text.slice(start, end)
+      element.append(mark)
+      cursor = end
+    })
+    if (cursor < text.length) element.append(document.createTextNode(text.slice(cursor)))
+  }
+
+  updateStatus(text) {
+    this.status.textContent = String(text ?? "")
   }
 
   renderMessage(text, spinner = false) {
@@ -737,6 +926,7 @@ export class TamSelect {
     this.error = null
     this.hasMore = false
     this.nextPage = null
+    this.updateStatus("")
     if (this.options.remoteUrl) {
       this.remoteResults = []
       this.updateVisibleItems([])

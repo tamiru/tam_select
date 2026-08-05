@@ -81,6 +81,71 @@ test("local search matches multiple terms, details, metadata, and unaccented tex
   }
 })
 
+test("advanced local search ranks strong matches and tolerates typing mistakes", () => {
+  const cleanup = setupDOM(`
+    <select>
+      <option value="">Select a region</option>
+      <option value="western">Western Oromia</option>
+      <option value="oromia">Oromia Regional State</option>
+      <option value="sidama">Sidama</option>
+    </select>
+  `)
+  try {
+    const tamSelect = new TamSelect(document.querySelector("select"))
+
+    input(tamSelect.input, "oromia")
+    assert.deepEqual(tamSelect.visibleItems.map(entry => entry.item.value), ["oromia", "western"])
+
+    input(tamSelect.input, "oromai")
+    assert.deepEqual(tamSelect.visibleItems.map(entry => entry.item.value), ["western", "oromia"])
+  } finally {
+    cleanup()
+  }
+})
+
+test("search highlights normalized matches and announces the result count", () => {
+  const cleanup = setupDOM(localSelect())
+  try {
+    const tamSelect = new TamSelect(document.querySelector("select"))
+
+    input(tamSelect.input, "cafe")
+    const match = tamSelect.dropdown.querySelector('[data-value="cf"]')
+    assert.equal(match.querySelector("mark")?.textContent, "Café")
+    assert.equal(tamSelect.status.textContent, "1 result available")
+
+    input(tamSelect.input, "missing place")
+    assert.equal(tamSelect.status.textContent, "No results found")
+  } finally {
+    cleanup()
+  }
+})
+
+test("advanced local search features can be disabled", () => {
+  const cleanup = setupDOM(`
+    <select>
+      <option value="">Select a region</option>
+      <option value="western">Western Oromia</option>
+      <option value="oromia">Oromia Regional State</option>
+    </select>
+  `)
+  try {
+    const tamSelect = new TamSelect(document.querySelector("select"), {
+      fuzzySearch: false,
+      highlightMatches: false,
+      sortByRelevance: false
+    })
+
+    input(tamSelect.input, "oromia")
+    assert.deepEqual(tamSelect.visibleItems.map(entry => entry.item.value), ["western", "oromia"])
+    assert.equal(tamSelect.dropdown.querySelector("mark"), null)
+
+    input(tamSelect.input, "oromai")
+    assert.deepEqual(tamSelect.visibleItems, [])
+  } finally {
+    cleanup()
+  }
+})
+
 test("filtering preserves the active option when it remains visible", () => {
   const cleanup = setupDOM(localSelect())
   try {
@@ -228,6 +293,74 @@ test("non-searchable selects use a focusable button combobox and preserve disabl
     assert.equal(select.value, "aa")
   } finally {
     cleanup()
+  }
+})
+
+test("DaisyUI theme applies semantic control and option classes", () => {
+  const cleanup = setupDOM(localSelect())
+  try {
+    const tamSelect = new TamSelect(document.querySelector("select"), { theme: "daisyui" })
+
+    assert.ok(tamSelect.control.classList.contains("input"))
+    assert.equal(tamSelect.control.classList.contains("min-h-10"), false)
+
+    tamSelect.open()
+    const activeOption = tamSelect.dropdown.querySelector('[role="option"]')
+    assert.match(activeOption.className, /bg-primary/)
+
+    tamSelect.select.setAttribute("aria-invalid", "true")
+    tamSelect.syncAria()
+    assert.ok(tamSelect.control.classList.contains("input-error"))
+
+    tamSelect.select.disabled = true
+    tamSelect.applyDisabled()
+    assert.ok(tamSelect.control.classList.contains("bg-base-200"))
+    assert.ok(tamSelect.control.classList.contains("opacity-50"))
+    assert.equal(Object.values(tamSelect.classes).join(" ").includes("dark:"), false)
+  } finally {
+    cleanup()
+  }
+})
+
+test("DaisyUI controls match input height and only grow for multiple selection", () => {
+  const singleCleanup = setupDOM(localSelect())
+  try {
+    const single = new TamSelect(document.querySelector("select"), { theme: "daisyui" })
+    assert.equal(single.control.className, "input relative w-full cursor-text rounded-field text-base-content")
+  } finally {
+    singleCleanup()
+  }
+
+  const multipleCleanup = setupDOM(localSelect({ multiple: true }))
+  try {
+    const multiple = new TamSelect(document.querySelector("select"), { theme: "daisyui" })
+    assert.ok(multiple.control.classList.contains("min-h-10"))
+    assert.ok(multiple.control.classList.contains("h-auto"))
+    assert.ok(multiple.control.classList.contains("flex-wrap"))
+  } finally {
+    multipleCleanup()
+  }
+})
+
+test("auto theme detects DaisyUI input and select classes", () => {
+  const cleanup = setupDOM(localSelect({ extra: 'class="input w-full"' }))
+  try {
+    const detected = new TamSelect(document.querySelector("select"), { theme: "auto" })
+    assert.equal(detected.theme, "daisyui")
+    assert.ok(detected.control.classList.contains("input"))
+    assert.ok(detected.control.classList.contains("rounded-field"))
+    assert.ok(detected.input.classList.contains("rounded-field"))
+  } finally {
+    cleanup()
+  }
+
+  const defaultCleanup = setupDOM(localSelect())
+  try {
+    const fallback = new TamSelect(document.querySelector("select"), { theme: "auto" })
+    assert.equal(fallback.theme, "default")
+    assert.equal(fallback.control.classList.contains("input"), false)
+  } finally {
+    defaultCleanup()
   }
 })
 

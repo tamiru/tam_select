@@ -51,6 +51,7 @@ class TamSelectInputTest < Minitest::Test
     assert_equal({ describedby: "student_skill_ids_error", invalid: "true" }, html_options[:aria])
     assert_equal "nested tam-select", html_options.dig(:data, :controller)
     assert_equal false, JSON.parse(html_options.dig(:data, :tam_select_options_value))["closeAfterSelect"]
+    assert_equal "auto", JSON.parse(html_options.dig(:data, :tam_select_options_value))["theme"]
     refute html_options.key?(:tam_options)
   end
 end
