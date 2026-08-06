@@ -326,7 +326,10 @@ test("DaisyUI controls match input height and only grow for multiple selection",
   const singleCleanup = setupDOM(localSelect())
   try {
     const single = new TamSelect(document.querySelector("select"), { theme: "daisyui" })
-    assert.equal(single.control.className, "input relative w-full cursor-text rounded-field text-base-content")
+    assert.equal(
+      single.control.className,
+      "input relative w-full cursor-text rounded-field text-base-content focus:[--input-color:var(--color-primary)] focus:outline-none focus:outline-offset-0 focus:shadow-none focus-visible:[--input-color:var(--color-primary)] focus-visible:outline-none focus-visible:outline-offset-0 focus-visible:shadow-none focus-within:[--input-color:var(--color-primary)] focus-within:outline-none focus-within:outline-offset-0 focus-within:shadow-none"
+    )
   } finally {
     singleCleanup()
   }
