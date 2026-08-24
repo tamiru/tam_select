@@ -35,6 +35,15 @@ export function setupDOM(body = "") {
     dom.window.HTMLElement.prototype.scrollIntoView = function scrollIntoView() {}
   }
 
+  if (!globalThis.IntersectionObserver) {
+    globalThis.IntersectionObserver = class {
+      constructor() {}
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    }
+  }
+
   return () => {
     dom.window.close()
     for (const name of GLOBALS) delete globalThis[name]

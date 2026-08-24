@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TamSelect – Animation Presets Demo</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: system-ui, -apple-system, sans-serif; }
+    .preset-card { transition: box-shadow 0.2s, border-color 0.2s; }
+    .preset-card:hover { box-shadow: 0 8px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1); }
+    .preset-card.active { border-color: #3b82f6; box-shadow: 0 0 0 3px rgb(59 130 246 / 0.15); }
+    .easing-graph { width: 100%; height: 80px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0; }
+    .ball { width: 20px; height: 20px; border-radius: 50%; background: linear-gradient(135deg, #3b82f6, #8b5cf6); }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+  <div class="max-w-6xl mx-auto px-6 py-12">
+    <!-- Header -->
+    <div class="text-center mb-12">
+      <h1 class="text-4xl font-bold text-gray-900 mb-3">TamSelect Animation Presets</h1>
+      <p class="text-lg text-gray-500 max-w-2xl mx-auto">
+        Click any preset to see the dropdown animation. Each card shows the timing curve, duration, and a live preview.
+      </p>
+    </div>
+
+    <!-- Controls -->
+    <div class="flex items-center justify-center gap-4 mb-10">
+      <button id="openAllBtn" class="px-5 py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors shadow-sm">
+        Open All
+      </button>
+      <button id="closeAllBtn" class="px-5 py-2.5 bg-white text-gray-700 rounded-lg font-medium border border-gray-300 hover:bg-gray-50 transition-colors shadow-sm">
+        Close All
+      </button>
+      <button id="toggleThemeBtn" class="px-5 py-2.5 bg-white text-gray-700 rounded-lg font-medium border border-gray-300 hover:bg-gray-50 transition-colors shadow-sm">
+        Toggle Dark Mode
+      </button>
+    </div>
+
+    <!-- Preset grid -->
+    <div id="presetGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+
+    <!-- Custom config section -->
+    <div class="mt-16 bg-white rounded-2xl border border-gray-200 p-8 shadow-sm">
+      <h2 class="text-2xl font-bold text-gray-900 mb-2">Custom Configuration</h2>
+      <p class="text-gray-500 mb-6">Use individual options when no preset fits your needs.</p>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Duration (ms)</label>
+          <input id="customDuration" type="number" value="250" min="0" max="2000" step="50"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Easing</label>
+          <select id="customEasing"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white">
+            <option value="ease-out">ease-out</option>
+            <option value="ease-in">ease-in</option>
+            <option value="ease-in-out">ease-in-out</option>
+            <option value="linear">linear</option>
+            <option value="cubic-bezier(0.4, 0, 0.2, 1)">Material (0.4, 0, 0.2, 1)</option>
+            <option value="cubic-bezier(0.34, 1.56, 0.64, 1)">Spring (0.34, 1.56, 0.64, 1)</option>
+            <option value="cubic-bezier(0.68, -0.55, 0.27, 1.55)">Bounce (0.68, -0.55, 0.27, 1.55)</option>
+            <option value="cubic-bezier(0.175, 0.885, 0.32, 1.275)">Pop (0.175, 0.885, 0.32, 1.275)</option>
+            <option value="cubic-bezier(0.25, 0.46, 0.45, 0.94)">Slide (0.25, 0.46, 0.45, 0.94)</option>
+          </select>
+        </div>
+        <div class="flex items-end">
+          <button id="applyCustomBtn" class="w-full px-5 py-2 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition-colors shadow-sm">
+            Apply Custom Config
+          </button>
+        </div>
+      </div>
+      <div class="mt-6">
+        <div id="customPreview"></div>
+      </div>
+    </div>
+
+    <!-- Code snippet -->
+    <div class="mt-10 bg-gray-900 rounded-2xl p-6 overflow-x-auto shadow-sm">
+      <div class="flex items-center justify-between mb-4">
+        <span class="text-gray-400 text-sm font-medium">Usage</span>
+        <button id="copyBtn" class="text-gray-400 hover:text-white text-sm transition-colors">Copy</button>
+      </div>
+      <pre id="codeSnippet" class="text-sm text-gray-300 leading-relaxed"><code></code></pre>
+    </div>
+  </div>
+
+  <script type="module">
+    import TamSelect, { ANIMATION_PRESETS } from "../src/tam-select.js"
+
+    const PRESETS = [
+      { name: "default", label: "Default", desc: "Standard quick open/close", color: "bg-gray-100 text-gray-700" },
+      { name: "material", label: "Material", desc: "Google Material Design", color: "bg-blue-50 text-blue-700" },
+      { name: "spring", label: "Spring", desc: "Bouncy overshoot", color: "bg-green-50 text-green-700" },
+      { name: "bounce", label: "Bounce", desc: "Overshoot bounce effect", color: "bg-yellow-50 text-yellow-700" },
+      { name: "elastic", label: "Elastic", desc: "Wide elastic spring", color: "bg-orange-50 text-orange-700" },
+      { name: "snappy", label: "Snappy", desc: "Fast, responsive", color: "bg-red-50 text-red-700" },
+      { name: "smooth", label: "Smooth", desc: "Gentle ease", color: "bg-purple-50 text-purple-700" },
+      { name: "fade", label: "Fade", desc: "Simple opacity fade", color: "bg-pink-50 text-pink-700" },
+      { name: "pop", label: "Pop", desc: "Quick pop-in", color: "bg-cyan-50 text-cyan-700" },
+      { name: "slide", label: "Slide", desc: "Smooth deceleration", color: "bg-indigo-50 text-indigo-700" },
+      { name: "none", label: "None", desc: "Instant, no animation", color: "bg-zinc-100 text-zinc-600" },
+    ]
+
+    const SELECT_HTML = `
+      <label for="REGION">Region</label>
+      <select id="REGION">
+        <option value="">Select a region</option>
+        <option value="aa">Addis Ababa</option>
+        <option value="or">Oromia</option>
+        <option value="ti">Tigray</option>
+        <option value="sn">Sidama</option>
+        <option value="cf">Café Region</option>
+        <option value="am">Amhara</option>
+        <option value="sw">South West</option>
+      </select>
+    `
+
+    const grid = document.getElementById("presetGrid")
+    const instances = []
+
+    PRESETS.forEach(({ name, label, desc, color }) => {
+      const id = `sel-${name}`
+      const card = document.createElement("div")
+      card.className = "preset-card bg-white rounded-xl border border-gray-200 p-5 shadow-sm"
+      card.innerHTML = `
+        <div class="flex items-center justify-between mb-3">
+          <span class="px-2.5 py-1 rounded-md text-xs font-semibold ${color}">${label}</span>
+          <span class="text-xs text-gray-400">${ANIMATION_PRESETS[name].duration}ms</span>
+        </div>
+        <p class="text-sm text-gray-500 mb-4">${desc}</p>
+        <div class="mb-3">${SELECT_HTML.replaceAll("REGION", id)}</div>
+        <div class="flex items-center gap-2 mt-3">
+          <div id="ball-${name}" class="ball"></div>
+          <div class="flex-1 h-1 bg-gray-100 rounded-full overflow-hidden">
+            <div id="track-${name}" class="h-full bg-blue-500 rounded-full" style="width: 0%"></div>
+          </div>
+        </div>
+        <div class="mt-3 flex gap-2">
+          <button data-preset="${name}" data-action="open"
+            class="flex-1 px-3 py-1.5 text-xs font-medium bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors">
+            Open
+          </button>
+          <button data-preset="${name}" data-action="close"
+            class="flex-1 px-3 py-1.5 text-xs font-medium bg-gray-50 text-gray-600 rounded-lg hover:bg-gray-100 transition-colors">
+            Close
+          </button>
+        </div>
+      `
+      grid.appendChild(card)
+
+      const select = card.querySelector(`#${id}`)
+      const preset = ANIMATION_PRESETS[name]
+      const ts = new TamSelect(select, {
+        animationPreset: name,
+        searchable: false,
+      })
+      instances.push({ name, ts, card })
+    })
+
+    // Open/Close all
+    document.getElementById("openAllBtn").addEventListener("click", () => {
+      instances.forEach(({ ts }) => ts.open())
+    })
+    document.getElementById("closeAllBtn").addEventListener("click", () => {
+      instances.forEach(({ ts }) => ts.close())
+    })
+
+    // Individual open/close buttons
+    grid.addEventListener("click", (e) => {
+      const btn = e.target.closest("[data-preset]")
+      if (!btn) return
+      const preset = btn.dataset.preset
+      const action = btn.dataset.action
+      const inst = instances.find(i => i.name === preset)
+      if (inst) inst.ts[action]()
+    })
+
+    // Ball animation demo
+    function animateBall(name, duration, easing) {
+      const ball = document.getElementById(`ball-${name}`)
+      const track = document.getElementById(`track-${name}`)
+      if (!ball || !track) return
+
+      ball.style.transition = "none"
+      ball.style.transform = "translateX(0)"
+      track.style.transition = "none"
+      track.style.width = "0%"
+      ball.offsetHeight // reflow
+
+      ball.style.transition = `transform ${duration}ms ${easing}`
+      track.style.transition = `width ${duration}ms ${easing}`
+      ball.style.transform = "translateX(calc(200px - 20px))"
+      track.style.width = "100%"
+    }
+
+    // Patch open/close to also animate balls
+    instances.forEach(({ name, ts }) => {
+      const origOpen = ts.open.bind(ts)
+      const origClose = ts.close.bind(ts)
+      const preset = ANIMATION_PRESETS[name]
+      ts.open = () => { origOpen(); animateBall(name, preset.duration, preset.easing) }
+      ts.close = () => { origClose(); }
+    })
+
+    // Dark mode
+    let darkMode = false
+    document.getElementById("toggleThemeBtn").addEventListener("click", () => {
+      darkMode = !darkMode
+      document.documentElement.classList.toggle("dark", darkMode)
+      document.body.classList.toggle("bg-gray-50", !darkMode)
+      document.body.classList.toggle("bg-gray-900", darkMode)
+      instances.forEach(({ card }) => {
+        card.classList.toggle("bg-white", !darkMode)
+        card.classList.toggle("bg-gray-800", darkMode)
+        card.classList.toggle("border-gray-200", !darkMode)
+        card.classList.toggle("border-gray-700", darkMode)
+      })
+    })
+
+    // Custom config
+    let customInstance = null
+    document.getElementById("applyCustomBtn").addEventListener("click", () => {
+      const duration = parseInt(document.getElementById("customDuration").value) || 250
+      const easing = document.getElementById("customEasing").value
+
+      const container = document.getElementById("customPreview")
+      container.innerHTML = `
+        <div class="flex items-center gap-4">
+          <div id="custom-select-wrap"></div>
+          <button id="custom-open" class="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 transition-colors">Open</button>
+          <button id="custom-close" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors">Close</button>
+          <div class="flex items-center gap-2 ml-4">
+            <div id="custom-ball" class="ball" style="background: linear-gradient(135deg, #8b5cf6, #ec4899)"></div>
+            <div class="flex-1 h-1 bg-gray-100 rounded-full overflow-hidden w-48">
+              <div id="custom-track" class="h-full bg-purple-500 rounded-full" style="width: 0%"></div>
+            </div>
+          </div>
+          <span class="text-xs text-gray-400 ml-2">${duration}ms · ${easing}</span>
+        </div>
+      `
+
+      const wrap = document.getElementById("custom-select-wrap")
+      wrap.innerHTML = SELECT_HTML.replaceAll("REGION", "custom-region")
+
+      if (customInstance) customInstance.destroy()
+      const select = wrap.querySelector("#custom-region")
+      customInstance = new TamSelect(select, {
+        animationPreset: null,
+        animationDuration: duration,
+        animationEasing: easing,
+        searchable: false,
+      })
+
+      document.getElementById("custom-open").addEventListener("click", () => {
+        customInstance.open()
+        animateBallCustom(duration, easing)
+      })
+      document.getElementById("custom-close").addEventListener("click", () => {
+        customInstance.close()
+      })
+    })
+
+    function animateBallCustom(duration, easing) {
+      const ball = document.getElementById("custom-ball")
+      const track = document.getElementById("custom-track")
+      if (!ball || !track) return
+      ball.style.transition = "none"
+      ball.style.transform = "translateX(0)"
+      track.style.transition = "none"
+      track.style.width = "0%"
+      ball.offsetHeight
+      ball.style.transition = `transform ${duration}ms ${easing}`
+      track.style.transition = `width ${duration}ms ${easing}`
+      ball.style.transform = "translateX(calc(200px - 20px))"
+      track.style.width = "100%"
+    }
+
+    // Code snippet
+    const snippet = `import TamSelect, { ANIMATION_PRESETS } from "tam-select"
+
+// Use a preset
+new TamSelect(select, { animationPreset: "spring" })
+
+// List all presets
+Object.entries(ANIMATION_PRESETS).forEach(([name, { duration, easing }]) => {
+  console.log(\`\${name}: \${duration}ms \${easing}\`)
+})
+
+// Custom values (no preset)
+new TamSelect(select, {
+  animationPreset: null,
+  animationDuration: 350,
+  animationEasing: "cubic-bezier(0.4, 0, 0.2, 1)"
+})`
+    document.querySelector("#codeSnippet code").textContent = snippet
+
+    document.getElementById("copyBtn").addEventListener("click", () => {
+      navigator.clipboard.writeText(snippet).then(() => {
+        const btn = document.getElementById("copyBtn")
+        btn.textContent = "Copied!"
+        setTimeout(() => { btn.textContent = "Copy" }, 2000)
+      })
+    })
+  </script>
+</body>
+</html>

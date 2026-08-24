@@ -1,26 +1,26 @@
 const DEFAULT_CLASSES = {
   wrapper: "tam-select relative w-full text-zinc-900 [color-scheme:light] dark:text-zinc-100 dark:[color-scheme:dark]",
-  control: "relative flex min-h-11 w-full cursor-text flex-wrap items-center gap-2 rounded-xl border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm transition duration-150 hover:border-zinc-400 focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-500/10 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:shadow-black/20 dark:hover:border-zinc-600 dark:focus-within:border-blue-400 dark:focus-within:ring-blue-400/10",
-  controlMultiple: "",
+  control: "relative flex min-h-11 w-full cursor-text flex-wrap items-center gap-2 overflow-hidden rounded-xl border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm transition duration-150 hover:border-zinc-400 focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-500/10 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:shadow-black/20 dark:hover:border-zinc-600 dark:focus-within:border-blue-400 dark:focus-within:ring-blue-400/10",
+  controlMultiple: "h-auto py-1.5",
   controlOpen: "border-blue-500 ring-4 ring-blue-500/10 dark:border-blue-400 dark:ring-blue-400/10",
   controlInvalid: "border-red-500 ring-4 ring-red-500/10 dark:border-red-400 dark:ring-red-400/10",
   controlDisabled: "cursor-not-allowed bg-zinc-100 opacity-60 dark:bg-zinc-800 dark:text-zinc-400",
-  input: "min-w-16 flex-1 border-0 bg-transparent p-0 text-left text-sm text-zinc-900 outline-none placeholder:text-zinc-400 focus:ring-0 dark:text-zinc-100 dark:placeholder:text-zinc-500",
+  input: "min-w-16 flex-1 shrink basis-0 border-0 bg-transparent p-0 text-start text-sm text-zinc-900 outline-none placeholder:text-zinc-400 focus:ring-0 dark:text-zinc-100 dark:placeholder:text-zinc-500",
   inputClosed: "absolute inset-0 z-0 h-full w-full cursor-pointer opacity-0",
   trigger: "absolute inset-0 z-0 h-full w-full cursor-pointer rounded-xl border-0 bg-transparent p-0 focus:outline-none disabled:cursor-not-allowed",
   searchIcon: "size-4 shrink-0 text-zinc-400 dark:text-zinc-500",
-  placeholder: "pointer-events-none text-zinc-400 dark:text-zinc-500",
-  tag: "relative z-10 inline-flex max-w-full items-center gap-1 rounded-lg bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-200 transition-colors dark:bg-blue-950/50 dark:text-blue-300 dark:ring-blue-800",
-  tagRemove: "rounded p-0.5 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:hover:bg-blue-900",
-  clear: "relative z-20 ml-auto rounded p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-700 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-zinc-500 dark:hover:bg-zinc-800 dark:hover:text-zinc-200 dark:focus:ring-blue-400",
-  chevron: "pointer-events-none relative z-10 ml-auto size-4 shrink-0 text-zinc-400 transition-transform",
+  placeholder: "pointer-events-none shrink truncate text-zinc-400 dark:text-zinc-500",
+  tag: "relative z-10 inline-flex max-w-full shrink-0 items-center gap-1 rounded-lg bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-200 transition-colors dark:bg-blue-950/50 dark:text-blue-300 dark:ring-blue-800",
+  tagRemove: "me-0.5 shrink-0 rounded p-0.5 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:hover:bg-blue-900",
+  clear: "relative z-20 ms-auto shrink-0 rounded p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-700 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-zinc-500 dark:hover:bg-zinc-800 dark:hover:text-zinc-200 dark:focus:ring-blue-400",
+  chevron: "pointer-events-none relative z-10 ms-auto size-4 shrink-0 text-zinc-400 transition-transform",
   chevronOpen: "rotate-180",
   dropdown: "absolute z-50 mt-1.5 max-h-72 w-full overflow-auto rounded-xl border border-zinc-200 bg-white p-1.5 shadow-2xl ring-1 ring-black/5 dark:border-zinc-700 dark:bg-zinc-900 dark:shadow-black/50 dark:ring-white/10",
-  dropdownAnimation: "origin-top-center transition-all duration-150 ease-out",
+  dropdownAnimation: "origin-top-center",
   dropdownClosed: "mt-1.5 max-h-72 w-full scale-y-[0.98] opacity-0 pointer-events-none",
   dropdownOpen: "scale-y-100 opacity-100 pointer-events-auto",
   groupHeader: "px-3 pt-3 pb-1 text-xs font-semibold text-zinc-500 select-none dark:text-zinc-400",
-  option: "flex min-h-11 cursor-pointer items-center justify-between gap-3 rounded-lg px-3 py-2 text-sm text-zinc-700 outline-none transition-colors duration-100 dark:text-zinc-200",
+  option: "flex min-h-11 cursor-pointer items-center justify-between gap-3 rounded-lg px-3 py-2 text-sm text-zinc-700 outline-none transition-colors duration-100 hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-800",
   optionContent: "flex min-w-0 flex-1 items-center gap-3",
   optionText: "flex min-w-0 flex-1 flex-col",
   optionLabel: "font-normal",
@@ -34,7 +34,9 @@ const DEFAULT_CLASSES = {
   status: "sr-only",
   message: "px-3 py-6 text-center text-sm text-zinc-500 dark:text-zinc-400",
   spinner: "size-4 animate-spin rounded-full border-2 border-zinc-300 border-t-blue-600",
-  error: "px-3 py-3 text-sm text-red-600 dark:text-red-400"
+  error: "px-3 py-3 text-sm text-red-600 dark:text-red-400",
+  tagDragging: "opacity-50 ring-2 ring-blue-400",
+  tagDragOver: "border-l-2 border-l-blue-500"
 }
 
 // DaisyUI's semantic color classes are used when the host application has
@@ -42,26 +44,26 @@ const DEFAULT_CLASSES = {
 const THEME_CLASSES = {
   daisyui: {
     wrapper: "tam-select relative w-full text-base-content",
-    control: "input relative w-full cursor-text rounded-field text-base-content focus:[--input-color:var(--color-primary)] focus:outline-none focus:outline-offset-0 focus:shadow-none focus-visible:[--input-color:var(--color-primary)] focus-visible:outline-none focus-visible:outline-offset-0 focus-visible:shadow-none focus-within:[--input-color:var(--color-primary)] focus-within:outline-none focus-within:outline-offset-0 focus-within:shadow-none",
-    controlMultiple: "h-auto min-h-10 flex-wrap py-1.5",
+    control: "input relative w-full cursor-text rounded-field overflow-hidden text-base-content focus:[--input-color:var(--color-primary)] focus:outline-none focus:outline-offset-0 focus:shadow-none focus-visible:[--input-color:var(--color-primary)] focus-visible:outline-none focus-visible:outline-offset-0 focus-visible:shadow-none focus-within:[--input-color:var(--color-primary)] focus-within:outline-none focus-within:outline-offset-0 focus-within:shadow-none",
+    controlMultiple: "min-h-10 h-auto flex-wrap py-1.5",
     controlOpen: "",
     controlInvalid: "input-error",
     controlDisabled: "cursor-not-allowed bg-base-200 opacity-50",
-    input: "min-w-16 flex-1 bg-transparent p-0 text-left text-base-content outline-none placeholder:text-base-content/50 focus:outline-none focus:ring-0",
+    input: "min-w-16 flex-1 shrink basis-0 bg-transparent p-0 text-start text-base-content outline-none placeholder:text-base-content/50 focus:outline-none focus:ring-0",
     inputClosed: "absolute inset-0 z-0 h-full w-full cursor-pointer rounded-field opacity-0",
     trigger: "absolute inset-0 z-0 h-full w-full cursor-pointer rounded-field border-0 bg-transparent p-0 focus:outline-none disabled:cursor-not-allowed",
     searchIcon: "size-4 shrink-0 text-base-content/50",
-    placeholder: "pointer-events-none text-base-content/50",
-    tag: "badge badge-primary relative z-10 max-w-full gap-1",
-    tagRemove: "rounded-btn p-0.5 hover:bg-primary-focus focus:outline-none focus:ring-2 focus:ring-primary",
-    clear: "relative z-20 ml-auto rounded-btn p-1 text-base-content/50 transition-colors hover:bg-base-200 hover:text-base-content focus:outline-none focus:ring-2 focus:ring-primary",
-    chevron: "pointer-events-none relative z-10 ml-auto size-4 shrink-0 text-base-content/50 transition-transform",
+    placeholder: "pointer-events-none shrink truncate text-base-content/50",
+    tag: "badge badge-primary relative z-10 max-w-full shrink-0 gap-1",
+    tagRemove: "me-0.5 shrink-0 rounded-btn p-0.5 hover:bg-primary-focus focus:outline-none focus:ring-2 focus:ring-primary",
+    clear: "relative z-20 ms-auto shrink-0 rounded-btn p-1 text-base-content/50 transition-colors hover:bg-base-200 hover:text-base-content focus:outline-none focus:ring-2 focus:ring-primary",
+    chevron: "pointer-events-none relative z-10 ms-auto size-4 shrink-0 text-base-content/50 transition-transform",
     dropdown: "absolute z-50 mt-1.5 max-h-72 w-full overflow-auto rounded-box border border-base-300 bg-base-100 p-2 shadow-xl",
-    dropdownAnimation: "origin-top-center transition-all duration-150 ease-out",
+    dropdownAnimation: "origin-top-center",
     dropdownClosed: "mt-1.5 max-h-72 w-full scale-y-[0.98] opacity-0 pointer-events-none",
     dropdownOpen: "scale-y-100 opacity-100 pointer-events-auto",
     groupHeader: "px-3 pt-3 pb-1 text-xs font-semibold text-base-content/60 select-none",
-    option: "flex min-h-11 cursor-pointer items-center justify-between gap-3 rounded-btn px-3 py-2 text-sm text-base-content outline-none transition-colors duration-100",
+    option: "flex min-h-11 cursor-pointer items-center justify-between gap-3 rounded-btn px-3 py-2 text-sm text-base-content outline-none transition-colors duration-100 hover:bg-base-200",
     optionDetail: "text-xs font-normal text-base-content/60",
     optionImage: "size-9 shrink-0 rounded-full bg-base-200 object-cover",
     optionMeta: "badge badge-ghost shrink-0",
@@ -71,7 +73,9 @@ const THEME_CLASSES = {
     highlight: "rounded-sm bg-warning/30 px-0.5 text-inherit",
     message: "px-3 py-6 text-center text-sm text-base-content/60",
     spinner: "loading loading-spinner loading-sm text-primary",
-    error: "px-3 py-3 text-sm text-error"
+    error: "px-3 py-3 text-sm text-error",
+    tagDragging: "opacity-50 ring-2 ring-primary",
+    tagDragOver: "border-l-2 border-l-primary"
   }
 }
 
@@ -80,6 +84,20 @@ const ICONS = {
   chevron: '<svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 7.22a.75.75 0 011.06 0L10 10.94l3.72-3.72a.75.75 0 111.06 1.06l-4.25 4.25a.75.75 0 01-1.06 0L5.22 8.28a.75.75 0 010-1.06z" clip-rule="evenodd"/></svg>',
   close: '<svg viewBox="0 0 20 20" fill="currentColor" class="size-3" aria-hidden="true"><path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z"/></svg>',
   check: '<svg viewBox="0 0 20 20" fill="currentColor" class="size-4" aria-hidden="true"><path fill-rule="evenodd" d="M16.7 5.3a1 1 0 010 1.4l-8 8a1 1 0 01-1.4 0l-4-4a1 1 0 011.4-1.4L8 12.6l7.3-7.3a1 1 0 011.4 0z" clip-rule="evenodd"/></svg>'
+}
+
+const ANIMATION_PRESETS = {
+  default: { duration: 150, easing: "ease-out" },
+  material: { duration: 250, easing: "cubic-bezier(0.4, 0, 0.2, 1)" },
+  spring: { duration: 400, easing: "cubic-bezier(0.34, 1.56, 0.64, 1)" },
+  snappy: { duration: 100, easing: "ease-in" },
+  smooth: { duration: 300, easing: "cubic-bezier(0.25, 0.1, 0.25, 1)" },
+  bounce: { duration: 500, easing: "cubic-bezier(0.68, -0.55, 0.27, 1.55)" },
+  elastic: { duration: 600, easing: "cubic-bezier(0.68, -0.6, 0.32, 1.6)" },
+  fade: { duration: 200, easing: "linear" },
+  pop: { duration: 200, easing: "cubic-bezier(0.175, 0.885, 0.32, 1.275)" },
+  slide: { duration: 250, easing: "cubic-bezier(0.25, 0.46, 0.45, 0.94)" },
+  none: { duration: 0, easing: "ease" }
 }
 
 const uid = () => `tam-select-${Math.random().toString(36).slice(2, 10)}`
@@ -152,10 +170,18 @@ export class TamSelect {
       classes: {},
       headers: {},
       animations: true,
+      animationPreset: null,
+      animationDuration: 150,
+      animationEasing: "ease-out",
       emptyState: null,
       noResultsState: null,
       loadingState: null,
       lazyLoadImages: false,
+      virtualScroll: false,
+      virtualScrollThreshold: 100,
+      virtualScrollBuffer: 5,
+      virtualItemHeight: 44,
+      draggable: false,
       maximumSelectionLength: 0,
       maximumInputLength: 0,
       minimumResultsForSearch: 0,
@@ -163,8 +189,10 @@ export class TamSelect {
       tokenSeparators: [],
       sorter: null,
       width: "resolve",
+      dir: "auto",
       ...options
     }
+    this.dir = this.options.dir === "auto" ? this.detectDirection() : this.options.dir
     const inferredTheme = ["input", "select"].some(className => select.classList.contains(className)) ? "daisyui" : "default"
     this.theme = this.options.theme === "auto" ? inferredTheme : this.options.theme
     const themeClasses = THEME_CLASSES[this.theme] || {}
@@ -199,6 +227,9 @@ export class TamSelect {
     this.lazyObserver = null
     this.selectionLimitReached = false
     this.searchVisible = this.options.minimumResultsForSearch <= 0
+    this.isVirtualScroll = false
+    this.virtualStartIndex = 0
+    this.onVirtualScroll = null
     this.build()
     this.bind()
     this.readNativeOptions()
@@ -218,6 +249,7 @@ export class TamSelect {
     this.wrapper = document.createElement("div")
     this.wrapper.className = this.classes.wrapper
     this.wrapper.dataset.tamSelectRoot = ""
+    this.wrapper.setAttribute("dir", this.dir)
     if (this.options.width !== "resolve") {
       this.wrapper.style.width = this.options.width
     }
@@ -276,7 +308,15 @@ export class TamSelect {
     this.dropdown.id = this.listboxId
     this.dropdown.className = `${this.classes.dropdown} hidden`
     if (this.options.animations) {
+      const preset = this.options.animationPreset ? ANIMATION_PRESETS[this.options.animationPreset] : null
+      const duration = preset ? preset.duration : this.options.animationDuration
+      const easing = preset ? preset.easing : this.options.animationEasing
+      this.options.animationDuration = duration
+      this.options.animationEasing = easing
       toggleClasses(this.dropdown, this.classes.dropdownAnimation, true)
+      this.dropdown.style.setProperty("--tam-duration", `${duration}ms`)
+      this.dropdown.style.setProperty("--tam-easing", easing)
+      this.dropdown.style.transition = `all var(--tam-duration) var(--tam-easing)`
     }
     this.dropdown.setAttribute("role", "listbox")
     if (this.multiple) this.dropdown.setAttribute("aria-multiselectable", "true")
@@ -330,9 +370,13 @@ export class TamSelect {
       this.focusTarget.focus()
     }
     this.onScroll = () => {
-      if (!this.options.remoteUrl || !this.hasMore || this.loading) return
-      if (this.dropdown.scrollTop + this.dropdown.clientHeight >= this.dropdown.scrollHeight - 32) {
-        this.loadRemote(this.nextPage || this.page + 1, true)
+      if (this.options.remoteUrl && this.hasMore && !this.loading) {
+        if (this.dropdown.scrollTop + this.dropdown.clientHeight >= this.dropdown.scrollHeight - 32) {
+          this.loadRemote(this.nextPage || this.page + 1, true)
+        }
+      }
+      if (this.isVirtualScroll) {
+        this.rerenderVirtualItems()
       }
     }
     this.onLabelClick = event => {
@@ -351,6 +395,14 @@ export class TamSelect {
     this.select.addEventListener("invalid", this.onNativeInvalid)
     this.labelElements.forEach(label => label.addEventListener("click", this.onLabelClick))
     document.addEventListener("pointerdown", this.onOutside)
+  }
+
+  detectDirection() {
+    const selectDir = this.select.getAttribute("dir")
+    if (selectDir) return selectDir
+    const docDir = document.documentElement.getAttribute("dir") || document.body?.getAttribute("dir")
+    if (docDir) return docDir
+    return "ltr"
   }
 
   findLabelElements() {
@@ -391,7 +443,7 @@ export class TamSelect {
     for (const child of children) {
       if (child.tagName === "OPTGROUP") {
         const group = { label: child.label, items: [], entries: [] }
-        for (const option of child.options) {
+        for (const option of child.querySelectorAll("option")) {
           if (option.value === "") continue
           const item = this.buildItem(option)
           item.group = group.label
@@ -590,6 +642,7 @@ export class TamSelect {
     tag.className = this.classes.tag
     tag.style.maxWidth = "100%"
     tag.style.minWidth = "0"
+    tag.dataset.tagValue = item.value
     const label = document.createElement("span")
     label.className = "max-w-48 truncate"
     label.style.minWidth = "0"
@@ -605,7 +658,75 @@ export class TamSelect {
     remove.innerHTML = ICONS.close
     remove.addEventListener("click", event => { event.stopPropagation(); this.deselect(item.value) })
     tag.append(label, remove)
+    if (this.options.draggable && this.multiple && !this.select.disabled) {
+      tag.setAttribute("draggable", "true")
+      tag.style.cursor = "grab"
+      tag.addEventListener("dragstart", event => this.onTagDragStart(event, item))
+      tag.addEventListener("dragend", () => this.onTagDragEnd())
+      tag.addEventListener("dragover", event => this.onTagDragOver(event))
+      tag.addEventListener("dragenter", event => this.onTagDragEnter(event))
+      tag.addEventListener("dragleave", event => this.onTagDragLeave(event))
+      tag.addEventListener("drop", event => this.onTagDrop(event, item))
+    }
     return tag
+  }
+
+  onTagDragStart(event, item) {
+    event.dataTransfer.effectAllowed = "move"
+    event.dataTransfer.setData("text/plain", item.value)
+    this.draggedItem = item
+    requestAnimationFrame(() => {
+      event.target.classList.add(this.classes.tagDragging)
+    })
+  }
+
+  onTagDragEnd() {
+    this.draggedItem = null
+    this.values.querySelectorAll("[data-tag-value]").forEach(el => {
+      el.classList.remove(this.classes.tagDragging, this.classes.tagDragOver)
+    })
+  }
+
+  onTagDragOver(event) {
+    event.preventDefault()
+    event.dataTransfer.dropEffect = "move"
+  }
+
+  onTagDragEnter(event) {
+    event.preventDefault()
+    const tag = event.target.closest("[data-tag-value]")
+    if (tag && tag.dataset.tagValue !== this.draggedItem?.value) {
+      tag.classList.add(this.classes.tagDragOver)
+    }
+  }
+
+  onTagDragLeave(event) {
+    const tag = event.target.closest("[data-tag-value]")
+    if (tag) tag.classList.remove(this.classes.tagDragOver)
+  }
+
+  onTagDrop(event, targetItem) {
+    event.preventDefault()
+    const sourceItem = this.draggedItem
+    if (!sourceItem || sourceItem.value === targetItem.value) return
+
+    const sourceIndex = this.selectedItems().findIndex(i => i.value === sourceItem.value)
+    const targetIndex = this.selectedItems().findIndex(i => i.value === targetItem.value)
+    if (sourceIndex < 0 || targetIndex < 0) return
+
+    const option = this.select.querySelector(`option[value="${sourceItem.value}"]`)
+    const targetOption = this.select.querySelector(`option[value="${targetItem.value}"]`)
+    if (option && targetOption) {
+      if (sourceIndex < targetIndex) {
+        targetOption.after(option)
+      } else {
+        targetOption.before(option)
+      }
+    }
+
+    this.readNativeOptions()
+    this.renderSelection()
+    this.emit("tam-select:reorder", { value: this.value, items: this.selectedItems() })
   }
 
   renderDropdown() {
@@ -645,19 +766,13 @@ export class TamSelect {
       return this.syncActiveDescendant()
     }
 
-    let groupIndex = 0
-    for (const entry of this.visibleItems) {
-      if (entry.type === "group-header") {
-        this.dropdown.append(this.makeGroupHeader(entry))
-        continue
-      }
-      if (entry.type === "create") {
-        this.dropdown.append(this.makeOption(entry, this.visibleItems.indexOf(entry)))
-      } else {
-        const index = this.visibleItems.indexOf(entry)
-        this.dropdown.append(this.makeOption(entry, index))
-      }
+    const shouldVirtual = this.options.virtualScroll || this.visibleItems.length > this.options.virtualScrollThreshold
+    if (shouldVirtual && this.visibleItems.length > 0) {
+      this.renderVirtualDropdown()
+    } else {
+      this.renderStandardDropdown()
     }
+
     if (!this.visibleItems.length) {
       if (this.options.noResultsState) {
         const noResults = document.createElement("div")
@@ -676,6 +791,60 @@ export class TamSelect {
         ? (typeof this.options.resultsText === "function" ? this.options.resultsText(resultCount) : this.options.resultsText)
         : this.options.noResultsText
     this.updateStatus(statusText)
+    this.syncActiveDescendant()
+  }
+
+  renderStandardDropdown() {
+    for (const entry of this.visibleItems) {
+      if (entry.type === "group-header") {
+        this.dropdown.append(this.makeGroupHeader(entry))
+      } else {
+        const index = this.visibleItems.indexOf(entry)
+        this.dropdown.append(this.makeOption(entry, index))
+      }
+    }
+  }
+
+  renderVirtualDropdown() {
+    this.isVirtualScroll = true
+    const itemHeight = this.options.virtualItemHeight
+    const buffer = this.options.virtualScrollBuffer
+    const total = this.visibleItems.length
+    const totalHeight = total * itemHeight
+    const scrollTop = this.dropdown.scrollTop || 0
+    const viewportHeight = this.dropdown.clientHeight || 288
+    const start = Math.max(0, Math.floor(scrollTop / itemHeight) - buffer)
+    const end = Math.min(total, Math.ceil((scrollTop + viewportHeight) / itemHeight) + buffer)
+
+    if (start > 0) {
+      const topSpacer = document.createElement("div")
+      topSpacer.style.height = `${start * itemHeight}px`
+      topSpacer.dataset.virtualSpacer = "top"
+      this.dropdown.append(topSpacer)
+    }
+
+    for (let i = start; i < end; i++) {
+      const entry = this.visibleItems[i]
+      if (entry.type === "group-header") {
+        this.dropdown.append(this.makeGroupHeader(entry))
+      } else {
+        this.dropdown.append(this.makeOption(entry, i))
+      }
+    }
+
+    if (end < total) {
+      const bottomSpacer = document.createElement("div")
+      bottomSpacer.style.height = `${(total - end) * itemHeight}px`
+      bottomSpacer.dataset.virtualSpacer = "bottom"
+      this.dropdown.append(bottomSpacer)
+    }
+  }
+
+  rerenderVirtualItems() {
+    if (!this.isVirtualScroll || !this.opened) return
+    const children = Array.from(this.dropdown.children)
+    children.forEach(child => child.remove())
+    this.renderVirtualDropdown()
     this.syncActiveDescendant()
   }
 
@@ -731,6 +900,7 @@ export class TamSelect {
     const content = document.createElement("span")
     content.className = this.classes.optionContent
     content.style.minWidth = "0"
+    content.style.maxWidth = "100%"
     if (selected) content.classList.add("min-w-0", "flex-1")
     if (item.image) {
       const image = this.options.lazyLoadImages ? this.makeLazyImage(item) : document.createElement("img")
@@ -745,6 +915,7 @@ export class TamSelect {
     const text = document.createElement("span")
     text.className = this.classes.optionText
     text.style.minWidth = "0"
+    text.style.overflow = "hidden"
     const label = document.createElement("span")
     label.className = `${this.classes.optionLabel} truncate`
     label.style.overflow = "hidden"
@@ -1001,6 +1172,9 @@ export class TamSelect {
   selectValue(value) {
     const item = this.ensureNativeOption(value)
     if (item.disabled) return
+    if (this.multiple && this.options.maximumSelectionLength > 0) {
+      if (this.selectedItems().length >= this.options.maximumSelectionLength) return
+    }
     if (!this.multiple) Array.from(this.select.options).forEach(option => { option.selected = false })
     item.option.selected = true
     item.selected = true
@@ -1177,11 +1351,11 @@ export class TamSelect {
 
   close() {
     if (!this.opened) return
+    this.opened = false
     if (this.options.selectOnClose && this.activeIndex >= 0) {
       const entry = this.visibleItems[this.activeIndex]
       if (entry && entry.type !== "group-header" && !entry.disabled) this.activateEntry(entry)
     }
-    this.opened = false
     this.cancelRemoteWork()
     this.focusTarget.setAttribute("aria-expanded", "false")
     toggleClasses(this.control, this.classes.controlOpen, false)
@@ -1194,6 +1368,7 @@ export class TamSelect {
     this.error = null
     this.hasMore = false
     this.nextPage = null
+    this.isVirtualScroll = false
     this.updateStatus("")
     if (this.options.remoteUrl) {
       this.remoteResults = []
@@ -1211,7 +1386,7 @@ export class TamSelect {
         this.dropdown.removeEventListener("transitionend", hide)
       }
       this.dropdown.addEventListener("transitionend", hide, { once: true })
-      this.closeTimer = setTimeout(hide, 200)
+      this.closeTimer = setTimeout(hide, this.options.animationDuration + 50)
     } else {
       this.dropdown.classList.add("hidden")
     }
@@ -1461,4 +1636,5 @@ export class TamSelect {
   }
 }
 
+export { ANIMATION_PRESETS }
 export default TamSelect

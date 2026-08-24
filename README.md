@@ -525,6 +525,47 @@ The dropdown opens and closes with a smooth CSS transition. Disable it with `ani
 new TamSelect(select, { animations: false })
 ```
 
+#### Animation presets
+
+Choose a built-in preset with `animationPreset` — it sets both duration and easing in one shot:
+
+| Preset | Duration | Easing | Feel |
+|---|---|---|---|
+| `"default"` | 150ms | `ease-out` | Standard quick open/close |
+| `"material"` | 250ms | `cubic-bezier(0.4, 0, 0.2, 1)` | Material Design deceleration |
+| `"spring"` | 400ms | `cubic-bezier(0.34, 1.56, 0.64, 1)` | Bouncy overshoot |
+| `"bounce"` | 500ms | `cubic-bezier(0.68, -0.55, 0.27, 1.55)` | Overshoot bounce |
+| `"elastic"` | 600ms | `cubic-bezier(0.68, -0.6, 0.32, 1.6)` | Wide elastic spring |
+| `"snappy"` | 100ms | `ease-in` | Fast, responsive |
+| `"smooth"` | 300ms | `cubic-bezier(0.25, 0.1, 0.25, 1)` | Gentle ease |
+| `"fade"` | 200ms | `linear` | Simple opacity fade |
+| `"pop"` | 200ms | `cubic-bezier(0.175, 0.885, 0.32, 1.275)` | Quick pop-in |
+| `"slide"` | 250ms | `cubic-bezier(0.25, 0.46, 0.45, 0.94)` | Smooth deceleration |
+| `"none"` | 0ms | `ease` | Instant, no animation |
+
+```js
+new TamSelect(select, { animationPreset: "spring" })
+```
+
+Presets override individual `animationDuration` and `animationEasing` values. Set `animationPreset: null` to use your own:
+
+```js
+new TamSelect(select, {
+  animationPreset: null,
+  animationDuration: 350,
+  animationEasing: "cubic-bezier(0.4, 0, 0.2, 1)"
+})
+```
+
+List all available presets programmatically:
+
+```js
+import { ANIMATION_PRESETS } from "tam-select"
+console.log(ANIMATION_PRESETS.bounce) // { duration: 500, easing: "cubic-bezier(0.68, -0.55, 0.27, 1.55)" }
+```
+
+> **Live demo:** Open [`demo/animation-presets.html`](demo/animation-presets.html) to try all presets side by side.
+
 ### Lazy-load images
 
 Option images are loaded only when they scroll into the dropdown viewport:
@@ -645,6 +686,9 @@ new TamSelect(select, { width: "100%" })   // Full width (default: "resolve")
 | `theme` | `"auto"` | Visual preset; `"default"`, `"daisyui"`, or `"auto"` for class detection |
 | `classes` | `{}` | Overrides any Tailwind class group |
 | `animations` | `true` | Smooth dropdown open/close transitions |
+| `animationPreset` | `null` | Built-in preset: `"default"`, `"material"`, `"spring"`, `"bounce"`, `"elastic"`, `"snappy"`, `"smooth"`, `"fade"`, `"pop"`, `"slide"`, `"none"` |
+| `animationDuration` | `150` | Animation duration in ms (overridden by preset) |
+| `animationEasing` | `"ease-out"` | CSS easing function (overridden by preset) |
 | `lazyLoadImages` | `false` | Load option images only when visible |
 | `emptyState` | `null` | Custom content for empty option list |
 | `noResultsState` | `null` | Custom content when no results match |

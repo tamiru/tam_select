@@ -9,8 +9,12 @@
   },
   "type": "module",
   "main": "./src/tam-select.js",
+  "types": "./src/tam-select.d.ts",
   "exports": {
-    ".": "./src/tam-select.js",
+    ".": {
+      "types": "./src/tam-select.d.ts",
+      "default": "./src/tam-select.js"
+    },
     "./rails-controller": "./rails/app/javascript/controllers/tam_select_controller.js"
   },
   "files": [

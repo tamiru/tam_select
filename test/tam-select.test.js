@@ -328,7 +328,7 @@ test("DaisyUI controls match input height and only grow for multiple selection",
     const single = new TamSelect(document.querySelector("select"), { theme: "daisyui" })
     assert.equal(
       single.control.className,
-      "input relative w-full cursor-text rounded-field text-base-content focus:[--input-color:var(--color-primary)] focus:outline-none focus:outline-offset-0 focus:shadow-none focus-visible:[--input-color:var(--color-primary)] focus-visible:outline-none focus-visible:outline-offset-0 focus-visible:shadow-none focus-within:[--input-color:var(--color-primary)] focus-within:outline-none focus-within:outline-offset-0 focus-within:shadow-none"
+      "input relative w-full cursor-text rounded-field overflow-hidden text-base-content focus:[--input-color:var(--color-primary)] focus:outline-none focus:outline-offset-0 focus:shadow-none focus-visible:[--input-color:var(--color-primary)] focus-visible:outline-none focus-visible:outline-offset-0 focus-visible:shadow-none focus-within:[--input-color:var(--color-primary)] focus-within:outline-none focus-within:outline-offset-0 focus-within:shadow-none"
     )
   } finally {
     singleCleanup()
@@ -499,6 +499,1221 @@ test("remote errors replace loading and emit an accessible error state", async (
     assert.match(tamSelect.error, /503/)
     assert.equal(tamSelect.dropdown.querySelector('[role="alert"]').textContent, "Request failed (503)")
     assert.equal(errors, 1)
+  } finally {
+    cleanup()
+  }
+})
+
+// ─── Option Groups ────────────────────────────────────────────────────
+
+test("option groups render section headers and navigate through them", () => {
+  const cleanup = setupDOM(`
+    <select>
+      <option value="">Select</option>
+      <optgroup label="Africa">
+        <option value="et">Ethiopia</option>
+        <option value="ke">Kenya</option>
+      </optgroup>
+      <optgroup label="Asia">
+        <option value="jp">Japan</option>
+        <option value="cn">China</option>
+      </optgroup>
+    </select>
+  `)
+  try {
+    const select = document.querySelector("select")
+    const tamSelect = new TamSelect(select)
+
+    const headers = tamSelect.dropdown.querySelectorAll("[data-tam-select-group]")
+    assert.equal(headers.length, 0, "dropdown not yet open")
+
+    keydown(tamSelect.input, "ArrowDown")
+    assert.equal(tamSelect.opened, true)
+    assert.equal(tamSelect.visibleItems[tamSelect.activeIndex].item.value, "et")
+    const openHeaders = tamSelect.dropdown.querySelectorAll("[data-tam-select-group]")
+    assert.equal(openHeaders.length, 2)
+    assert.equal(openHeaders[0].textContent, "Africa")
+    assert.equal(openHeaders[1].textContent, "Asia")
+
+    keydown(tamSelect.input, "ArrowDown")
+    assert.equal(tamSelect.visibleItems[tamSelect.activeIndex].item.value, "ke")
+    keydown(tamSelect.input, "ArrowDown")
+    assert.equal(tamSelect.visibleItems[tamSelect.activeIndex].item.value, "jp")
+
+    keydown(tamSelect.input, "Enter")
+    assert.equal(select.value, "jp")
+  } finally {
+    cleanup()
+  }
+})
+
+test("option groups filter correctly and hide empty groups", () => {
+  const cleanup = setupDOM(`
+    <select>
+      <option value="">Select</option>
+      <optgroup label="Africa">
+        <option value="et">Ethiopia</option>
+        <option value="ke">Kenya</option>
+      </optgroup>
+      <optgroup label="Asia">
+        <option value="jp">Japan</option>
+      </optgroup>
+    </select>
+  `)
+  try {
+    const tamSelect = new TamSelect(document.querySelector("select"))
+    input(tamSelect.input, "ethiopia")
+    assert.equal(tamSelect.opened, true)
+
+    const headers = tamSelect.dropdown.querySelectorAll("[data-tam-select-group]")
+    assert.equal(headers.length, 1)
+    assert.equal(headers[0].textContent, "Africa")
+    const values = tamSelect.visibleItems.filter(e => e.type === "item").map(e => e.item.value)
+    assert.deepEqual(values, ["et"])
+  } finally {
+    cleanup()
+  }
+})
+
+// ─── Animations ───────────────────────────────────────────────────────
+
+test("dropdown gets animation classes when opened and closed", () => {
+  const cleanup = setupDOM(localSelect())
+  try {
+    const tamSelect = new TamSelect(document.querySelector("select"))
+    assert.ok(tamSelect.dropdown.classList.contains("origin-top-center"))
+
+    tamSelect.open()
+    assert.ok(tamSelect.dropdown.classList.contains("scale-y-100"))
+    assert.ok(tamSelect.dropdown.classList.contains("opacity-100"))
+    assert.ok(tamSelect.dropdown.classList.contains("pointer-events-auto"))
+
+    tamSelect.close()
+    assert.ok(tamSelect.dropdown.classList.contains("scale-y-[0.98]"))
+    assert.ok(tamSelect.dropdown.classList.contains("opacity-0"))
+    assert.ok(tamSelect.dropdown.classList.contains("pointer-events-none"))
+  } finally {
+    cleanup()
+  }
+})
+
+test("animations can be disabled", () => {
+  const cleanup = setupDOM(localSelect())
+  try {
+    const tamSelect = new TamSelect(document.querySelector("select"), { animations: false })
+    assert.equal(tamSelect.dropdown.classList.contains("origin-top-center"), false)
+
+    tamSelect.open()
+    assert.equal(tamSelect.dropdown.classList.contains("scale-y-100"), false)
+
+    tamSelect.close()
+    assert.ok(tamSelect.dropdown.classList.contains("hidden"))
+  } finally {
+    cleanup()
+  }
+})
+
+// ─── Type-ahead ───────────────────────────────────────────────────────
+
+test("type-ahead jumps to the first matching option on rapid typing", () => {
+  const cleanup = setupDOM(localSelect())
+  try {
+    const tamSelect = new TamSelect(document.querySelector("select"))
+    tamSelect.open()
+
+    keydown(tamSelect.input, "s")
+    assert.equal(tamSelect.visibleItems[tamSelect.activeIndex].item.value, "sn")
+  } finally {
+    cleanup()
+  }
+})
+
+test("type-ahead buffers rapid characters and resets after 500ms", async () => {
+  const cleanup = setupDOM(`
+    <select>
+      <option value="">Select</option>
+      <option value="sidama">Sidama</option>
+      <option value="south">South</option>
+    </select>
+  `)
+  try {
+    const tamSelect = new TamSelect(document.querySelector("select"))
+    tamSelect.open()
+
+    keydown(tamSelect.input, "s")
+    keydown(tamSelect.input, "o")
+    assert.equal(tamSelect.visibleItems[tamSelect.activeIndex].item.value, "south")
+
+    await flush(600)
+    keydown(tamSelect.input, "s")
+    assert.equal(tamSelect.visibleItems[tamSelect.activeIndex].item.value, "sidama")
+  } finally {
+    cleanup()
+  }
+})
+
+// ─── Home/End Navigation ──────────────────────────────────────────────
+
+test("Home and End jump to first and last selectable option", () => {
+  const cleanup = setupDOM(localSelect())
+  try {
+    const tamSelect = new TamSelect(document.querySelector("select"))
+    tamSelect.open()
+
+    keydown(tamSelect.input, "End")
+    assert.equal(tamSelect.visibleItems[tamSelect.activeIndex].item.value, "cf")
+
+    keydown(tamSelect.input, "Home")
+    assert.equal(tamSelect.visibleItems[tamSelect.activeIndex].item.value, "aa")
+  } finally {
+    cleanup()
+  }
+})
+
+test("Home skips disabled options", () => {
+  const cleanup = setupDOM(`
+    <select>
+      <option value="">Select</option>
+      <option value="a" disabled>First</option>
+      <option value="b">Second</option>
+    </select>
+  `)
+  try {
+    const tamSelect = new TamSelect(document.querySelector("select"))
+    tamSelect.open()
+
+    keydown(tamSelect.input, "End")
+    assert.equal(tamSelect.visibleItems[tamSelect.activeIndex].item.value, "b")
+
+    keydown(tamSelect.input, "Home")
+    assert.equal(tamSelect.visibleItems[tamSelect.activeIndex].item.value, "b")
+  } finally {
+    cleanup()
+  }
+})
+
+// ─── Ctrl+A Toggle All ────────────────────────────────────────────────
+
+test("Ctrl+A selects all visible options in multi-select mode", () => {
+  const cleanup = setupDOM(localSelect({ multiple: true }))
+  try {
+    const select = document.querySelector("select")
+    const tamSelect = new TamSelect(select)
+    tamSelect.open()
+
+    keydown(tamSelect.input, "a", { ctrlKey: true })
+    assert.deepEqual(tamSelect.value, ["aa", "or", "sn", "cf"])
+
+    keydown(tamSelect.input, "a", { ctrlKey: true })
+    assert.deepEqual(tamSelect.value, [])
+  } finally {
+    cleanup()
+  }
+})
+
+test("Ctrl+A does not select disabled options", () => {
+  const cleanup = setupDOM(localSelect({ multiple: true }))
+  try {
+    const select = document.querySelector("select")
+    const tamSelect = new TamSelect(select, { searchable: false })
+    tamSelect.open()
+    keydown(tamSelect.trigger, "a", { ctrlKey: true })
+
+    assert.ok(!select.querySelector('option[value="ti"]').selected, "disabled option excluded")
+  } finally {
+    cleanup()
+  }
+})
+
+// ─── Maximum Selection Length ──────────────────────────────────────────
+
+test("maximumSelectionLength prevents selecting beyond the limit", () => {
+  const cleanup = setupDOM(localSelect({ multiple: true }))
+  try {
+    const select = document.querySelector("select")
+    const tamSelect = new TamSelect(select, { maximumSelectionLength: 2 })
+
+    tamSelect.selectValue("aa")
+    tamSelect.selectValue("or")
+    assert.deepEqual(tamSelect.value, ["aa", "or"])
+    assert.ok(tamSelect.selectionLimitReached)
+    assert.ok(tamSelect.input.disabled)
+
+    tamSelect.selectValue("sn")
+    assert.deepEqual(tamSelect.value, ["aa", "or"])
+
+    tamSelect.deselect("aa")
+    assert.equal(tamSelect.selectionLimitReached, false)
+    assert.equal(tamSelect.input.disabled, false)
+  } finally {
+    cleanup()
+  }
+})
+
+// ─── Maximum Input Length ──────────────────────────────────────────────
+
+test("maximumInputLength sets maxlength on the search input", () => {
+  const cleanup = setupDOM(localSelect())
+  try {
+    const tamSelect = new TamSelect(document.querySelector("select"), { maximumInputLength: 10 })
+    assert.equal(tamSelect.input.maxLength, 10)
+  } finally {
+    cleanup()
+  }
+})
+
+// ─── Minimum Results for Search ───────────────────────────────────────
+
+test("minimumResultsForSearch hides search icon when few options exist", () => {
+  const cleanup = setupDOM(localSelect())
+  try {
+    const tamSelect = new TamSelect(document.querySelector("select"), { minimumResultsForSearch: 10 })
+    assert.equal(tamSelect.searchVisible, false)
+
+    tamSelect.open()
+    assert.ok(tamSelect.searchIcon.classList.contains("hidden"), "search icon hidden when few options")
+  } finally {
+    cleanup()
+  }
+})
+
+// ─── Select on Close ──────────────────────────────────────────────────
+
+test("selectOnClose selects the active option when dropdown closes", async () => {
+  const cleanup = setupDOM(localSelect())
+  try {
+    const select = document.querySelector("select")
+    const tamSelect = new TamSelect(select, { selectOnClose: true })
+    tamSelect.open()
+
+    keydown(tamSelect.input, "ArrowDown")
+    assert.equal(tamSelect.visibleItems[tamSelect.activeIndex].item.value, "or")
+
+    keydown(tamSelect.input, "Escape")
+    assert.equal(select.value, "or")
+    assert.equal(tamSelect.opened, false)
+    await flush()
+  } finally {
+    cleanup()
+  }
+})
+
+test("selectOnClose is off by default", async () => {
+  const cleanup = setupDOM(localSelect())
+  try {
+    const select = document.querySelector("select")
+    const tamSelect = new TamSelect(select)
+    tamSelect.open()
+
+    keydown(tamSelect.input, "ArrowDown")
+    keydown(tamSelect.input, "Escape")
+    await flush()
+    assert.equal(select.value, "")
+  } finally {
+    cleanup()
+  }
+})
+
+// ─── Token Separators ─────────────────────────────────────────────────
+
+test("tokenSeparators splits typed input into tags in multi-select", () => {
+  const cleanup = setupDOM(localSelect({ multiple: true }))
+  try {
+    const select = document.querySelector("select")
+    const tamSelect = new TamSelect(select, { creatable: true, tokenSeparators: [","] })
+
+    tamSelect.input.value = "New One,New Two"
+    tamSelect.input.dispatchEvent(new Event("input", { bubbles: true }))
+
+    assert.ok(select.querySelector('option[value="New One"]'), "first token created")
+    assert.ok(select.querySelector('option[value="New Two"]'), "second token created")
+    assert.equal(tamSelect.input.value, "")
+  } finally {
+    cleanup()
+  }
+})
+
+// ─── Sorter ───────────────────────────────────────────────────────────
+
+test("sorter applies custom sort to filtered results", () => {
+  const cleanup = setupDOM(`
+    <select>
+      <option value="">Select</option>
+      <option value="aa">Alpha</option>
+      <option value="bb">Beta</option>
+      <option value="cc">Charlie</option>
+    </select>
+  `)
+  try {
+    const tamSelect = new TamSelect(document.querySelector("select"), {
+      sortByRelevance: false,
+      sorter: items => [...items].reverse()
+    })
+    tamSelect.open()
+    input(tamSelect.input, "a")
+    const values = tamSelect.visibleItems.map(e => e.item?.value)
+    assert.deepEqual(values, ["cc", "bb", "aa"])
+  } finally {
+    cleanup()
+  }
+})
+
+// ─── Width ────────────────────────────────────────────────────────────
+
+test("width option sets wrapper inline style", () => {
+  const cleanup = setupDOM(localSelect())
+  try {
+    const tamSelect = new TamSelect(document.querySelector("select"), { width: "300px" })
+    assert.equal(tamSelect.wrapper.style.width, "300px")
+  } finally {
+    cleanup()
+  }
+})
+
+test("width resolve does not set inline style", () => {
+  const cleanup = setupDOM(localSelect())
+  try {
+    const tamSelect = new TamSelect(document.querySelector("select"), { width: "resolve" })
+    assert.equal(tamSelect.wrapper.style.width, "")
+  } finally {
+    cleanup()
+  }
+})
+
+// ─── Focus/Blur API ───────────────────────────────────────────────────
+
+test("focus and blur control the focus target", () => {
+  const cleanup = setupDOM(localSelect())
+  try {
+    const tamSelect = new TamSelect(document.querySelector("select"))
+    tamSelect.focus()
+    assert.equal(document.activeElement, tamSelect.input)
+
+    tamSelect.blur()
+    assert.notEqual(document.activeElement, tamSelect.input)
+  } finally {
+    cleanup()
+  }
+})
+
+test("focus does nothing when select is disabled", () => {
+  const cleanup = setupDOM(localSelect())
+  try {
+    const select = document.querySelector("select")
+    select.disabled = true
+    const tamSelect = new TamSelect(select)
+    tamSelect.focus()
+    assert.notEqual(document.activeElement, tamSelect.input)
+  } finally {
+    cleanup()
+  }
+})
+
+// ─── addData / removeData ─────────────────────────────────────────────
+
+test("addData adds options and removeData removes them", () => {
+  const cleanup = setupDOM(localSelect())
+  try {
+    const select = document.querySelector("select")
+    const tamSelect = new TamSelect(select)
+    let adds = 0
+    let removes = 0
+    select.addEventListener("tam-select:data:add", () => { adds += 1 })
+    select.addEventListener("tam-select:data:remove", () => { removes += 1 })
+
+    tamSelect.addData({ value: "nw", label: "New Place" })
+    assert.equal(select.querySelector("option[value=\"nw\"]").textContent, "New Place")
+    assert.ok(tamSelect.items.some(i => i.value === "nw"))
+    assert.equal(adds, 1)
+
+    tamSelect.removeData("nw")
+    assert.equal(select.querySelector("option[value=\"nw\"]"), null)
+    assert.equal(tamSelect.items.some(i => i.value === "nw"), false)
+    assert.equal(removes, 1)
+  } finally {
+    cleanup()
+  }
+})
+
+test("addData accepts an array of items", () => {
+  const cleanup = setupDOM(localSelect())
+  try {
+    const tamSelect = new TamSelect(document.querySelector("select"))
+
+    tamSelect.addData([
+      { value: "x1", label: "X One" },
+      { value: "x2", label: "X Two" }
+    ])
+    assert.ok(tamSelect.items.some(i => i.value === "x1"))
+    assert.ok(tamSelect.items.some(i => i.value === "x2"))
+  } finally {
+    cleanup()
+  }
+})
+
+// ─── Custom Empty and Loading States ──────────────────────────────────
+
+test("emptyState renders custom content when no options exist", () => {
+  const cleanup = setupDOM(localSelect())
+  try {
+    const tamSelect = new TamSelect(document.querySelector("select"), {
+      emptyState: "Nothing here"
+    })
+    tamSelect.open()
+    input(tamSelect.input, "zzzzzzz")
+
+    assert.match(tamSelect.dropdown.textContent, /Nothing here/)
+  } finally {
+    cleanup()
+  }
+})
+
+test("emptyState accepts a function for custom rendering", () => {
+  const cleanup = setupDOM(localSelect())
+  try {
+    const tamSelect = new TamSelect(document.querySelector("select"), {
+      emptyState: (el) => { el.innerHTML = "<strong>Custom</strong>" }
+    })
+    tamSelect.open()
+    input(tamSelect.input, "zzzzzzz")
+
+    assert.ok(tamSelect.dropdown.querySelector("strong"))
+  } finally {
+    cleanup()
+  }
+})
+
+// ─── Lazy Load Images ─────────────────────────────────────────────────
+
+test("lazyLoadImages creates images with data-lazy-src instead of src", () => {
+  const cleanup = setupDOM(`
+    <select>
+      <option value="">Select</option>
+      <option value="a" data-image="/a.jpg">A</option>
+    </select>
+  `)
+  try {
+    const tamSelect = new TamSelect(document.querySelector("select"), { lazyLoadImages: true })
+    tamSelect.open()
+
+    const img = tamSelect.dropdown.querySelector("img")
+    assert.equal(img.dataset.lazySrc, "/a.jpg")
+    assert.equal(img.src, "")
+  } finally {
+    cleanup()
+  }
+})
+
+test("without lazyLoadImages, images load immediately", () => {
+  const cleanup = setupDOM(`
+    <select>
+      <option value="">Select</option>
+      <option value="a" data-image="/a.jpg">A</option>
+    </select>
+  `)
+  try {
+    const tamSelect = new TamSelect(document.querySelector("select"), { lazyLoadImages: false })
+    tamSelect.open()
+
+    const img = tamSelect.dropdown.querySelector("img")
+    assert.ok(img.src.includes("/a.jpg"))
+  } finally {
+    cleanup()
+  }
+})
+
+// ─── Long Value Truncation ────────────────────────────────────────────
+
+test("single-select truncates long selected value with ellipsis", () => {
+  const cleanup = setupDOM(`
+    <select>
+      <option value="">Select</option>
+      <option value="long" selected>This is an extremely long option label that should definitely be truncated with ellipsis instead of overflowing the container</option>
+    </select>
+  `)
+  try {
+    const tamSelect = new TamSelect(document.querySelector("select"))
+    const label = tamSelect.values.querySelector("span.truncate")
+    assert.ok(label, "truncated label exists")
+    assert.equal(label.textContent, "This is an extremely long option label that should definitely be truncated with ellipsis instead of overflowing the container")
+    assert.ok(tamSelect.control.classList.contains("overflow-hidden"), "control has overflow-hidden")
+  } finally {
+    cleanup()
+  }
+})
+
+test("multi-select tags truncate long labels", () => {
+  const cleanup = setupDOM(`
+    <select multiple>
+      <option value="">Select</option>
+      <option value="a" selected>Short</option>
+      <option value="b" selected>This is a very long tag label that should be truncated inside the pill</option>
+    </select>
+  `)
+  try {
+    const tamSelect = new TamSelect(document.querySelector("select"))
+    const tags = tamSelect.values.querySelectorAll("span")
+    const tagLabels = Array.from(tags).filter(el => el.classList.contains("truncate"))
+    assert.equal(tagLabels.length, 2)
+    assert.equal(tagLabels[0].textContent, "Short")
+    assert.equal(tagLabels[1].textContent, "This is a very long tag label that should be truncated inside the pill")
+    assert.ok(tamSelect.control.classList.contains("overflow-hidden"), "control clips overflow")
+  } finally {
+    cleanup()
+  }
+})
+
+test("placeholder truncates when control is narrow", () => {
+  const cleanup = setupDOM(localSelect({ extra: 'style="width: 120px"' }))
+  try {
+    const tamSelect = new TamSelect(document.querySelector("select"), { width: "120px" })
+    const placeholder = tamSelect.values.querySelector("span")
+    assert.ok(placeholder, "placeholder exists")
+    assert.ok(placeholder.classList.contains("truncate"), "placeholder has truncate class")
+    assert.equal(placeholder.textContent, "Select a region")
+  } finally {
+    cleanup()
+  }
+})
+
+test("dropdown options truncate long labels", () => {
+  const cleanup = setupDOM(`
+    <select>
+      <option value="">Select</option>
+      <option value="long">This is an extremely long option label that extends far beyond the normal width of a dropdown menu</option>
+    </select>
+  `)
+  try {
+    const tamSelect = new TamSelect(document.querySelector("select"))
+    tamSelect.open()
+    const label = tamSelect.dropdown.querySelector("span.truncate")
+    assert.ok(label, "option label has truncate class")
+    assert.equal(label.style.overflow, "hidden")
+    assert.equal(label.style.textOverflow, "ellipsis")
+    assert.equal(label.style.whiteSpace, "nowrap")
+  } finally {
+    cleanup()
+  }
+})
+
+test("long selected value with detail truncates both lines", () => {
+  const cleanup = setupDOM(`
+    <select>
+      <option value="">Select</option>
+      <option value="long" selected data-detail="This is also a very long detail line that should truncate independently from the label">Extremely long label that needs truncation</option>
+    </select>
+  `)
+  try {
+    const tamSelect = new TamSelect(document.querySelector("select"))
+    const spans = tamSelect.values.querySelectorAll("span.truncate")
+    assert.equal(spans.length, 2, "both label and detail are truncated")
+    assert.equal(spans[0].textContent, "Extremely long label that needs truncation")
+    assert.equal(spans[1].textContent, "This is also a very long detail line that should truncate independently from the label")
+  } finally {
+    cleanup()
+  }
+})
+
+test("control does not grow beyond wrapper width with long values", () => {
+  const cleanup = setupDOM(`
+    <div style="width: 200px">
+      <select>
+        <option value="">Select</option>
+        <option value="long" selected>ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ</option>
+      </select>
+    </div>
+  `)
+  try {
+    const tamSelect = new TamSelect(document.querySelector("select"))
+    assert.ok(tamSelect.control.classList.contains("overflow-hidden"))
+    assert.equal(tamSelect.wrapper.style.width, "")
+    const content = tamSelect.values.querySelector("span")
+    assert.ok(content, "content element exists")
+  } finally {
+    cleanup()
+  }
+})
+
+test("input does not overflow when visible alongside long selected value", () => {
+  const cleanup = setupDOM(`
+    <select multiple>
+      <option value="">Select</option>
+      <option value="a" selected>Short tag</option>
+    </select>
+  `)
+  try {
+    const tamSelect = new TamSelect(document.querySelector("select"))
+    assert.ok(tamSelect.control.classList.contains("overflow-hidden"))
+    assert.equal(tamSelect.input.classList.contains("shrink"), true, "input has shrink class")
+    assert.equal(tamSelect.input.classList.contains("basis-0"), true, "input has basis-0 class")
+  } finally {
+    cleanup()
+  }
+})
+
+// ─── Virtual Scrolling ────────────────────────────────────────────────
+
+test("virtualScroll renders only visible items with spacers for large lists", () => {
+  const options = Array.from({ length: 200 }, (_, i) => `<option value="${i}">Item ${i}</option>`).join("")
+  const cleanup = setupDOM(`<select><option value="">Select</option>${options}</select>`)
+  try {
+    const tamSelect = new TamSelect(document.querySelector("select"), { virtualScroll: true, virtualScrollThreshold: 5 })
+    tamSelect.open()
+
+    assert.ok(tamSelect.isVirtualScroll, "virtual scroll is active")
+    const optionElements = tamSelect.dropdown.querySelectorAll("[role=\"option\"]")
+    assert.ok(optionElements.length < 200, `only ${optionElements.length} options rendered, not all 200`)
+    assert.ok(optionElements.length > 0, "some options are rendered")
+
+    const bottomSpacer = tamSelect.dropdown.querySelector("[data-virtual-spacer=\"bottom\"]")
+    assert.ok(bottomSpacer, "bottom spacer exists")
+    assert.ok(parseInt(bottomSpacer.style.height) > 0, "bottom spacer has height")
+  } finally {
+    cleanup()
+  }
+})
+
+test("virtualScroll auto-enables when item count exceeds threshold", () => {
+  const options = Array.from({ length: 50 }, (_, i) => `<option value="${i}">Item ${i}</option>`).join("")
+  const cleanup = setupDOM(`<select><option value="">Select</option>${options}</select>`)
+  try {
+    const tamSelect = new TamSelect(document.querySelector("select"), { virtualScrollThreshold: 10 })
+    tamSelect.open()
+
+    assert.ok(tamSelect.isVirtualScroll, "virtual scroll auto-enabled")
+    const optionElements = tamSelect.dropdown.querySelectorAll("[role=\"option\"]")
+    assert.ok(optionElements.length < 50, `only ${optionElements.length} options rendered`)
+  } finally {
+    cleanup()
+  }
+})
+
+test("virtualScroll does not activate for small lists", () => {
+  const cleanup = setupDOM(localSelect())
+  try {
+    const tamSelect = new TamSelect(document.querySelector("select"), { virtualScrollThreshold: 100 })
+    tamSelect.open()
+
+    assert.equal(tamSelect.isVirtualScroll, false, "virtual scroll not active for small list")
+    const optionElements = tamSelect.dropdown.querySelectorAll("[role=\"option\"]")
+    assert.equal(optionElements.length, 5, "all options rendered")
+  } finally {
+    cleanup()
+  }
+})
+
+test("virtualScroll resets when dropdown closes", () => {
+  const options = Array.from({ length: 200 }, (_, i) => `<option value="${i}">Item ${i}</option>`).join("")
+  const cleanup = setupDOM(`<select><option value="">Select</option>${options}</select>`)
+  try {
+    const tamSelect = new TamSelect(document.querySelector("select"), { virtualScroll: true, virtualScrollThreshold: 5 })
+    tamSelect.open()
+    assert.ok(tamSelect.isVirtualScroll)
+
+    tamSelect.close()
+    assert.equal(tamSelect.isVirtualScroll, false, "virtual scroll reset on close")
+  } finally {
+    cleanup()
+  }
+})
+
+test("virtualScroll keyboard navigation works with large lists", () => {
+  const options = Array.from({ length: 200 }, (_, i) => `<option value="${i}">Item ${i}</option>`).join("")
+  const cleanup = setupDOM(`<select><option value="">Select</option>${options}</select>`)
+  try {
+    const tamSelect = new TamSelect(document.querySelector("select"), { virtualScroll: true, virtualScrollThreshold: 5 })
+
+    keydown(tamSelect.input, "ArrowDown")
+    assert.equal(tamSelect.visibleItems[tamSelect.activeIndex].item.value, "0")
+
+    keydown(tamSelect.input, "ArrowDown")
+    assert.equal(tamSelect.visibleItems[tamSelect.activeIndex].item.value, "1")
+
+    keydown(tamSelect.input, "End")
+    assert.equal(tamSelect.visibleItems[tamSelect.activeIndex].item.value, "199")
+
+    keydown(tamSelect.input, "Home")
+    assert.equal(tamSelect.visibleItems[tamSelect.activeIndex].item.value, "0")
+  } finally {
+    cleanup()
+  }
+})
+
+test("virtualScroll search filters and re-enables virtual rendering", () => {
+  const options = Array.from({ length: 200 }, (_, i) => `<option value="item${i}">Item ${i}</option>`).join("")
+  const cleanup = setupDOM(`<select><option value="">Select</option>${options}</select>`)
+  try {
+    const tamSelect = new TamSelect(document.querySelector("select"), { virtualScroll: true, virtualScrollThreshold: 5 })
+    tamSelect.open()
+    assert.ok(tamSelect.isVirtualScroll)
+
+    input(tamSelect.input, "item1")
+    const filtered = tamSelect.dropdown.querySelectorAll("[role=\"option\"]")
+    assert.ok(filtered.length > 0, "filtered options rendered")
+    assert.ok(filtered.length < 200, `only ${filtered.length} options after filter`)
+  } finally {
+    cleanup()
+  }
+})
+
+// ─── RTL Support ─────────────────────────────────────────────────────
+
+test("dir option sets wrapper dir attribute", () => {
+  const cleanup = setupDOM(localSelect())
+  try {
+    const tamSelect = new TamSelect(document.querySelector("select"), { dir: "rtl" })
+    assert.equal(tamSelect.wrapper.getAttribute("dir"), "rtl")
+    assert.equal(tamSelect.dir, "rtl")
+  } finally {
+    cleanup()
+  }
+})
+
+test("dir auto-detects from document element", () => {
+  const cleanup = setupDOM(localSelect())
+  try {
+    document.documentElement.setAttribute("dir", "rtl")
+    const tamSelect = new TamSelect(document.querySelector("select"))
+    assert.equal(tamSelect.dir, "rtl")
+    assert.equal(tamSelect.wrapper.getAttribute("dir"), "rtl")
+    document.documentElement.removeAttribute("dir")
+  } finally {
+    cleanup()
+  }
+})
+
+test("dir auto-detects from select element", () => {
+  const cleanup = setupDOM(localSelect({ extra: 'dir="rtl"' }))
+  try {
+    const tamSelect = new TamSelect(document.querySelector("select"))
+    assert.equal(tamSelect.dir, "rtl")
+    assert.equal(tamSelect.wrapper.getAttribute("dir"), "rtl")
+  } finally {
+    cleanup()
+  }
+})
+
+test("dir defaults to ltr when no direction is set", () => {
+  const cleanup = setupDOM(localSelect())
+  try {
+    const tamSelect = new TamSelect(document.querySelector("select"))
+    assert.equal(tamSelect.dir, "ltr")
+    assert.equal(tamSelect.wrapper.getAttribute("dir"), "ltr")
+  } finally {
+    cleanup()
+  }
+})
+
+test("RTL layout uses logical properties for clear and chevron", () => {
+  const cleanup = setupDOM(localSelect())
+  try {
+    const tamSelect = new TamSelect(document.querySelector("select"), { dir: "rtl" })
+    assert.ok(tamSelect.clearButton.classList.contains("ms-auto"), "clear has ms-auto")
+    assert.ok(tamSelect.chevron.classList.contains("ms-auto"), "chevron has ms-auto")
+    assert.ok(tamSelect.input.classList.contains("text-start"), "input has text-start")
+  } finally {
+    cleanup()
+  }
+})
+
+test("RTL single select works with keyboard navigation", () => {
+  const cleanup = setupDOM(localSelect({ extra: 'dir="rtl"' }))
+  try {
+    const select = document.querySelector("select")
+    const tamSelect = new TamSelect(select, { dir: "rtl" })
+
+    keydown(tamSelect.input, "ArrowDown")
+    assert.equal(tamSelect.opened, true)
+    assert.equal(tamSelect.visibleItems[tamSelect.activeIndex].item.value, "aa")
+
+    keydown(tamSelect.input, "ArrowDown")
+    assert.equal(tamSelect.visibleItems[tamSelect.activeIndex].item.value, "or")
+
+    keydown(tamSelect.input, "Enter")
+    assert.equal(select.value, "or")
+  } finally {
+    cleanup()
+  }
+})
+
+test("RTL multi select works with selection", () => {
+  const cleanup = setupDOM(localSelect({ multiple: true, extra: 'dir="rtl"' }))
+  try {
+    const select = document.querySelector("select")
+    const tamSelect = new TamSelect(select, { dir: "rtl" })
+
+    tamSelect.selectValue("aa")
+    tamSelect.selectValue("or")
+    assert.deepEqual(tamSelect.value, ["aa", "or"])
+
+    tamSelect.clear()
+    assert.deepEqual(tamSelect.value, [])
+  } finally {
+    cleanup()
+  }
+})
+
+// ─── Drag and Drop ───────────────────────────────────────────────────
+
+test("tags are draggable when draggable option is true", () => {
+  const cleanup = setupDOM(localSelect({ multiple: true }))
+  try {
+    const select = document.querySelector("select")
+    select.options[1].selected = true
+    select.options[2].selected = true
+    const tamSelect = new TamSelect(select, { draggable: true })
+
+    const tags = tamSelect.values.querySelectorAll("[data-tag-value]")
+    assert.equal(tags.length, 2)
+    assert.equal(tags[0].getAttribute("draggable"), "true")
+    assert.equal(tags[0].style.cursor, "grab")
+    assert.equal(tags[1].getAttribute("draggable"), "true")
+  } finally {
+    cleanup()
+  }
+})
+
+test("tags are not draggable by default", () => {
+  const cleanup = setupDOM(localSelect({ multiple: true }))
+  try {
+    const select = document.querySelector("select")
+    select.options[1].selected = true
+    const tamSelect = new TamSelect(select)
+
+    const tag = tamSelect.values.querySelector("[data-tag-value]")
+    assert.equal(tag.getAttribute("draggable"), null)
+  } finally {
+    cleanup()
+  }
+})
+
+test("drag and drop reorders selected tags", () => {
+  const cleanup = setupDOM(localSelect({ multiple: true }))
+  try {
+    const select = document.querySelector("select")
+    select.options[1].selected = true
+    select.options[2].selected = true
+    select.options[3].selected = true
+    const tamSelect = new TamSelect(select, { draggable: true })
+
+    assert.deepEqual(tamSelect.value, ["aa", "or", "ti"])
+
+    const tags = Array.from(tamSelect.values.querySelectorAll("[data-tag-value]"))
+    const sourceTag = tags[0]
+    const targetTag = tags[2]
+
+    let reorderFired = false
+    select.addEventListener("tam-select:reorder", () => { reorderFired = true })
+
+    const dragStartEvent = new Event("dragstart", { bubbles: true, cancelable: true })
+    dragStartEvent.dataTransfer = { effectAllowed: "", setData: () => {}, getData: () => "aa" }
+    sourceTag.dispatchEvent(dragStartEvent)
+
+    const dropEvent = new Event("drop", { bubbles: true, cancelable: true })
+    dropEvent.preventDefault = () => {}
+    dropEvent.dataTransfer = { getData: () => "aa" }
+    targetTag.dispatchEvent(dropEvent)
+
+    assert.ok(reorderFired, "tam-select:reorder event dispatched")
+  } finally {
+    cleanup()
+  }
+})
+
+test("dragging same tag to same position is a no-op", () => {
+  const cleanup = setupDOM(localSelect({ multiple: true }))
+  try {
+    const select = document.querySelector("select")
+    select.options[1].selected = true
+    select.options[2].selected = true
+    const tamSelect = new TamSelect(select, { draggable: true })
+
+    tamSelect.draggedItem = tamSelect.items.find(i => i.value === "aa")
+
+    let reorderFired = false
+    select.addEventListener("tam-select:reorder", () => { reorderFired = true })
+
+    const targetItem = tamSelect.items.find(i => i.value === "aa")
+    const dropEvent = new Event("drop", { bubbles: true, cancelable: true })
+    dropEvent.preventDefault = () => {}
+    dropEvent.dataTransfer = { getData: () => "aa" }
+    tamSelect.onTagDrop(dropEvent, targetItem)
+
+    assert.equal(reorderFired, false, "no reorder for same target")
+  } finally {
+    cleanup()
+  }
+})
+
+test("drag and drop does not work on disabled select", () => {
+  const cleanup = setupDOM(localSelect({ multiple: true }))
+  try {
+    const select = document.querySelector("select")
+    select.disabled = true
+    select.options[1].selected = true
+    const tamSelect = new TamSelect(select, { draggable: true })
+
+    const tag = tamSelect.values.querySelector("[data-tag-value]")
+    assert.equal(tag.getAttribute("draggable"), null, "disabled select tags not draggable")
+  } finally {
+    cleanup()
+  }
+})
+
+// ─── Animation Configuration ───
+
+test("animationDuration sets CSS custom property on dropdown", () => {
+  const cleanup = setupDOM(localSelect())
+  try {
+    const select = document.querySelector("select")
+    const tamSelect = new TamSelect(select, { animationDuration: 300 })
+
+    assert.equal(tamSelect.options.animationDuration, 300)
+    assert.equal(tamSelect.dropdown.style.getPropertyValue("--tam-duration"), "300ms")
+  } finally {
+    cleanup()
+  }
+})
+
+test("animationDuration default is 150ms", () => {
+  const cleanup = setupDOM(localSelect())
+  try {
+    const select = document.querySelector("select")
+    const tamSelect = new TamSelect(select)
+
+    assert.equal(tamSelect.options.animationDuration, 150)
+    assert.equal(tamSelect.dropdown.style.getPropertyValue("--tam-duration"), "150ms")
+  } finally {
+    cleanup()
+  }
+})
+
+test("animationEasing sets CSS custom property on dropdown", () => {
+  const cleanup = setupDOM(localSelect())
+  try {
+    const select = document.querySelector("select")
+    const tamSelect = new TamSelect(select, { animationEasing: "cubic-bezier(0.4, 0, 0.2, 1)" })
+
+    assert.equal(tamSelect.options.animationEasing, "cubic-bezier(0.4, 0, 0.2, 1)")
+    assert.equal(tamSelect.dropdown.style.getPropertyValue("--tam-easing"), "cubic-bezier(0.4, 0, 0.2, 1)")
+  } finally {
+    cleanup()
+  }
+})
+
+test("animationEasing default is ease-out", () => {
+  const cleanup = setupDOM(localSelect())
+  try {
+    const select = document.querySelector("select")
+    const tamSelect = new TamSelect(select)
+
+    assert.equal(tamSelect.options.animationEasing, "ease-out")
+    assert.equal(tamSelect.dropdown.style.getPropertyValue("--tam-easing"), "ease-out")
+  } finally {
+    cleanup()
+  }
+})
+
+test("animations: false disables animation classes and custom properties", () => {
+  const cleanup = setupDOM(localSelect())
+  try {
+    const select = document.querySelector("select")
+    const tamSelect = new TamSelect(select, { animations: false, animationDuration: 300 })
+
+    assert.equal(tamSelect.dropdown.style.getPropertyValue("--tam-duration"), "")
+    assert.equal(tamSelect.dropdown.style.getPropertyValue("--tam-easing"), "")
+  } finally {
+    cleanup()
+  }
+})
+
+test("custom animation duration affects close timer", () => {
+  const cleanup = setupDOM(localSelect())
+  try {
+    const select = document.querySelector("select")
+    const tamSelect = new TamSelect(select, { animationDuration: 500 })
+
+    tamSelect.open()
+    assert.equal(tamSelect.opened, true)
+
+    // Close triggers timer = animationDuration + 50 = 550ms
+    const start = Date.now()
+    tamSelect.close()
+    assert.equal(tamSelect.opened, false)
+  } finally {
+    cleanup()
+  }
+})
+
+// ─── Animation Presets ───
+
+test("animationPreset 'material' sets duration and easing", () => {
+  const cleanup = setupDOM(localSelect())
+  try {
+    const select = document.querySelector("select")
+    const tamSelect = new TamSelect(select, { animationPreset: "material" })
+
+    assert.equal(tamSelect.options.animationDuration, 250)
+    assert.equal(tamSelect.options.animationEasing, "cubic-bezier(0.4, 0, 0.2, 1)")
+    assert.equal(tamSelect.dropdown.style.getPropertyValue("--tam-duration"), "250ms")
+    assert.equal(tamSelect.dropdown.style.getPropertyValue("--tam-easing"), "cubic-bezier(0.4, 0, 0.2, 1)")
+  } finally {
+    cleanup()
+  }
+})
+
+test("animationPreset 'spring' sets duration and easing", () => {
+  const cleanup = setupDOM(localSelect())
+  try {
+    const select = document.querySelector("select")
+    const tamSelect = new TamSelect(select, { animationPreset: "spring" })
+
+    assert.equal(tamSelect.options.animationDuration, 400)
+    assert.equal(tamSelect.options.animationEasing, "cubic-bezier(0.34, 1.56, 0.64, 1)")
+    assert.equal(tamSelect.dropdown.style.getPropertyValue("--tam-duration"), "400ms")
+  } finally {
+    cleanup()
+  }
+})
+
+test("animationPreset 'snappy' sets short duration and ease-in", () => {
+  const cleanup = setupDOM(localSelect())
+  try {
+    const select = document.querySelector("select")
+    const tamSelect = new TamSelect(select, { animationPreset: "snappy" })
+
+    assert.equal(tamSelect.options.animationDuration, 100)
+    assert.equal(tamSelect.options.animationEasing, "ease-in")
+  } finally {
+    cleanup()
+  }
+})
+
+test("animationPreset 'smooth' sets long duration and cubic ease", () => {
+  const cleanup = setupDOM(localSelect())
+  try {
+    const select = document.querySelector("select")
+    const tamSelect = new TamSelect(select, { animationPreset: "smooth" })
+
+    assert.equal(tamSelect.options.animationDuration, 300)
+    assert.equal(tamSelect.options.animationEasing, "cubic-bezier(0.25, 0.1, 0.25, 1)")
+  } finally {
+    cleanup()
+  }
+})
+
+test("animationPreset 'none' disables animation", () => {
+  const cleanup = setupDOM(localSelect())
+  try {
+    const select = document.querySelector("select")
+    const tamSelect = new TamSelect(select, { animationPreset: "none" })
+
+    assert.equal(tamSelect.options.animationDuration, 0)
+    assert.equal(tamSelect.options.animationEasing, "ease")
+  } finally {
+    cleanup()
+  }
+})
+
+test("animationPreset 'bounce' sets long duration with overshoot easing", () => {
+  const cleanup = setupDOM(localSelect())
+  try {
+    const select = document.querySelector("select")
+    const tamSelect = new TamSelect(select, { animationPreset: "bounce" })
+
+    assert.equal(tamSelect.options.animationDuration, 500)
+    assert.equal(tamSelect.options.animationEasing, "cubic-bezier(0.68, -0.55, 0.27, 1.55)")
+    assert.equal(tamSelect.dropdown.style.getPropertyValue("--tam-duration"), "500ms")
+  } finally {
+    cleanup()
+  }
+})
+
+test("animationPreset 'elastic' sets longest duration with elastic easing", () => {
+  const cleanup = setupDOM(localSelect())
+  try {
+    const select = document.querySelector("select")
+    const tamSelect = new TamSelect(select, { animationPreset: "elastic" })
+
+    assert.equal(tamSelect.options.animationDuration, 600)
+    assert.equal(tamSelect.options.animationEasing, "cubic-bezier(0.68, -0.6, 0.32, 1.6)")
+    assert.equal(tamSelect.dropdown.style.getPropertyValue("--tam-easing"), "cubic-bezier(0.68, -0.6, 0.32, 1.6)")
+  } finally {
+    cleanup()
+  }
+})
+
+test("animationPreset 'fade' sets linear easing for opacity-only transitions", () => {
+  const cleanup = setupDOM(localSelect())
+  try {
+    const select = document.querySelector("select")
+    const tamSelect = new TamSelect(select, { animationPreset: "fade" })
+
+    assert.equal(tamSelect.options.animationDuration, 200)
+    assert.equal(tamSelect.options.animationEasing, "linear")
+  } finally {
+    cleanup()
+  }
+})
+
+test("animationPreset 'pop' sets quick ease-out-back easing", () => {
+  const cleanup = setupDOM(localSelect())
+  try {
+    const select = document.querySelector("select")
+    const tamSelect = new TamSelect(select, { animationPreset: "pop" })
+
+    assert.equal(tamSelect.options.animationDuration, 200)
+    assert.equal(tamSelect.options.animationEasing, "cubic-bezier(0.175, 0.885, 0.32, 1.275)")
+  } finally {
+    cleanup()
+  }
+})
+
+test("animationPreset 'slide' sets deceleration easing for directional transitions", () => {
+  const cleanup = setupDOM(localSelect())
+  try {
+    const select = document.querySelector("select")
+    const tamSelect = new TamSelect(select, { animationPreset: "slide" })
+
+    assert.equal(tamSelect.options.animationDuration, 250)
+    assert.equal(tamSelect.options.animationEasing, "cubic-bezier(0.25, 0.46, 0.45, 0.94)")
+  } finally {
+    cleanup()
+  }
+})
+
+test("animationPreset overrides animationDuration and animationEasing", () => {
+  const cleanup = setupDOM(localSelect())
+  try {
+    const select = document.querySelector("select")
+    const tamSelect = new TamSelect(select, {
+      animationPreset: "material",
+      animationDuration: 999,
+      animationEasing: "linear"
+    })
+
+    // Preset wins over individual values
+    assert.equal(tamSelect.options.animationDuration, 250)
+    assert.equal(tamSelect.options.animationEasing, "cubic-bezier(0.4, 0, 0.2, 1)")
+  } finally {
+    cleanup()
+  }
+})
+
+test("null animationPreset uses individual duration and easing", () => {
+  const cleanup = setupDOM(localSelect())
+  try {
+    const select = document.querySelector("select")
+    const tamSelect = new TamSelect(select, {
+      animationPreset: null,
+      animationDuration: 350,
+      animationEasing: "linear"
+    })
+
+    assert.equal(tamSelect.options.animationDuration, 350)
+    assert.equal(tamSelect.options.animationEasing, "linear")
+    assert.equal(tamSelect.dropdown.style.getPropertyValue("--tam-duration"), "350ms")
+    assert.equal(tamSelect.dropdown.style.getPropertyValue("--tam-easing"), "linear")
   } finally {
     cleanup()
   }
