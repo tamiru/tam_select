@@ -12,12 +12,13 @@ Gem::Specification.new do |spec|
 
   spec.metadata = {
     "source_code_uri" => spec.homepage,
-    "changelog_uri" => "#{spec.homepage}/releases",
+    "changelog_uri" => "#{spec.homepage}/blob/main/CHANGELOG.md",
+    "allowed_push_host" => "https://rubygems.org",
     "rubygems_mfa_required" => "true"
   }
 
   spec.files = Dir.chdir(__dir__) do
-    Dir["{lib,rails,src,examples}/**/*", "LICENSE", "README.md", "Rakefile", "package.json"]
+    Dir["{lib,rails,src,examples}/**/*", "CHANGELOG.md", "LICENSE", "README.md", "Rakefile", "package.json"]
   end
   spec.require_paths = ["lib"]
 

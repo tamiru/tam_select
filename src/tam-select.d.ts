@@ -29,6 +29,34 @@ export interface TamSelectPagination {
   [key: string]: unknown
 }
 
+export interface TamSelectTemplateContext {
+  tamSelect: TamSelect
+  context: "result" | "selection"
+}
+
+export interface TamSelectTransportOptions {
+  url: URL
+  query: string
+  page: number
+  headers: Record<string, string>
+  signal: AbortSignal
+  tamSelect: TamSelect
+}
+
+export interface TamSelectLanguage {
+  placeholder?: string
+  searchPlaceholder?: string
+  noResults?: string
+  create?: string | ((query: string) => string)
+  loading?: string
+  loadMore?: string
+  inputTooShort?: string | ((remaining: number) => string)
+  results?: string | ((count: number) => string)
+  clear?: string
+  remove?: string | ((item: TamSelectItem) => string)
+  selectionLimit?: string | ((limit: number) => string)
+}
+
 export interface TamSelectOptions {
   /** Enable text filtering. Default: `true` */
   searchable?: boolean
@@ -72,6 +100,8 @@ export interface TamSelectOptions {
   searchFields?: string[]
   /** Function or text for result count announcement. Default: `(count) => ...` */
   resultsText?: string | ((count: number) => string)
+  /** Localized labels and messages. Explicit top-level text options take precedence. */
+  language?: TamSelectLanguage
   /** Key for value in remote items. Default: `"value"` */
   valueField?: string
   /** Key for label in remote items. Default: `"label"` */
@@ -118,6 +148,20 @@ export interface TamSelectOptions {
   tokenSeparators?: string[]
   /** Custom sort function for filtered results. Default: `null` */
   sorter?: ((items: TamSelectItem[]) => TamSelectItem[]) | null
+  /** Render a result. Return a Node for trusted markup or text for escaped output. */
+  templateResult?: ((item: TamSelectItem, context: TamSelectTemplateContext) => Node | string | null | false) | null
+  /** Render a selected value. Return a Node for trusted markup or text for escaped output. */
+  templateSelection?: ((item: TamSelectItem, context: TamSelectTemplateContext) => Node | string | null | false) | null
+  /** Custom remote transport. It may return JSON or a Response-like object. */
+  transport?: ((options: TamSelectTransportOptions) => unknown | Promise<unknown>) | null
+  /** Transform remote JSON before configured paths are read. */
+  processResults?: ((data: unknown, context: { query: string; page: number; tamSelect: TamSelect }) => unknown | Promise<unknown>) | null
+  /** Extra remote query parameters or a function that returns them. */
+  remoteParams?: Record<string, unknown> | ((context: { query: string; page: number; tamSelect: TamSelect }) => Record<string, unknown>)
+  /** Cache remote responses by final URL. Default: `false` */
+  cacheRemote?: boolean
+  /** Element or selector used to portal the dropdown beyond clipping containers. */
+  dropdownParent?: Element | string | null
   /** Container width (CSS value or `"resolve"` for auto). Default: `"resolve"` */
   width?: string
   /** Text direction: `"ltr"`, `"rtl"`, or `"auto"`. Default: `"auto"` */
@@ -228,7 +272,7 @@ declare class TamSelect {
   /** Remove focus */
   blur(): void
   /** Set the selected value(s) */
-  setValue(value: string | string | null): void
+  setValue(value: string | string[] | null): void
   /** Clear all selections */
   clear(): void
   /** Re-read native options and re-render */
@@ -237,6 +281,8 @@ declare class TamSelect {
   addData(raw: Record<string, unknown> | Record<string, unknown>[]): void
   /** Remove options by value */
   removeData(values: string | string[]): void
+  /** Clear cached remote responses */
+  clearRemoteCache(): void
   /** Select a value programmatically */
   selectValue(value: string): void
   /** Deselect a value */

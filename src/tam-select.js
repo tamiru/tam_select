@@ -76,6 +76,45 @@ const THEME_CLASSES = {
     error: "px-3 py-3 text-sm text-error",
     tagDragging: "opacity-50 ring-2 ring-primary",
     tagDragOver: "border-l-2 border-l-primary"
+  },
+  select2: {
+    wrapper: "tam-select relative w-full text-sm text-gray-700",
+    control: "relative flex min-h-7 w-full cursor-text flex-wrap items-center gap-1 overflow-hidden rounded border border-gray-400 bg-white px-1 py-0.5 text-sm text-gray-700 transition duration-150 hover:border-gray-500 focus-within:border-gray-600 focus-within:ring-1 focus-within:ring-gray-300",
+    controlMultiple: "min-h-8 h-auto flex-wrap py-1",
+    controlOpen: "border-gray-600",
+    controlInvalid: "border-red-500",
+    controlDisabled: "cursor-not-allowed bg-gray-100 opacity-60",
+    input: "min-w-20 flex-1 shrink basis-0 border-0 bg-transparent p-0 text-start text-sm text-gray-700 outline-none placeholder:text-gray-400 focus:ring-0",
+    inputClosed: "absolute inset-0 z-0 h-full w-full cursor-pointer border-0 opacity-0",
+    trigger: "absolute inset-0 z-0 h-full w-full cursor-pointer rounded border-0 bg-transparent p-0 focus:outline-none disabled:cursor-not-allowed",
+    searchIcon: "size-4 shrink-0 text-gray-400",
+    placeholder: "pointer-events-none shrink truncate text-gray-400",
+    tag: "relative z-10 inline-flex max-w-full shrink-0 items-center gap-1 rounded border border-gray-400 bg-gray-200 px-1.5 py-0.5 text-xs text-gray-700",
+    tagRemove: "ms-0.5 shrink-0 rounded-none border-r border-gray-400 px-1 text-gray-500 hover:bg-gray-300 hover:text-gray-700 focus:outline-none focus:ring-1 focus:ring-gray-400",
+    clear: "relative z-20 ms-auto shrink-0 rounded p-0.5 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 focus:outline-none focus:ring-1 focus:ring-gray-400",
+    chevron: "pointer-events-none relative z-10 ms-auto size-4 shrink-0 text-gray-500 transition-transform",
+    dropdown: "absolute z-50 mt-0 max-h-52 w-full overflow-auto rounded border border-gray-400 bg-white p-0",
+    dropdownAnimation: "origin-top-center",
+    dropdownClosed: "mt-0 max-h-52 w-full scale-y-95 opacity-0 pointer-events-none",
+    dropdownOpen: "scale-y-100 opacity-100 pointer-events-auto",
+    groupHeader: "px-2 pt-2 pb-1 text-xs font-bold text-gray-600 select-none",
+    option: "flex min-h-7 cursor-pointer items-center justify-between gap-2 rounded-none px-2 py-1 text-sm text-gray-700 outline-none transition-colors duration-75 hover:bg-blue-500 hover:text-white",
+    optionContent: "flex min-w-0 flex-1 items-center gap-2",
+    optionText: "flex min-w-0 flex-1 flex-col",
+    optionLabel: "font-normal",
+    optionDetail: "text-xs font-normal text-gray-500",
+    optionImage: "size-7 shrink-0 rounded bg-gray-100 object-cover",
+    optionMeta: "shrink-0 rounded bg-gray-200 px-1 py-0.5 text-xs font-medium text-gray-600",
+    optionActive: "bg-blue-500 text-white [&_*]:text-white",
+    optionSelected: "bg-gray-200 font-medium text-gray-700",
+    optionDisabled: "cursor-not-allowed opacity-50",
+    highlight: "rounded-sm bg-amber-200/80 px-0.5 text-inherit",
+    status: "sr-only",
+    message: "px-2 py-4 text-center text-sm text-gray-500",
+    spinner: "size-4 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600",
+    error: "px-2 py-4 text-center text-sm text-red-600",
+    tagDragging: "opacity-50 ring-2 ring-blue-400",
+    tagDragOver: "border-l-2 border-l-blue-500"
   }
 }
 
@@ -160,6 +199,10 @@ export class TamSelect {
       sortByRelevance: true,
       searchFields: ["label", "detail", "meta"],
       resultsText: count => `${count} result${count === 1 ? "" : "s"} available`,
+      clearLabel: "Clear selection",
+      removeLabel: item => `Remove ${item.label}`,
+      selectionLimitText: limit => `You can select up to ${limit} item${limit === 1 ? "" : "s"}`,
+      language: {},
       valueField: "value",
       labelField: "label",
       imageField: "image",
@@ -188,10 +231,35 @@ export class TamSelect {
       selectOnClose: false,
       tokenSeparators: [],
       sorter: null,
+      templateResult: null,
+      templateSelection: null,
+      transport: null,
+      processResults: null,
+      remoteParams: {},
+      cacheRemote: false,
+      dropdownParent: null,
       width: "resolve",
       dir: "auto",
       ...options
     }
+    const languageOptions = {
+      placeholder: "placeholder",
+      searchPlaceholder: "searchPlaceholder",
+      noResults: "noResultsText",
+      create: "createText",
+      loading: "loadingText",
+      loadMore: "loadMoreText",
+      inputTooShort: "inputTooShortText",
+      results: "resultsText",
+      clear: "clearLabel",
+      remove: "removeLabel",
+      selectionLimit: "selectionLimitText"
+    }
+    Object.entries(languageOptions).forEach(([languageKey, optionKey]) => {
+      if (hasOwn(this.options.language, languageKey) && !hasOwn(options, optionKey)) {
+        this.options[optionKey] = this.options.language[languageKey]
+      }
+    })
     this.dir = this.options.dir === "auto" ? this.detectDirection() : this.options.dir
     const inferredTheme = ["input", "select"].some(className => select.classList.contains(className)) ? "daisyui" : "default"
     this.theme = this.options.theme === "auto" ? inferredTheme : this.options.theme
@@ -230,6 +298,9 @@ export class TamSelect {
     this.isVirtualScroll = false
     this.virtualStartIndex = 0
     this.onVirtualScroll = null
+    this.remoteCache = new Map()
+    this.destroyed = false
+    this.refreshQueued = false
     this.build()
     this.bind()
     this.readNativeOptions()
@@ -297,7 +368,7 @@ export class TamSelect {
     this.clearButton = document.createElement("button")
     this.clearButton.type = "button"
     this.clearButton.className = this.classes.clear
-    this.clearButton.setAttribute("aria-label", "Clear selection")
+    this.clearButton.setAttribute("aria-label", this.options.clearLabel)
     this.clearButton.innerHTML = ICONS.close
 
     this.chevron = document.createElement("span")
@@ -329,8 +400,16 @@ export class TamSelect {
 
     const focusControl = this.searchable ? [this.searchIcon, this.input] : [this.trigger]
     this.control.append(this.values, ...focusControl, this.clearButton, this.chevron)
-    this.wrapper.append(this.control, this.dropdown, this.status)
+    this.wrapper.append(this.control, this.status)
     this.select.after(this.wrapper)
+    this.dropdownParent = this.resolveDropdownParent()
+    this.portalDropdown = Boolean(this.dropdownParent)
+    if (this.portalDropdown) {
+      this.dropdownParent.append(this.dropdown)
+      this.dropdown.style.position = "fixed"
+    } else {
+      this.wrapper.append(this.dropdown)
+    }
     this.labelElements = this.findLabelElements()
     this.applyDisabled()
     this.syncAria()
@@ -355,7 +434,9 @@ export class TamSelect {
     this.onKeydown = event => this.handleKeydown(event)
     this.onClear = event => { event.stopPropagation(); this.clear() }
     this.onTrigger = event => { event.preventDefault(); this.open(); this.trigger.focus() }
-    this.onOutside = event => { if (!this.wrapper.contains(event.target)) this.close() }
+    this.onOutside = event => {
+      if (!this.wrapper.contains(event.target) && !this.dropdown.contains(event.target)) this.close()
+    }
     this.onNativeChange = () => {
       if (this.select.checkValidity()) this.invalidFromEvent = false
       this.readNativeOptions()
@@ -384,6 +465,8 @@ export class TamSelect {
       event.preventDefault()
       this.focusTarget.focus()
     }
+    this.onFormReset = () => queueMicrotask(() => this.refresh())
+    this.onViewportChange = () => { if (this.opened && this.portalDropdown) this.updateDropdownPosition() }
 
     this.control.addEventListener("click", this.onControlClick)
     this.focusTarget.addEventListener("keydown", this.onKeydown)
@@ -395,6 +478,44 @@ export class TamSelect {
     this.select.addEventListener("invalid", this.onNativeInvalid)
     this.labelElements.forEach(label => label.addEventListener("click", this.onLabelClick))
     document.addEventListener("pointerdown", this.onOutside)
+    this.select.form?.addEventListener("reset", this.onFormReset)
+    window.addEventListener("resize", this.onViewportChange)
+    window.addEventListener("scroll", this.onViewportChange, true)
+    this.mutationObserver = new MutationObserver(() => this.queueRefresh())
+    this.mutationObserver.observe(this.select, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ["disabled", "label", "value", "selected", "required", "aria-invalid", "aria-describedby", "data-detail", "data-meta", "data-image"]
+    })
+  }
+
+  resolveDropdownParent() {
+    if (!this.options.dropdownParent) return null
+    if (typeof this.options.dropdownParent === "string") return document.querySelector(this.options.dropdownParent)
+    const ElementClass = this.select.ownerDocument.defaultView.Element
+    return this.options.dropdownParent instanceof ElementClass ? this.options.dropdownParent : null
+  }
+
+  queueRefresh() {
+    if (this.refreshQueued || this.destroyed) return
+    this.refreshQueued = true
+    queueMicrotask(() => {
+      this.refreshQueued = false
+      if (!this.destroyed && this.select.isConnected) this.refresh()
+    })
+  }
+
+  updateDropdownPosition() {
+    if (!this.portalDropdown) return
+    const rect = this.control.getBoundingClientRect()
+    const gap = 6
+    const estimatedHeight = Math.min(this.dropdown.scrollHeight || 288, 288)
+    const placeAbove = window.innerHeight - rect.bottom < estimatedHeight + gap && rect.top > estimatedHeight + gap
+    this.dropdown.style.left = `${rect.left}px`
+    this.dropdown.style.width = `${rect.width}px`
+    this.dropdown.style.top = `${placeAbove ? Math.max(gap, rect.top - estimatedHeight - gap) : rect.bottom + gap}px`
+    this.dropdown.dataset.placement = placeAbove ? "top" : "bottom"
   }
 
   detectDirection() {
@@ -421,14 +542,15 @@ export class TamSelect {
   }
 
   readNativeOptions() {
-    const previousItems = new Map(this.items.map(item => [item.option, item]))
+    this.previousItemsByOption = new Map(this.items.map(item => [item.option, item]))
     const parsed = this.parseGroups()
+    this.previousItemsByOption = null
     this.groupTree = parsed.tree
     this.items = parsed.flat
 
     if (this.options.remoteUrl) {
-      const currentOptions = new Set(this.items.map(item => item.option))
-      this.remoteResults = this.remoteResults.filter(item => currentOptions.has(item.option))
+      const currentItems = new Map(this.items.map(item => [item.option, item]))
+      this.remoteResults = this.remoteResults.map(item => currentItems.get(item.option)).filter(Boolean)
       this.updateVisibleItems(this.remoteResults)
     } else {
       this.filterLocal(false)
@@ -462,7 +584,7 @@ export class TamSelect {
   }
 
   buildItem(option) {
-    return {
+    const attributes = {
       id: this.optionId(option),
       value: option.value,
       label: option.textContent.trim(),
@@ -474,6 +596,8 @@ export class TamSelect {
       option,
       group: null
     }
+    const existing = this.previousItemsByOption?.get(option)
+    return existing ? Object.assign(existing, attributes) : attributes
   }
 
   selectedItems() {
@@ -599,7 +723,7 @@ export class TamSelect {
     const startIndex = this.activeIndex >= 0 ? this.activeIndex + 1 : 0
     const candidates = [...this.visibleItems.slice(startIndex), ...this.visibleItems.slice(0, startIndex)]
     const match = candidates.find(entry =>
-      entry.type !== "group-header" && !entry.disabled && normalize(entry.item?.value).startsWith(query)
+      entry.type !== "group-header" && !entry.disabled && normalize(entry.item?.label ?? entry.label).startsWith(query)
     )
     if (match) {
       const index = this.visibleItems.indexOf(match)
@@ -649,12 +773,15 @@ export class TamSelect {
     label.style.overflow = "hidden"
     label.style.textOverflow = "ellipsis"
     label.style.whiteSpace = "nowrap"
-    label.textContent = item.label
+    const template = this.renderTemplate(this.options.templateSelection, item, "selection")
+    if (template) label.append(template)
+    else label.textContent = item.label
     const remove = document.createElement("button")
     remove.type = "button"
     remove.className = this.classes.tagRemove
     remove.disabled = this.select.disabled
-    remove.setAttribute("aria-label", `Remove ${item.label}`)
+    const removeLabel = typeof this.options.removeLabel === "function" ? this.options.removeLabel(item) : this.options.removeLabel
+    remove.setAttribute("aria-label", removeLabel)
     remove.innerHTML = ICONS.close
     remove.addEventListener("click", event => { event.stopPropagation(); this.deselect(item.value) })
     tag.append(label, remove)
@@ -675,7 +802,8 @@ export class TamSelect {
     event.dataTransfer.effectAllowed = "move"
     event.dataTransfer.setData("text/plain", item.value)
     this.draggedItem = item
-    requestAnimationFrame(() => {
+    const scheduleFrame = window.requestAnimationFrame || (callback => window.setTimeout(callback, 0))
+    scheduleFrame(() => {
       event.target.classList.add(this.classes.tagDragging)
     })
   }
@@ -902,6 +1030,11 @@ export class TamSelect {
     content.style.minWidth = "0"
     content.style.maxWidth = "100%"
     if (selected) content.classList.add("min-w-0", "flex-1")
+    const template = this.renderTemplate(selected ? this.options.templateSelection : this.options.templateResult, item, selected ? "selection" : "result")
+    if (template) {
+      content.append(template)
+      return content
+    }
     if (item.image) {
       const image = this.options.lazyLoadImages ? this.makeLazyImage(item) : document.createElement("img")
       if (!this.options.lazyLoadImages) {
@@ -936,6 +1069,16 @@ export class TamSelect {
     }
     content.append(text)
     return content
+  }
+
+  renderTemplate(template, item, context) {
+    if (typeof template !== "function") return null
+    const rendered = template(item, { tamSelect: this, context })
+    if (rendered == null || rendered === false) return null
+    if (rendered instanceof Node) return rendered
+    const text = document.createElement("span")
+    text.textContent = String(rendered)
+    return text
   }
 
   makeLazyImage(item) {
@@ -1121,8 +1264,13 @@ export class TamSelect {
   toggleAll() {
     const visibleEntries = this.visibleItems.filter(entry => entry.type === "item" && !entry.disabled)
     const allSelected = visibleEntries.every(entry => entry.item.selected)
+    let selectedCount = this.selectedItems().length
     visibleEntries.forEach(entry => {
-      entry.item.selected = !allSelected
+      const canSelect = this.options.maximumSelectionLength <= 0 || selectedCount < this.options.maximumSelectionLength
+      const nextSelected = allSelected ? false : (entry.item.selected || canSelect)
+      if (!entry.item.selected && nextSelected) selectedCount += 1
+      if (entry.item.selected && !nextSelected) selectedCount -= 1
+      entry.item.selected = nextSelected
       if (entry.item.option) entry.item.option.selected = entry.item.selected
     })
     this.commit()
@@ -1162,7 +1310,13 @@ export class TamSelect {
       this.deselect(item.value)
     } else if (this.multiple && this.options.maximumSelectionLength > 0) {
       const selectedCount = this.selectedItems().length
-      if (selectedCount >= this.options.maximumSelectionLength) return
+      if (selectedCount >= this.options.maximumSelectionLength) {
+        const text = typeof this.options.selectionLimitText === "function"
+          ? this.options.selectionLimitText(this.options.maximumSelectionLength)
+          : this.options.selectionLimitText
+        this.updateStatus(text)
+        return
+      }
       this.selectValue(item.value)
     } else {
       this.selectValue(item.value)
@@ -1172,13 +1326,21 @@ export class TamSelect {
   selectValue(value) {
     const item = this.ensureNativeOption(value)
     if (item.disabled) return
+    if (!this.emit("tam-select:selecting", { item }, true)) return
     if (this.multiple && this.options.maximumSelectionLength > 0) {
-      if (this.selectedItems().length >= this.options.maximumSelectionLength) return
+      if (this.selectedItems().length >= this.options.maximumSelectionLength) {
+        const text = typeof this.options.selectionLimitText === "function"
+          ? this.options.selectionLimitText(this.options.maximumSelectionLength)
+          : this.options.selectionLimitText
+        this.updateStatus(text)
+        return
+      }
     }
     if (!this.multiple) Array.from(this.select.options).forEach(option => { option.selected = false })
     item.option.selected = true
     item.selected = true
     this.commit()
+    this.emit("tam-select:select", { item })
     if (this.options.closeAfterSelect) this.close()
     else this.resetQueryAfterSelection()
   }
@@ -1193,15 +1355,20 @@ export class TamSelect {
   deselect(value) {
     const item = this.items.find(entry => String(entry.value) === String(value))
     if (!item) return
+    if (!this.emit("tam-select:unselecting", { item }, true)) return
     item.selected = false
     if (item.option) item.option.selected = false
     this.commit()
+    this.emit("tam-select:unselect", { item })
   }
 
   clear() {
+    const items = this.selectedItems()
+    if (!items.length || !this.emit("tam-select:clearing", { items }, true)) return
     Array.from(this.select.options).forEach(option => { option.selected = false })
     this.items.forEach(item => { item.selected = false })
     this.commit()
+    this.emit("tam-select:clear", { items })
   }
 
   createItem(label, candidateValue = undefined) {
@@ -1211,6 +1378,7 @@ export class TamSelect {
       this.selectValue(existing.value)
       return existing
     }
+    if (!this.emit("tam-select:creating", { label, value: String(value) }, true)) return null
     const item = this.addItem({ value, label, selected: false, created: true })
     this.selectValue(item.value)
     this.emit("tam-select:create", { item })
@@ -1327,6 +1495,7 @@ export class TamSelect {
 
   open(loadRemote = true) {
     if (this.opened || this.select.disabled) return
+    if (!this.emit("tam-select:opening", {}, true)) return
     clearTimeout(this.closeTimer)
     this.opened = true
     if (this.options.minimumResultsForSearch > 0) {
@@ -1345,12 +1514,17 @@ export class TamSelect {
     this.renderSelection()
     if (this.options.remoteUrl && loadRemote) this.startRemoteSearch(false)
     else this.renderDropdown()
+    if (this.portalDropdown) {
+      const scheduleFrame = window.requestAnimationFrame || (callback => window.setTimeout(callback, 0))
+      scheduleFrame(() => this.updateDropdownPosition())
+    }
     this.focusTarget.focus({ preventScroll: true })
     this.emit("tam-select:open")
   }
 
   close() {
     if (!this.opened) return
+    if (!this.emit("tam-select:closing", {}, true)) return
     this.opened = false
     if (this.options.selectOnClose && this.activeIndex >= 0) {
       const entry = this.visibleItems[this.activeIndex]
@@ -1466,12 +1640,37 @@ export class TamSelect {
       const url = new URL(this.options.remoteUrl, window.location.origin)
       url.searchParams.set(this.options.queryParam, request.query)
       url.searchParams.set(this.options.pageParam, page)
-      const response = await fetch(url, {
-        headers: { Accept: "application/json", ...this.options.headers },
-        signal: controller.signal
+      const extraParams = typeof this.options.remoteParams === "function"
+        ? this.options.remoteParams({ query: request.query, page, tamSelect: this })
+        : this.options.remoteParams
+      Object.entries(extraParams || {}).forEach(([key, value]) => {
+        if (value != null) url.searchParams.set(key, String(value))
       })
-      if (!response.ok) throw new Error(`Request failed (${response.status})`)
-      const data = await response.json()
+      const cacheKey = url.toString()
+      let data = this.options.cacheRemote ? this.remoteCache.get(cacheKey) : null
+      if (!data) {
+        const transportOptions = {
+          url,
+          query: request.query,
+          page,
+          headers: { Accept: "application/json", ...this.options.headers },
+          signal: controller.signal,
+          tamSelect: this
+        }
+        const result = typeof this.options.transport === "function"
+          ? await this.options.transport(transportOptions)
+          : await fetch(url, { headers: transportOptions.headers, signal: controller.signal })
+        if (result && typeof result.json === "function") {
+          if (!result.ok) throw new Error(`Request failed (${result.status})`)
+          data = await result.json()
+        } else {
+          data = result
+        }
+        if (this.options.cacheRemote) this.remoteCache.set(cacheKey, data)
+      }
+      if (typeof this.options.processResults === "function") {
+        data = await this.options.processResults(data, { query: request.query, page, tamSelect: this })
+      }
       if (this.activeRequest?.id !== requestId) return
 
       const rawItems = this.getPath(data, this.options.itemsPath)
@@ -1555,8 +1754,16 @@ export class TamSelect {
     this.renderDropdown()
   }
 
-  emit(name, detail = {}) {
-    this.select.dispatchEvent(new CustomEvent(name, { bubbles: true, detail: { tamSelect: this, ...detail } }))
+  emit(name, detail = {}, cancelable = false) {
+    return this.select.dispatchEvent(new CustomEvent(name, {
+      bubbles: true,
+      cancelable,
+      detail: { tamSelect: this, ...detail }
+    }))
+  }
+
+  clearRemoteCache() {
+    this.remoteCache.clear()
   }
 
   tokenizeInput() {
@@ -1617,15 +1824,21 @@ export class TamSelect {
   }
 
   destroy() {
+    this.destroyed = true
     this.cancelRemoteWork()
     clearTimeout(this.closeTimer)
     clearTimeout(this.typeaheadTimer)
     if (this.lazyObserver) { this.lazyObserver.disconnect(); this.lazyObserver = null }
     document.removeEventListener("pointerdown", this.onOutside)
+    window.removeEventListener("resize", this.onViewportChange)
+    window.removeEventListener("scroll", this.onViewportChange, true)
+    this.select.form?.removeEventListener("reset", this.onFormReset)
+    this.mutationObserver?.disconnect()
     this.select.removeEventListener("change", this.onNativeChange)
     this.select.removeEventListener("invalid", this.onNativeInvalid)
     this.labelElements.forEach(label => label.removeEventListener("click", this.onLabelClick))
     this.wrapper.remove()
+    if (this.portalDropdown) this.dropdown.remove()
     if (!this.hadSrOnlyClass) this.select.classList.remove("sr-only")
     if (this.originalTabIndex === null) this.select.removeAttribute("tabindex")
     else this.select.setAttribute("tabindex", this.originalTabIndex)

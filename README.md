@@ -1,7 +1,7 @@
 # Tam Select
 
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Gem Version](https://img.shields.io/badge/version-1.2.6-blue.svg)](https://github.com/tamiru/tam_select)
+[![Gem Version](https://img.shields.io/badge/version-1.3.0-blue.svg)](https://rubygems.org/gems/tam_select)
 
 **Tam Select** is an accessible, searchable select component for Ruby on Rails, built for Simple Form, Stimulus, Turbo, and Tailwind CSS. It keeps the native `<select>` as the source of truth, so Rails form submission, validation, selected values, and browser autofill continue to work. It is a complete, modern, jQuery-free replacement for Select2.
 
@@ -71,7 +71,7 @@ The update is idempotent, so rerunning the installer does not duplicate the alia
 This uses the local file installed by the generator. For non-Rails bundler use, install the npm package from GitHub and import its published package name instead:
 
 ```bash
-npm install github:tamiru/tam_select
+npm install tam-select
 ```
 
 ```js
@@ -109,11 +109,17 @@ Versions before this release generated a relative controller import. After upgra
 - Single and multiple selection
 - Ranked, typo-tolerant local search with highlighted matches and user-created tags
 - Remote JSON search with debouncing and incremental pagination
+- Pluggable remote transport, query parameters, response processing, and optional caching
 - Option groups (`<optgroup>`) with visual section headers
 - Smooth dropdown open/close animations
 - Type-ahead search: rapid character typing jumps to matching options
 - Lazy-loaded option images via IntersectionObserver
 - Custom empty, no-results, and loading state templates
+- Secure result and selection templates (text is escaped; DOM nodes enable trusted markup)
+- Localized visible messages and accessible labels
+- Preventable opening, closing, selecting, unselecting, clearing, and creating events
+- Automatic synchronization after native option mutations and form resets
+- Portal dropdown placement for modals and overflow-clipped containers
 - Maximum selection length limit (`maximumSelectionLength`)
 - Maximum input length limit (`maximumInputLength`)
 - Minimum results before showing search box (`minimumResultsForSearch`)
@@ -502,6 +508,14 @@ instance.destroy()
 ```
 
 When consuming the npm package directly, import from `"tam-select"` instead.
+The packaged Stimulus controller is available from `"tam-select/stimulus"`:
+
+```js
+import { Application } from "@hotwired/stimulus"
+import TamSelectController from "tam-select/stimulus"
+
+Application.start().register("tam-select", TamSelectController)
+```
 
 ### Option groups
 
@@ -652,6 +666,48 @@ new TamSelect(select, { width: "300px" })  // Fixed width
 new TamSelect(select, { width: "100%" })   // Full width (default: "resolve")
 ```
 
+### Templates, localization, and dropdown portals
+
+String template results are rendered as text. Return a DOM node only when you
+intentionally need trusted markup:
+
+```js
+new TamSelect(select, {
+  templateResult: item => {
+    const strong = document.createElement("strong")
+    strong.textContent = item.label
+    return strong
+  },
+  templateSelection: item => item.label,
+  language: {
+    noResults: "No matching choices",
+    clear: "Clear selection",
+    remove: item => `Remove ${item.label}`
+  },
+  dropdownParent: "#modal"
+})
+```
+
+### Custom remote transport
+
+Use `transport`, `remoteParams`, and `processResults` to connect GraphQL,
+authenticated APIs, or nonstandard response shapes:
+
+```js
+new TamSelect(select, {
+  remoteUrl: "/api/regions",
+  remoteParams: ({ page }) => ({ locale: "am", page }),
+  transport: ({ url, signal, headers }) => fetch(url, { signal, headers }),
+  processResults: data => ({
+    items: data.nodes.map(node => ({ value: node.id, label: node.name })),
+    pagination: { has_more: data.pageInfo.hasNextPage }
+  }),
+  cacheRemote: true
+})
+```
+
+Call `clearRemoteCache()` after related data changes.
+
 ## Main options
 
 | Option | Default | Purpose |
@@ -673,6 +729,14 @@ new TamSelect(select, { width: "100%" })   // Full width (default: "resolve")
 | `selectOnClose` | `false` | Auto-select active option when dropdown closes |
 | `tokenSeparators` | `[]` | Characters that trigger tag creation (e.g. `[",", " "]`) |
 | `sorter` | `null` | Custom sort function `(items) => items` |
+| `templateResult` | `null` | Custom dropdown result renderer |
+| `templateSelection` | `null` | Custom selected-value renderer |
+| `language` | `{}` | Localized messages and accessible labels |
+| `transport` | `fetch` | Custom remote request function |
+| `processResults` | `null` | Transforms remote responses |
+| `remoteParams` | `{}` | Extra remote query parameters |
+| `cacheRemote` | `false` | Caches remote responses by final URL |
+| `dropdownParent` | `null` | Portals the dropdown into an element or selector |
 | `width` | `"resolve"` | Container width (CSS value or `"resolve"` for auto) |
 | `fuzzySearch` | `true` | Tolerates small typing mistakes in local search |
 | `highlightMatches` | `true` | Highlights direct query matches in results |
@@ -709,6 +773,11 @@ select.addEventListener("tam-select:data:add", ({ detail }) => console.log(detai
 select.addEventListener("tam-select:data:remove", ({ detail }) => console.log(detail.items))
 ```
 
+The `opening`, `closing`, `selecting`, `unselecting`, `clearing`, and `creating`
+events are cancelable. Call `event.preventDefault()` to veto the operation.
+Successful operations emit `open`, `close`, `select`, `unselect`, `clear`,
+`create`, and `change` events.
+
 Standard native `change` events are also dispatched for Rails and other controllers.
 
 ### Public API
@@ -724,9 +793,23 @@ Standard native `change` events are also dispatched for Rails and other controll
 | `refresh()` | Re-reads native options and re-renders |
 | `addData(raw)` | Adds one or more options programmatically |
 | `removeData(values)` | Removes options by value |
+| `clearRemoteCache()` | Clears cached remote responses |
 | `destroy()` | Removes all generated markup and restores the native select |
 
 Read the current selection through `instance.value`, and recover an existing instance with `TamSelect.getInstance(select)`.
+
+## CI/CD
+
+GitHub Actions validates Ruby, JavaScript, TypeScript declarations, npm package
+contents, and the built gem. A matching `v*.*.*` tag publishes both packages.
+
+Configure the `release` GitHub environment with these secrets:
+
+- `RUBYGEMS_API_KEY`: push-only key scoped to `tam_select`, with key-level MFA disabled.
+- `NPM_TOKEN`: granular automation token with publish access to `tam-select` and 2FA bypass enabled for CI.
+
+Keep account MFA enabled. The release commands disconnect interactive input so
+misconfigured credentials fail instead of waiting for an OTP.
 
 ## Development
 

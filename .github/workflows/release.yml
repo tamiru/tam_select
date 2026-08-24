@@ -1,0 +1,92 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.4"
+          bundler-cache: true
+      - name: Verify tag matches gem and npm versions
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          gem_version="$(ruby -Ilib -rtam_select/version -e 'print TamSelect::VERSION')"
+          npm_version="$(node -p 'require("./package.json").version')"
+          test "$RELEASE_TAG" = "v${gem_version}"
+          test "$gem_version" = "$npm_version"
+      - run: npm ci
+      - run: npm test
+      - run: npm run check
+      - run: npm run typecheck
+      - run: npm audit --audit-level=high
+      - run: bundle exec rake test
+
+  rubygems:
+    needs: verify
+    runs-on: ubuntu-latest
+    environment: release
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.4"
+      - name: Build and validate gem
+        run: |
+          gem build tam_select.gemspec --output tam_select.gem
+          gem check tam_select.gem
+      - name: Publish to RubyGems
+        env:
+          GEM_HOST_API_KEY: ${{ secrets.RUBYGEMS_API_KEY }}
+        run: |
+          test -n "$GEM_HOST_API_KEY" || { echo "::error::RUBYGEMS_API_KEY is not configured"; exit 1; }
+          gem push tam_select.gem --host https://rubygems.org </dev/null
+
+  npm:
+    needs: verify
+    runs-on: ubuntu-latest
+    environment: release
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          registry-url: https://registry.npmjs.org
+      - run: npm ci
+      - name: Publish to npm
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          test -n "$NODE_AUTH_TOKEN" || { echo "::error::NPM_TOKEN is not configured"; exit 1; }
+          npm publish --access public
+
+  github-release:
+    needs: [rubygems, npm]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.4"
+      - run: gem build tam_select.gemspec --output tam_select.gem
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: gh release create "$RELEASE_TAG" tam_select.gem --verify-tag --generate-notes

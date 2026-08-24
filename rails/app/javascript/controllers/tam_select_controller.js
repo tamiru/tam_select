@@ -25,7 +25,23 @@ export default class extends Controller {
     this.instance?.refresh()
   }
 
+  open() {
+    this.instance?.open()
+  }
+
+  close() {
+    this.instance?.close()
+  }
+
+  focus() {
+    this.instance?.focus()
+  }
+
   clear() {
     this.instance?.clear()
+  }
+
+  setValue({ params }) {
+    this.instance?.setValue(params.value)
   }
 }

@@ -725,6 +725,19 @@ test("Ctrl+A does not select disabled options", () => {
   }
 })
 
+test("Ctrl+A respects maximumSelectionLength", () => {
+  const cleanup = setupDOM(localSelect({ multiple: true }))
+  try {
+    const tamSelect = new TamSelect(document.querySelector("select"), { maximumSelectionLength: 2 })
+    tamSelect.open()
+    keydown(tamSelect.input, "a", { ctrlKey: true })
+
+    assert.equal(tamSelect.value.length, 2)
+  } finally {
+    cleanup()
+  }
+})
+
 // ─── Maximum Selection Length ──────────────────────────────────────────
 
 test("maximumSelectionLength prevents selecting beyond the limit", () => {
@@ -1714,6 +1727,149 @@ test("null animationPreset uses individual duration and easing", () => {
     assert.equal(tamSelect.options.animationEasing, "linear")
     assert.equal(tamSelect.dropdown.style.getPropertyValue("--tam-duration"), "350ms")
     assert.equal(tamSelect.dropdown.style.getPropertyValue("--tam-easing"), "linear")
+  } finally {
+    cleanup()
+  }
+})
+
+test("custom result and selection templates support safe text and trusted DOM nodes", () => {
+  const cleanup = setupDOM(localSelect({ selected: "aa" }))
+  try {
+    const tamSelect = new TamSelect(document.querySelector("select"), {
+      templateResult: item => {
+        const strong = document.createElement("strong")
+        strong.dataset.customResult = item.value
+        strong.textContent = `Result: ${item.label}`
+        return strong
+      },
+      templateSelection: item => `<b>${item.label}</b>`
+    })
+
+    assert.equal(tamSelect.values.textContent, "<b>Addis Ababa</b>", "string templates remain escaped text")
+    tamSelect.open()
+    assert.equal(tamSelect.dropdown.querySelector('[data-custom-result="or"]')?.textContent, "Result: Oromia")
+  } finally {
+    cleanup()
+  }
+})
+
+test("cancelable lifecycle events can veto opening, selecting, clearing, and creating", () => {
+  const cleanup = setupDOM(localSelect())
+  try {
+    const select = document.querySelector("select")
+    const tamSelect = new TamSelect(select, { creatable: true })
+
+    select.addEventListener("tam-select:opening", event => event.preventDefault(), { once: true })
+    tamSelect.open()
+    assert.equal(tamSelect.opened, false)
+
+    select.addEventListener("tam-select:selecting", event => event.preventDefault(), { once: true })
+    tamSelect.selectValue("or")
+    assert.equal(tamSelect.value, "")
+
+    tamSelect.selectValue("or")
+    select.addEventListener("tam-select:clearing", event => event.preventDefault(), { once: true })
+    tamSelect.clear()
+    assert.equal(tamSelect.value, "or")
+
+    select.addEventListener("tam-select:creating", event => event.preventDefault(), { once: true })
+    assert.equal(tamSelect.createItem("Blocked"), null)
+    assert.equal(tamSelect.items.some(item => item.label === "Blocked"), false)
+  } finally {
+    cleanup()
+  }
+})
+
+test("native option mutations and form reset synchronize automatically", async () => {
+  const cleanup = setupDOM(`<form>${localSelect({ selected: "aa" })}</form>`)
+  try {
+    const select = document.querySelector("select")
+    const tamSelect = new TamSelect(select)
+    const option = new Option("Gambela", "ga")
+    select.add(option)
+    await flush()
+    assert.equal(tamSelect.items.some(item => item.value === "ga"), true)
+
+    tamSelect.selectValue("or")
+    select.form.reset()
+    await flush()
+    assert.equal(tamSelect.value, "aa")
+  } finally {
+    cleanup()
+  }
+})
+
+test("dropdownParent portals and positions the dropdown outside clipping containers", async () => {
+  const cleanup = setupDOM(`<div id="portal"></div>${localSelect()}`)
+  try {
+    const portal = document.querySelector("#portal")
+    const tamSelect = new TamSelect(document.querySelector("select"), { dropdownParent: portal })
+    tamSelect.control.getBoundingClientRect = () => ({ left: 10, top: 20, right: 210, bottom: 64, width: 200, height: 44 })
+    tamSelect.open()
+    await flush()
+
+    assert.equal(tamSelect.dropdown.parentElement, portal)
+    assert.equal(tamSelect.dropdown.style.position, "fixed")
+    assert.equal(tamSelect.dropdown.style.left, "10px")
+    assert.equal(tamSelect.dropdown.style.width, "200px")
+  } finally {
+    cleanup()
+  }
+})
+
+test("custom remote transport, parameters, processing, caching, and cache clearing compose", async () => {
+  const cleanup = setupDOM(localSelect())
+  try {
+    let calls = 0
+    const tamSelect = new TamSelect(document.querySelector("select"), {
+      remoteUrl: "/regions",
+      debounce: 0,
+      cacheRemote: true,
+      remoteParams: ({ page }) => ({ locale: "am", requested_page: page }),
+      transport: ({ url }) => {
+        calls += 1
+        assert.equal(url.searchParams.get("locale"), "am")
+        return { results: [{ id: "et", text: "Ethiopia" }] }
+      },
+      processResults: data => ({ items: data.results.map(item => ({ value: item.id, label: item.text })), pagination: {} })
+    })
+
+    await tamSelect.loadRemote(1)
+    await tamSelect.loadRemote(1)
+    assert.equal(calls, 1)
+    assert.equal(tamSelect.items.some(item => item.value === "et"), true)
+
+    tamSelect.clearRemoteCache()
+    await tamSelect.loadRemote(1)
+    assert.equal(calls, 2)
+  } finally {
+    cleanup()
+  }
+})
+
+test("language localizes visible messages and accessible control labels", () => {
+  const cleanup = setupDOM(localSelect({ multiple: true }))
+  try {
+    const tamSelect = new TamSelect(document.querySelector("select"), {
+      maximumSelectionLength: 1,
+      language: {
+        placeholder: "ይምረጡ…",
+        noResults: "ውጤት አልተገኘም",
+        clear: "ምርጫውን አጽዳ",
+        remove: item => `${item.label} አስወግድ`,
+        selectionLimit: "አንድ ብቻ ይምረጡ"
+      }
+    })
+
+    assert.equal(tamSelect.input.placeholder, "ይምረጡ…")
+    tamSelect.selectValue("aa")
+    assert.equal(tamSelect.clearButton.getAttribute("aria-label"), "ምርጫውን አጽዳ")
+    assert.equal(tamSelect.values.querySelector("button").getAttribute("aria-label"), "Addis Ababa አስወግድ")
+    tamSelect.selectValue("or")
+    assert.equal(tamSelect.status.textContent, "አንድ ብቻ ይምረጡ")
+
+    input(tamSelect.input, "missing")
+    assert.equal(tamSelect.status.textContent, "ውጤት አልተገኘም")
   } finally {
     cleanup()
   }
