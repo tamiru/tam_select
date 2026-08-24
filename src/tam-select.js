@@ -15,7 +15,11 @@ const DEFAULT_CLASSES = {
   clear: "relative z-20 ml-auto rounded p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-700 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-zinc-500 dark:hover:bg-zinc-800 dark:hover:text-zinc-200 dark:focus:ring-blue-400",
   chevron: "pointer-events-none relative z-10 ml-auto size-4 shrink-0 text-zinc-400 transition-transform",
   chevronOpen: "rotate-180",
-  dropdown: "absolute z-50 mt-1.5 max-h-72 w-full origin-top overflow-auto rounded-xl border border-zinc-200 bg-white p-1.5 shadow-2xl ring-1 ring-black/5 dark:border-zinc-700 dark:bg-zinc-900 dark:shadow-black/50 dark:ring-white/10",
+  dropdown: "absolute z-50 mt-1.5 max-h-72 w-full overflow-auto rounded-xl border border-zinc-200 bg-white p-1.5 shadow-2xl ring-1 ring-black/5 dark:border-zinc-700 dark:bg-zinc-900 dark:shadow-black/50 dark:ring-white/10",
+  dropdownAnimation: "origin-top-center transition-all duration-150 ease-out",
+  dropdownClosed: "mt-1.5 max-h-72 w-full scale-y-[0.98] opacity-0 pointer-events-none",
+  dropdownOpen: "scale-y-100 opacity-100 pointer-events-auto",
+  groupHeader: "px-3 pt-3 pb-1 text-xs font-semibold text-zinc-500 select-none dark:text-zinc-400",
   option: "flex min-h-11 cursor-pointer items-center justify-between gap-3 rounded-lg px-3 py-2 text-sm text-zinc-700 outline-none transition-colors duration-100 dark:text-zinc-200",
   optionContent: "flex min-w-0 flex-1 items-center gap-3",
   optionText: "flex min-w-0 flex-1 flex-col",
@@ -40,7 +44,7 @@ const THEME_CLASSES = {
     wrapper: "tam-select relative w-full text-base-content",
     control: "input relative w-full cursor-text rounded-field text-base-content focus:[--input-color:var(--color-primary)] focus:outline-none focus:outline-offset-0 focus:shadow-none focus-visible:[--input-color:var(--color-primary)] focus-visible:outline-none focus-visible:outline-offset-0 focus-visible:shadow-none focus-within:[--input-color:var(--color-primary)] focus-within:outline-none focus-within:outline-offset-0 focus-within:shadow-none",
     controlMultiple: "h-auto min-h-10 flex-wrap py-1.5",
-    controlOpen: "[--input-color:var(--color-primary)] ring-2 ring-primary/15",
+    controlOpen: "",
     controlInvalid: "input-error",
     controlDisabled: "cursor-not-allowed bg-base-200 opacity-50",
     input: "min-w-16 flex-1 bg-transparent p-0 text-left text-base-content outline-none placeholder:text-base-content/50 focus:outline-none focus:ring-0",
@@ -52,12 +56,16 @@ const THEME_CLASSES = {
     tagRemove: "rounded-btn p-0.5 hover:bg-primary-focus focus:outline-none focus:ring-2 focus:ring-primary",
     clear: "relative z-20 ml-auto rounded-btn p-1 text-base-content/50 transition-colors hover:bg-base-200 hover:text-base-content focus:outline-none focus:ring-2 focus:ring-primary",
     chevron: "pointer-events-none relative z-10 ml-auto size-4 shrink-0 text-base-content/50 transition-transform",
-    dropdown: "absolute z-50 mt-1.5 max-h-72 w-full origin-top overflow-auto rounded-box border border-base-300 bg-base-100 p-2 shadow-2xl ring-1 ring-base-content/10",
+    dropdown: "absolute z-50 mt-1.5 max-h-72 w-full overflow-auto rounded-box border border-base-300 bg-base-100 p-2 shadow-xl",
+    dropdownAnimation: "origin-top-center transition-all duration-150 ease-out",
+    dropdownClosed: "mt-1.5 max-h-72 w-full scale-y-[0.98] opacity-0 pointer-events-none",
+    dropdownOpen: "scale-y-100 opacity-100 pointer-events-auto",
+    groupHeader: "px-3 pt-3 pb-1 text-xs font-semibold text-base-content/60 select-none",
     option: "flex min-h-11 cursor-pointer items-center justify-between gap-3 rounded-btn px-3 py-2 text-sm text-base-content outline-none transition-colors duration-100",
     optionDetail: "text-xs font-normal text-base-content/60",
     optionImage: "size-9 shrink-0 rounded-full bg-base-200 object-cover",
     optionMeta: "badge badge-ghost shrink-0",
-    optionActive: "bg-primary/10 text-primary",
+    optionActive: "bg-primary text-primary-content",
     optionSelected: "bg-primary/10 font-medium text-primary",
     optionDisabled: "cursor-not-allowed opacity-50",
     highlight: "rounded-sm bg-warning/30 px-0.5 text-inherit",
@@ -120,7 +128,7 @@ export class TamSelect {
       placeholder: select.dataset.placeholder || select.querySelector('option[value=""]')?.textContent || "Select…",
       searchPlaceholder: "Search…",
       noResultsText: "No results found",
-      createText: query => `Create “${query}”`,
+      createText: query => `Create "${query}"`,
       loadingText: "Loading…",
       loadMoreText: "Load more",
       inputTooShortText: remaining => `Enter ${remaining} more character${remaining === 1 ? "" : "s"}`,
@@ -140,9 +148,21 @@ export class TamSelect {
       itemsPath: "items",
       paginationPath: "pagination",
       matcher: null,
-      theme: "default",
+      theme: "auto",
       classes: {},
       headers: {},
+      animations: true,
+      emptyState: null,
+      noResultsState: null,
+      loadingState: null,
+      lazyLoadImages: false,
+      maximumSelectionLength: 0,
+      maximumInputLength: 0,
+      minimumResultsForSearch: 0,
+      selectOnClose: false,
+      tokenSeparators: [],
+      sorter: null,
+      width: "resolve",
       ...options
     }
     const inferredTheme = ["input", "select"].some(className => select.classList.contains(className)) ? "daisyui" : "default"
@@ -172,6 +192,13 @@ export class TamSelect {
     this.originalAriaHidden = select.getAttribute("aria-hidden")
     this.originalId = select.getAttribute("id")
     this.hadSrOnlyClass = select.classList.contains("sr-only")
+    this.typeaheadBuffer = ""
+    this.typeaheadTimer = null
+    this.groupTree = []
+    this.closeTimer = null
+    this.lazyObserver = null
+    this.selectionLimitReached = false
+    this.searchVisible = this.options.minimumResultsForSearch <= 0
     this.build()
     this.bind()
     this.readNativeOptions()
@@ -191,6 +218,9 @@ export class TamSelect {
     this.wrapper = document.createElement("div")
     this.wrapper.className = this.classes.wrapper
     this.wrapper.dataset.tamSelectRoot = ""
+    if (this.options.width !== "resolve") {
+      this.wrapper.style.width = this.options.width
+    }
 
     this.control = document.createElement("div")
     this.control.className = [
@@ -201,6 +231,7 @@ export class TamSelect {
     this.values = document.createElement("div")
     this.values.id = this.valuesId
     this.values.className = "contents"
+    this.values.style.display = "contents"
 
     this.searchIcon = document.createElement("span")
     this.searchIcon.className = this.classes.searchIcon
@@ -213,6 +244,7 @@ export class TamSelect {
       this.input.className = this.classes.input
       this.input.autocomplete = "off"
       this.input.spellcheck = false
+      if (this.options.maximumInputLength > 0) this.input.maxLength = this.options.maximumInputLength
       this.input.setAttribute("role", "combobox")
       this.input.setAttribute("aria-haspopup", "listbox")
       this.input.setAttribute("aria-expanded", "false")
@@ -243,6 +275,9 @@ export class TamSelect {
     this.dropdown = document.createElement("div")
     this.dropdown.id = this.listboxId
     this.dropdown.className = `${this.classes.dropdown} hidden`
+    if (this.options.animations) {
+      toggleClasses(this.dropdown, this.classes.dropdownAnimation, true)
+    }
     this.dropdown.setAttribute("role", "listbox")
     if (this.multiple) this.dropdown.setAttribute("aria-multiselectable", "true")
 
@@ -259,6 +294,7 @@ export class TamSelect {
     this.labelElements = this.findLabelElements()
     this.applyDisabled()
     this.syncAria()
+    this.initLazyObserver()
   }
 
   bind() {
@@ -269,6 +305,9 @@ export class TamSelect {
     }
     this.onInput = () => {
       this.query = this.input.value
+      if (this.multiple && this.options.tokenSeparators.length && this.options.creatable) {
+        this.tokenizeInput()
+      }
       this.open(false)
       if (this.options.remoteUrl) this.scheduleRemote()
       else this.filterLocal()
@@ -331,22 +370,9 @@ export class TamSelect {
 
   readNativeOptions() {
     const previousItems = new Map(this.items.map(item => [item.option, item]))
-    this.items = Array.from(this.select.options)
-      .filter(option => option.value !== "")
-      .map(option => {
-        const item = previousItems.get(option) || { option, id: this.optionId(option) }
-        Object.assign(item, {
-          value: option.value,
-          label: option.textContent.trim(),
-          detail: option.dataset.detail || null,
-          meta: option.dataset.meta || null,
-          image: option.dataset.image || null,
-          disabled: option.disabled,
-          selected: option.selected,
-          option
-        })
-        return item
-      })
+    const parsed = this.parseGroups()
+    this.groupTree = parsed.tree
+    this.items = parsed.flat
 
     if (this.options.remoteUrl) {
       const currentOptions = new Set(this.items.map(item => item.option))
@@ -354,6 +380,47 @@ export class TamSelect {
       this.updateVisibleItems(this.remoteResults)
     } else {
       this.filterLocal(false)
+    }
+  }
+
+  parseGroups() {
+    const tree = []
+    const flat = []
+    const children = Array.from(this.select.children)
+
+    for (const child of children) {
+      if (child.tagName === "OPTGROUP") {
+        const group = { label: child.label, items: [], entries: [] }
+        for (const option of child.options) {
+          if (option.value === "") continue
+          const item = this.buildItem(option)
+          item.group = group.label
+          flat.push(item)
+          group.items.push(item)
+          group.entries.push({ type: "item", id: item.id, item, disabled: Boolean(item.disabled) })
+        }
+        if (group.items.length > 0) tree.push(group)
+      } else if (child.tagName === "OPTION" && child.value !== "") {
+        const item = this.buildItem(child)
+        flat.push(item)
+        tree.push({ type: "ungrouped", items: [item], entries: [{ type: "item", id: item.id, item, disabled: Boolean(item.disabled) }] })
+      }
+    }
+    return { tree, flat }
+  }
+
+  buildItem(option) {
+    return {
+      id: this.optionId(option),
+      value: option.value,
+      label: option.textContent.trim(),
+      detail: option.dataset.detail || null,
+      meta: option.dataset.meta || null,
+      image: option.dataset.image || null,
+      disabled: option.disabled,
+      selected: option.selected,
+      option,
+      group: null
     }
   }
 
@@ -372,13 +439,14 @@ export class TamSelect {
       matches = this.items.filter(item => this.matchesLocalItem(item))
     } else {
       matches = this.items
-        .map((item, index) => ({ item, index, score: this.searchScore(item) }))
-        .filter(match => Number.isFinite(match.score))
+          .map((item, index) => ({ item, index, score: this.searchScore(item) }))
+          .filter(match => Number.isFinite(match.score))
       if (this.options.sortByRelevance && normalize(this.query)) {
         matches.sort((left, right) => left.score - right.score || left.index - right.index)
       }
       matches = matches.map(match => match.item)
     }
+    matches = this.sortResults(matches)
     this.updateVisibleItems(matches)
     if (render) this.renderDropdown()
   }
@@ -388,8 +456,8 @@ export class TamSelect {
     if (!terms.length) return 0
     const configuredFields = Array.isArray(this.options.searchFields) ? this.options.searchFields : ["label", "detail", "meta"]
     const fields = configuredFields
-      .map((name, index) => ({ text: normalize(item[name]), weight: index * 0.25 }))
-      .filter(field => field.text)
+        .map((name, index) => ({ text: normalize(item[name]), weight: index * 0.25 }))
+        .filter(field => field.text)
 
     let total = 0
     for (const term of terms) {
@@ -421,16 +489,41 @@ export class TamSelect {
 
   updateVisibleItems(candidateItems, preserveActive = true) {
     const previousId = preserveActive ? this.visibleItems[this.activeIndex]?.id : null
-    const entries = candidateItems
-      .filter(item => this.multiple || !item.selected)
-      .map(item => ({ type: "item", id: item.id, item, disabled: Boolean(item.disabled) }))
+    const hasGroups = this.groupTree.some(group => group.type !== "ungrouped")
+
+    let entries
+    if (!hasGroups) {
+      entries = candidateItems
+        .filter(item => this.multiple || !item.selected)
+        .map(item => ({ type: "item", id: item.id, item, disabled: Boolean(item.disabled) }))
+    } else {
+      const visibleValues = new Set(candidateItems.map(item => String(item.value)))
+      entries = []
+      for (const group of this.groupTree) {
+        if (group.type === "ungrouped") {
+          for (const entry of group.entries) {
+            if (visibleValues.has(String(entry.item.value)) && (this.multiple || !entry.item.selected)) {
+              entries.push(entry)
+            }
+          }
+        } else {
+          const groupEntries = group.entries.filter(entry =>
+            visibleValues.has(String(entry.item.value)) && (this.multiple || !entry.item.selected)
+          )
+          if (groupEntries.length > 0) {
+            entries.push({ type: "group-header", id: `group-${group.label}`, group: group.label })
+            entries.push(...groupEntries)
+          }
+        }
+      }
+    }
 
     const createEntry = this.createEntry()
     if (createEntry) entries.push(createEntry)
 
     this.visibleItems = entries
     const preservedIndex = previousId ? entries.findIndex(entry => entry.id === previousId && !entry.disabled) : -1
-    this.activeIndex = preservedIndex >= 0 ? preservedIndex : entries.findIndex(entry => !entry.disabled)
+    this.activeIndex = preservedIndex >= 0 ? preservedIndex : entries.findIndex(entry => !entry.disabled && entry.type !== "group-header")
   }
 
   createEntry() {
@@ -442,6 +535,25 @@ export class TamSelect {
     const duplicate = this.items.some(item => normalize(item.value) === normalizedValue || normalize(item.label) === normalizedLabel)
     if (!normalizedValue || duplicate) return null
     return { type: "create", id: `${this.listboxId}-create`, label, value: String(value), disabled: false }
+  }
+
+  typeahead(char) {
+    if (!this.opened) return
+    clearTimeout(this.typeaheadTimer)
+    this.typeaheadBuffer += char
+    this.typeaheadTimer = setTimeout(() => { this.typeaheadBuffer = "" }, 500)
+
+    const query = normalize(this.typeaheadBuffer)
+    const startIndex = this.activeIndex >= 0 ? this.activeIndex + 1 : 0
+    const candidates = [...this.visibleItems.slice(startIndex), ...this.visibleItems.slice(0, startIndex)]
+    const match = candidates.find(entry =>
+      entry.type !== "group-header" && !entry.disabled && normalize(entry.item?.value).startsWith(query)
+    )
+    if (match) {
+      const index = this.visibleItems.indexOf(match)
+      this.activeIndex = index
+      this.updateActiveOption()
+    }
   }
 
   renderSelection() {
@@ -459,11 +571,15 @@ export class TamSelect {
     }
 
     const hasValue = selected.length > 0
+    const atLimit = this.multiple && this.options.maximumSelectionLength > 0 && selected.length >= this.options.maximumSelectionLength
+    this.selectionLimitReached = atLimit
     this.values.classList.toggle("hidden", !this.multiple && this.opened)
-    this.searchIcon.classList.toggle("hidden", !this.searchable || (!this.multiple && !this.opened))
+    this.searchIcon.classList.toggle("hidden", !this.searchable || !this.searchVisible || (!this.multiple && !this.opened))
     if (this.input) {
       toggleClasses(this.input, this.classes.inputClosed, !this.multiple && !this.opened)
       this.input.placeholder = this.multiple && !hasValue ? this.options.placeholder : this.options.searchPlaceholder
+      if (atLimit) this.input.disabled = true
+      else this.input.disabled = this.select.disabled
     }
     this.clearButton.classList.toggle("hidden", !this.options.clearable || !hasValue || this.select.disabled)
     this.syncAria()
@@ -472,8 +588,14 @@ export class TamSelect {
   makeTag(item) {
     const tag = document.createElement("span")
     tag.className = this.classes.tag
+    tag.style.maxWidth = "100%"
+    tag.style.minWidth = "0"
     const label = document.createElement("span")
     label.className = "max-w-48 truncate"
+    label.style.minWidth = "0"
+    label.style.overflow = "hidden"
+    label.style.textOverflow = "ellipsis"
+    label.style.whiteSpace = "nowrap"
     label.textContent = item.label
     const remove = document.createElement("button")
     remove.type = "button"
@@ -513,16 +635,58 @@ export class TamSelect {
       return this.syncActiveDescendant()
     }
 
-    this.visibleItems.forEach((entry, index) => this.dropdown.append(this.makeOption(entry, index)))
-    if (!this.visibleItems.length) this.renderMessage(this.options.noResultsText)
+    if (this.options.emptyState && !this.visibleItems.length && !this.loading) {
+      const empty = document.createElement("div")
+      empty.className = this.classes.message
+      if (typeof this.options.emptyState === "function") this.options.emptyState(empty)
+      else empty.textContent = this.options.emptyState
+      this.dropdown.append(empty)
+      this.updateStatus("")
+      return this.syncActiveDescendant()
+    }
+
+    let groupIndex = 0
+    for (const entry of this.visibleItems) {
+      if (entry.type === "group-header") {
+        this.dropdown.append(this.makeGroupHeader(entry))
+        continue
+      }
+      if (entry.type === "create") {
+        this.dropdown.append(this.makeOption(entry, this.visibleItems.indexOf(entry)))
+      } else {
+        const index = this.visibleItems.indexOf(entry)
+        this.dropdown.append(this.makeOption(entry, index))
+      }
+    }
+    if (!this.visibleItems.length) {
+      if (this.options.noResultsState) {
+        const noResults = document.createElement("div")
+        noResults.className = this.classes.message
+        if (typeof this.options.noResultsState === "function") this.options.noResultsState(noResults)
+        else noResults.textContent = this.options.noResultsState
+        this.dropdown.append(noResults)
+      } else {
+        this.renderMessage(this.options.noResultsText)
+      }
+    }
     if (this.loading && this.loadingPage > 1) this.renderMessage(this.options.loadingText, true)
     else if (this.hasMore) this.renderMessage(this.options.loadMoreText)
     const resultCount = this.visibleItems.filter(entry => entry.type === "item").length
     const statusText = resultCount || this.visibleItems.length
-      ? (typeof this.options.resultsText === "function" ? this.options.resultsText(resultCount) : this.options.resultsText)
-      : this.options.noResultsText
+        ? (typeof this.options.resultsText === "function" ? this.options.resultsText(resultCount) : this.options.resultsText)
+        : this.options.noResultsText
     this.updateStatus(statusText)
     this.syncActiveDescendant()
+  }
+
+  makeGroupHeader(entry) {
+    const header = document.createElement("div")
+    header.className = this.classes.groupHeader
+    header.setAttribute("role", "presentation")
+    header.textContent = entry.group
+    header.style.pointerEvents = "none"
+    header.dataset.tamSelectGroup = entry.group
+    return header
   }
 
   makeOption(entry, index) {
@@ -566,31 +730,67 @@ export class TamSelect {
   makeItemContent(item, selected = false) {
     const content = document.createElement("span")
     content.className = this.classes.optionContent
+    content.style.minWidth = "0"
     if (selected) content.classList.add("min-w-0", "flex-1")
     if (item.image) {
-      const image = document.createElement("img")
-      image.className = this.classes.optionImage
-      image.src = item.image
-      image.alt = ""
-      image.loading = "lazy"
+      const image = this.options.lazyLoadImages ? this.makeLazyImage(item) : document.createElement("img")
+      if (!this.options.lazyLoadImages) {
+        image.className = this.classes.optionImage
+        image.src = item.image
+        image.alt = ""
+        image.loading = "lazy"
+      }
       content.append(image)
     }
     const text = document.createElement("span")
     text.className = this.classes.optionText
+    text.style.minWidth = "0"
     const label = document.createElement("span")
     label.className = `${this.classes.optionLabel} truncate`
+    label.style.overflow = "hidden"
+    label.style.textOverflow = "ellipsis"
+    label.style.whiteSpace = "nowrap"
     if (selected) label.textContent = item.label
     else this.renderHighlightedText(label, item.label)
     text.append(label)
     if (item.detail) {
       const detail = document.createElement("span")
       detail.className = `${this.classes.optionDetail} truncate`
+      detail.style.overflow = "hidden"
+      detail.style.textOverflow = "ellipsis"
+      detail.style.whiteSpace = "nowrap"
       if (selected) detail.textContent = item.detail
       else this.renderHighlightedText(detail, item.detail)
       text.append(detail)
     }
     content.append(text)
     return content
+  }
+
+  makeLazyImage(item) {
+    const image = document.createElement("img")
+    image.className = this.classes.optionImage
+    image.alt = ""
+    image.dataset.lazySrc = item.image
+    if (this.lazyObserver) this.lazyObserver.observe(image)
+    else image.src = item.image
+    return image
+  }
+
+  initLazyObserver() {
+    if (!this.options.lazyLoadImages) return
+    this.lazyObserver = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        if (entry.isIntersecting) {
+          const img = entry.target
+          if (img.dataset.lazySrc) {
+            img.src = img.dataset.lazySrc
+            delete img.dataset.lazySrc
+          }
+          this.lazyObserver.unobserve(img)
+        }
+      }
+    }, { root: this.dropdown, rootMargin: "50px" })
   }
 
   renderHighlightedText(element, value) {
@@ -654,6 +854,15 @@ export class TamSelect {
   }
 
   renderMessage(text, spinner = false) {
+    if (this.options.loadingState && spinner) {
+      const state = document.createElement("div")
+      state.className = this.classes.message
+      state.setAttribute("role", "status")
+      if (typeof this.options.loadingState === "function") this.options.loadingState(state)
+      else state.textContent = this.options.loadingState
+      this.dropdown.append(state)
+      return
+    }
     const message = document.createElement("div")
     message.className = this.classes.message
     message.setAttribute("role", "status")
@@ -695,8 +904,21 @@ export class TamSelect {
       if (last) this.deselect(last.value)
     } else if (event.key === "Tab") {
       this.close()
-    } else if (this.input && !this.opened && event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) {
-      this.open(false)
+    } else if (event.key === "Home" && this.opened) {
+      event.preventDefault()
+      this.moveActiveToFirst()
+    } else if (event.key === "End" && this.opened) {
+      event.preventDefault()
+      this.moveActiveToLast()
+    } else if (event.key === "a" && (event.ctrlKey || event.metaKey) && this.multiple && this.opened) {
+      event.preventDefault()
+      this.toggleAll()
+    } else if (event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) {
+      if (this.opened) {
+        this.typeahead(event.key)
+      } else if (this.input) {
+        this.open(false)
+      }
     }
   }
 
@@ -705,17 +927,43 @@ export class TamSelect {
     let next = this.activeIndex
     for (let count = 0; count < this.visibleItems.length; count += 1) {
       next = (next + direction + this.visibleItems.length) % this.visibleItems.length
-      if (!this.visibleItems[next].disabled) {
+      const entry = this.visibleItems[next]
+      if (entry.type !== "group-header" && !entry.disabled) {
         this.activeIndex = next
         return this.updateActiveOption()
       }
     }
   }
 
+  moveActiveToFirst() {
+    if (!this.visibleItems.length) return
+    const first = this.visibleItems.findIndex(entry => entry.type !== "group-header" && !entry.disabled)
+    if (first >= 0) { this.activeIndex = first; this.updateActiveOption() }
+  }
+
+  moveActiveToLast() {
+    if (!this.visibleItems.length) return
+    const last = this.visibleItems.findLastIndex(entry => entry.type !== "group-header" && !entry.disabled)
+    if (last >= 0) { this.activeIndex = last; this.updateActiveOption() }
+  }
+
+  toggleAll() {
+    const visibleEntries = this.visibleItems.filter(entry => entry.type === "item" && !entry.disabled)
+    const allSelected = visibleEntries.every(entry => entry.item.selected)
+    visibleEntries.forEach(entry => {
+      entry.item.selected = !allSelected
+      if (entry.item.option) entry.item.option.selected = entry.item.selected
+    })
+    this.commit()
+  }
+
   updateActiveOption() {
     this.dropdown.querySelectorAll("[data-tam-select-entry]").forEach(option => {
       const index = Number(option.dataset.tamSelectEntry)
-      toggleClasses(option, this.classes.optionActive, index === this.activeIndex)
+      const entry = this.visibleItems[index]
+      if (entry && entry.type !== "group-header") {
+        toggleClasses(option, this.classes.optionActive, index === this.activeIndex)
+      }
     })
     this.syncActiveDescendant(true)
   }
@@ -723,7 +971,7 @@ export class TamSelect {
   syncActiveDescendant(scroll = false) {
     const entry = this.visibleItems[this.activeIndex]
     const active = entry && this.dropdown.querySelector(`[data-tam-select-entry="${this.activeIndex}"]`)
-    if (this.opened && active && !entry.disabled) {
+    if (this.opened && active && !entry.disabled && entry.type !== "group-header") {
       this.focusTarget.setAttribute("aria-activedescendant", entry.id)
       if (scroll) active.scrollIntoView({ block: "nearest" })
     } else {
@@ -739,8 +987,15 @@ export class TamSelect {
 
   toggleItem(item) {
     if (item.disabled) return
-    if (this.multiple && item.selected) this.deselect(item.value)
-    else this.selectValue(item.value)
+    if (this.multiple && item.selected) {
+      this.deselect(item.value)
+    } else if (this.multiple && this.options.maximumSelectionLength > 0) {
+      const selectedCount = this.selectedItems().length
+      if (selectedCount >= this.options.maximumSelectionLength) return
+      this.selectValue(item.value)
+    } else {
+      this.selectValue(item.value)
+    }
   }
 
   selectValue(value) {
@@ -898,8 +1153,18 @@ export class TamSelect {
 
   open(loadRemote = true) {
     if (this.opened || this.select.disabled) return
+    clearTimeout(this.closeTimer)
     this.opened = true
+    if (this.options.minimumResultsForSearch > 0) {
+      const totalOptions = this.options.remoteUrl ? Infinity : this.items.length
+      this.searchVisible = totalOptions >= this.options.minimumResultsForSearch
+      this.renderSelection()
+    }
     this.dropdown.classList.remove("hidden")
+    if (this.options.animations) {
+      toggleClasses(this.dropdown, this.classes.dropdownClosed, false)
+      toggleClasses(this.dropdown, this.classes.dropdownOpen, true)
+    }
     this.focusTarget.setAttribute("aria-expanded", "true")
     toggleClasses(this.control, this.classes.controlOpen, true)
     toggleClasses(this.chevron, this.classes.chevronOpen, true)
@@ -912,9 +1177,12 @@ export class TamSelect {
 
   close() {
     if (!this.opened) return
+    if (this.options.selectOnClose && this.activeIndex >= 0) {
+      const entry = this.visibleItems[this.activeIndex]
+      if (entry && entry.type !== "group-header" && !entry.disabled) this.activateEntry(entry)
+    }
     this.opened = false
     this.cancelRemoteWork()
-    this.dropdown.classList.add("hidden")
     this.focusTarget.setAttribute("aria-expanded", "false")
     toggleClasses(this.control, this.classes.controlOpen, false)
     this.focusTarget.removeAttribute("aria-activedescendant")
@@ -934,7 +1202,28 @@ export class TamSelect {
       this.filterLocal(false)
     }
     this.renderSelection()
+
+    if (this.options.animations) {
+      toggleClasses(this.dropdown, this.classes.dropdownOpen, false)
+      toggleClasses(this.dropdown, this.classes.dropdownClosed, true)
+      const hide = () => {
+        this.dropdown.classList.add("hidden")
+        this.dropdown.removeEventListener("transitionend", hide)
+      }
+      this.dropdown.addEventListener("transitionend", hide, { once: true })
+      this.closeTimer = setTimeout(hide, 200)
+    } else {
+      this.dropdown.classList.add("hidden")
+    }
     this.emit("tam-select:close")
+  }
+
+  focus() {
+    if (!this.select.disabled) this.focusTarget.focus()
+  }
+
+  blur() {
+    this.focusTarget.blur()
   }
 
   scheduleRemote() {
@@ -1095,8 +1384,68 @@ export class TamSelect {
     this.select.dispatchEvent(new CustomEvent(name, { bubbles: true, detail: { tamSelect: this, ...detail } }))
   }
 
+  tokenizeInput() {
+    if (!this.input) return
+    const value = this.input.value
+    const separators = this.options.tokenSeparators
+    let hasToken = false
+    for (const sep of separators) {
+      if (value.includes(sep)) {
+        hasToken = true
+        break
+      }
+    }
+    if (!hasToken) return
+    const tokens = value.split(new RegExp(separators.map(s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|'))).filter(Boolean)
+    tokens.forEach(token => {
+      const trimmed = token.trim()
+      if (trimmed) this.createItem(trimmed)
+    })
+    this.input.value = ""
+    this.query = ""
+    this.filterLocal()
+  }
+
+  sortResults(items) {
+    if (typeof this.options.sorter === "function") {
+      return this.options.sorter(items)
+    }
+    return items
+  }
+
+  addData(raw) {
+    const items = Array.isArray(raw) ? raw : [raw]
+    items.forEach(data => this.addItem(data))
+    this.readNativeOptions()
+    this.renderSelection()
+    if (this.opened) this.renderDropdown()
+    this.emit("tam-select:data:add", { items: items.map(d => this.items.find(i => String(i.value) === String(d.value ?? d[this.options.valueField]))) })
+  }
+
+  removeData(values) {
+    const rawValues = Array.isArray(values) ? values : [values]
+    const removed = []
+    rawValues.forEach(value => {
+      const item = this.items.find(i => String(i.value) === String(value))
+      if (item) {
+        if (item.option) item.option.remove()
+        this.items = this.items.filter(i => i !== item)
+        removed.push(item)
+      }
+    })
+    if (removed.length) {
+      this.readNativeOptions()
+      this.renderSelection()
+      if (this.opened) this.renderDropdown()
+      this.emit("tam-select:data:remove", { items: removed })
+    }
+  }
+
   destroy() {
     this.cancelRemoteWork()
+    clearTimeout(this.closeTimer)
+    clearTimeout(this.typeaheadTimer)
+    if (this.lazyObserver) { this.lazyObserver.disconnect(); this.lazyObserver = null }
     document.removeEventListener("pointerdown", this.onOutside)
     this.select.removeEventListener("change", this.onNativeChange)
     this.select.removeEventListener("invalid", this.onNativeInvalid)

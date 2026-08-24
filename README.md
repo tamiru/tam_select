@@ -1,9 +1,9 @@
 # Tam Select
 
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Gem Version](https://img.shields.io/badge/version-1.2.5-blue.svg)](https://github.com/tamiru/tam_select)
+[![Gem Version](https://img.shields.io/badge/version-1.2.6-blue.svg)](https://github.com/tamiru/tam_select)
 
-**Tam Select** is an accessible, searchable select component for Ruby on Rails, built for Simple Form, Stimulus, Turbo, and Tailwind CSS. It keeps the native `<select>` as the source of truth, so Rails form submission, validation, selected values, and browser autofill continue to work.
+**Tam Select** is an accessible, searchable select component for Ruby on Rails, built for Simple Form, Stimulus, Turbo, and Tailwind CSS. It keeps the native `<select>` as the source of truth, so Rails form submission, validation, selected values, and browser autofill continue to work. It is a complete, modern, jQuery-free replacement for Select2.
 
 ## Requirements
 
@@ -109,12 +109,27 @@ Versions before this release generated a relative controller import. After upgra
 - Single and multiple selection
 - Ranked, typo-tolerant local search with highlighted matches and user-created tags
 - Remote JSON search with debouncing and incremental pagination
+- Option groups (`<optgroup>`) with visual section headers
+- Smooth dropdown open/close animations
+- Type-ahead search: rapid character typing jumps to matching options
+- Lazy-loaded option images via IntersectionObserver
+- Custom empty, no-results, and loading state templates
+- Maximum selection length limit (`maximumSelectionLength`)
+- Maximum input length limit (`maximumInputLength`)
+- Minimum results before showing search box (`minimumResultsForSearch`)
+- Auto-select active option on close (`selectOnClose`)
+- Automatic tokenization into tags (`tokenSeparators`)
+- Custom result sorting (`sorter`)
+- Programmatic data management (`addData` / `removeData`)
+- Focus and blur API (`focus()` / `blur()`)
+- Keyboard navigation: arrows, Enter, Escape, Tab, Backspace, Home, End, Ctrl+A
+- Combobox/listbox ARIA semantics
+- Configurable dropdown width
 - Loading, empty, and error states
 - Select2-style closed selection and open search states with clear active, selected, disabled, loading, empty, and error feedback
 - Right-aligned select chevron that remains pinned to the control edge for short and default labels
-- Keyboard navigation: arrows, Enter, Escape, Tab, and Backspace
-- Combobox/listbox ARIA semantics
 - Light and dark Tailwind themes
+- DaisyUI semantic theme with auto-detection
 - Rails 8, Turbo, Turbo Frames, Stimulus, and Simple Form integration
 - Public API and bubbling custom events
 - No jQuery, Tom Select, Select2, Preline, or Floating UI dependency
@@ -448,12 +463,17 @@ Values and labels are compared with normalized, case-insensitive, accent-insensi
 
 ## Keyboard and accessibility behavior
 
-- ArrowDown and ArrowUp open the list, move through the rendered entries, and skip disabled options.
+- ArrowDown and ArrowUp open the list, move through the rendered entries, and skip disabled options and group headers.
+- Home and End jump to the first and last selectable option.
 - Enter selects the highlighted option or activates the highlighted Create action.
 - Escape closes the list and returns focus to the combobox; Tab closes without trapping focus.
 - Backspace removes the last tag from a multiple select when the search input is empty.
+- Ctrl+A toggles all visible options in multi-select mode.
+- Type-ahead: rapid character typing (within 500ms) jumps to the first matching option.
 - Searchable controls use an input combobox; non-searchable controls use a focusable button combobox.
 - Rails labels, descriptions, required state, disabled state, and invalid state are mirrored from the native select.
+- `selectOnClose` automatically selects the active option when the dropdown closes.
+- `maximumSelectionLength` limits the number of selectable items and disables the input at the limit.
 
 ## Core JavaScript
 
@@ -474,10 +494,122 @@ instance.open()
 instance.close()
 instance.clear()
 instance.refresh()
+instance.focus()
+instance.blur()
+instance.addData({ value: "new", label: "New Option" })
+instance.removeData("old-value")
 instance.destroy()
 ```
 
 When consuming the npm package directly, import from `"tam-select"` instead.
+
+### Option groups
+
+Native `<optgroup>` elements are automatically detected and rendered as section headers in the dropdown:
+
+```erb
+<%= form.select :region_id,
+      grouped_options_for_select(
+        [["Africa", [["Ethiopia", "et"], ["Kenya", "ke"]]],
+         ["Asia", [["Japan", "jp"], ["China", "cn"]]]
+      ]),
+      { prompt: "Select region" },
+      data: { controller: "tam-select" } %>
+```
+
+### Animations
+
+The dropdown opens and closes with a smooth CSS transition. Disable it with `animations: false`:
+
+```js
+new TamSelect(select, { animations: false })
+```
+
+### Lazy-load images
+
+Option images are loaded only when they scroll into the dropdown viewport:
+
+```js
+new TamSelect(select, { lazyLoadImages: true })
+```
+
+### Custom empty and loading states
+
+Provide a string or a function `(element) => {}` to render custom content:
+
+```js
+new TamSelect(select, {
+  emptyState: "No options yet. Create one!",
+  noResultsState: (el) => { el.innerHTML = '<em>Nothing found</em>' },
+  loadingState: "Fetching options..."
+})
+```
+
+### Maximum selection length
+
+Limit the number of items that can be selected in multi-select mode:
+
+```js
+new TamSelect(select, { maximumSelectionLength: 5 })
+```
+
+The input is disabled when the limit is reached. Setting `maximumSelectionLength: 0` (default) removes the limit.
+
+### Maximum input length
+
+Limit the number of characters in the search input:
+
+```js
+new TamSelect(select, { maximumInputLength: 20 })
+```
+
+### Minimum results for search
+
+Only show the search box when there are enough options:
+
+```js
+new TamSelect(select, { minimumResultsForSearch: 10 })
+```
+
+The search input is hidden when the option count is below the threshold. `0` (default) always shows the search.
+
+### Select on close
+
+Automatically select the currently highlighted option when the dropdown closes (Escape, Tab, or clicking outside):
+
+```js
+new TamSelect(select, { selectOnClose: true })
+```
+
+### Token separators
+
+In multi-select mode, automatically create tags when the user types a separator character:
+
+```js
+new TamSelect(select, {
+  creatable: true,
+  tokenSeparators: [",", " "]  // Comma or space creates a new tag
+})
+```
+
+### Custom sorter
+
+Provide a custom sort function for search results:
+
+```js
+new TamSelect(select, {
+  sorter: (items) => items.sort((a, b) => a.label.localeCompare(b.label))
+})
+```
+
+### Width
+
+Control the container width:
+
+```js
+new TamSelect(select, { width: "300px" })  // Fixed width
+new TamSelect(select, { width: "100%" })   // Full width (default: "resolve")
+```
 
 ## Main options
 
@@ -494,6 +626,13 @@ When consuming the npm package directly, import from `"tam-select"` instead.
 | `pageParam` | `page` | Remote page parameter |
 | `debounce` | `250` | Remote request delay in milliseconds |
 | `minQueryLength` | `0` | Characters required before requesting |
+| `maximumSelectionLength` | `0` | Max items selectable (0 = unlimited) |
+| `maximumInputLength` | `0` | Max characters in search input (0 = unlimited) |
+| `minimumResultsForSearch` | `0` | Min options before showing search box |
+| `selectOnClose` | `false` | Auto-select active option when dropdown closes |
+| `tokenSeparators` | `[]` | Characters that trigger tag creation (e.g. `[",", " "]`) |
+| `sorter` | `null` | Custom sort function `(items) => items` |
+| `width` | `"resolve"` | Container width (CSS value or `"resolve"` for auto) |
 | `fuzzySearch` | `true` | Tolerates small typing mistakes in local search |
 | `highlightMatches` | `true` | Highlights direct query matches in results |
 | `sortByRelevance` | `true` | Ranks stronger local matches first |
@@ -503,8 +642,13 @@ When consuming the npm package directly, import from `"tam-select"` instead.
 | `labelField` | `label` | Remote item label key |
 | `imageField` | `image` | Remote item image URL key |
 | `matcher` | `null` | Optional `(item, query) => boolean` local matcher |
-| `theme` | `"default"` (`"auto"` in Rails helpers) | Visual preset; use `"daisyui"` or class detection with `"auto"` |
+| `theme` | `"auto"` | Visual preset; `"default"`, `"daisyui"`, or `"auto"` for class detection |
 | `classes` | `{}` | Overrides any Tailwind class group |
+| `animations` | `true` | Smooth dropdown open/close transitions |
+| `lazyLoadImages` | `false` | Load option images only when visible |
+| `emptyState` | `null` | Custom content for empty option list |
+| `noResultsState` | `null` | Custom content when no results match |
+| `loadingState` | `null` | Custom content during loading |
 
 ## Events
 
@@ -517,11 +661,28 @@ select.addEventListener("tam-select:close", () => console.log("closed"))
 select.addEventListener("tam-select:load", ({ detail }) => console.log(detail.items))
 select.addEventListener("tam-select:create", ({ detail }) => console.log(detail.item))
 select.addEventListener("tam-select:error", ({ detail }) => console.error(detail.error))
+select.addEventListener("tam-select:data:add", ({ detail }) => console.log(detail.items))
+select.addEventListener("tam-select:data:remove", ({ detail }) => console.log(detail.items))
 ```
 
 Standard native `change` events are also dispatched for Rails and other controllers.
 
-The supported public methods are `open()`, `close()`, `setValue(value)`, `clear()`, `refresh()`, and `destroy()`. Read the current native-compatible selection through `instance.value`, and recover an existing instance with `TamSelect.getInstance(select)`.
+### Public API
+
+| Method | Description |
+|---|---|
+| `open()` | Opens the dropdown |
+| `close()` | Closes the dropdown |
+| `focus()` | Focuses the search input or trigger |
+| `blur()` | Removes focus |
+| `setValue(value)` | Sets the selected value(s) |
+| `clear()` | Clears all selections |
+| `refresh()` | Re-reads native options and re-renders |
+| `addData(raw)` | Adds one or more options programmatically |
+| `removeData(values)` | Removes options by value |
+| `destroy()` | Removes all generated markup and restores the native select |
+
+Read the current selection through `instance.value`, and recover an existing instance with `TamSelect.getInstance(select)`.
 
 ## Development
 
