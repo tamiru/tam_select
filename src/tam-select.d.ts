@@ -222,8 +222,10 @@ declare class TamSelect {
   readonly wrapper: HTMLDivElement
   /** The control `<div>` containing the selection display */
   readonly control: HTMLDivElement
-  /** The dropdown `<div>` containing the option list */
+  /** The dropdown panel containing search and results */
   readonly dropdown: HTMLDivElement
+  /** The scrollable listbox containing rendered options */
+  readonly results: HTMLDivElement
   /** The search `<input>` (when searchable) */
   readonly input: HTMLInputElement | undefined
   /** The trigger `<button>` (when not searchable) */

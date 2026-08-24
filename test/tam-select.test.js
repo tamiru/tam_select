@@ -169,7 +169,7 @@ test("Escape closes and restores focus while Tab closes without preventing navig
     tamSelect.open()
     keydown(tamSelect.input, "Escape")
     assert.equal(tamSelect.opened, false)
-    assert.equal(document.activeElement, tamSelect.input)
+    assert.equal(document.activeElement, tamSelect.trigger)
 
     tamSelect.open()
     const tab = new KeyboardEvent("keydown", { key: "Tab", bubbles: true, cancelable: true })
@@ -248,7 +248,7 @@ test("selection and creation dispatch one native change plus documented custom e
   }
 })
 
-test("ARIA belongs to the focusable input and mirrors Rails form metadata", () => {
+test("ARIA is split between the field trigger, dropdown search, and listbox", () => {
   const cleanup = setupDOM(localSelect({ extra: 'required aria-describedby="region-help" aria-invalid="true"' }))
   try {
     const select = document.querySelector("select")
@@ -256,21 +256,50 @@ test("ARIA belongs to the focusable input and mirrors Rails form metadata", () =
     const tamSelect = new TamSelect(select)
 
     assert.equal(tamSelect.control.hasAttribute("role"), false)
-    assert.equal(tamSelect.input.getAttribute("role"), "combobox")
+    assert.equal(tamSelect.trigger.getAttribute("role"), "combobox")
+    assert.equal(tamSelect.trigger.getAttribute("aria-controls"), tamSelect.listboxId)
+    assert.equal(tamSelect.trigger.getAttribute("aria-labelledby"), `${label.id} ${tamSelect.valuesId}`)
+    assert.equal(tamSelect.trigger.getAttribute("aria-describedby"), "region-help")
+    assert.equal(tamSelect.trigger.getAttribute("aria-required"), "true")
+    assert.equal(tamSelect.trigger.getAttribute("aria-invalid"), "true")
+    assert.equal(tamSelect.input.getAttribute("role"), "searchbox")
     assert.equal(tamSelect.input.getAttribute("aria-controls"), tamSelect.listboxId)
-    assert.equal(tamSelect.input.getAttribute("aria-autocomplete"), "list")
-    assert.equal(tamSelect.input.getAttribute("aria-labelledby"), label.id)
-    assert.equal(tamSelect.input.getAttribute("aria-describedby"), "region-help")
-    assert.equal(tamSelect.input.getAttribute("aria-required"), "true")
-    assert.equal(tamSelect.input.getAttribute("aria-invalid"), "true")
+    assert.equal(tamSelect.results.getAttribute("role"), "listbox")
 
     tamSelect.open()
     const ids = Array.from(tamSelect.dropdown.querySelectorAll('[role="option"]'), option => option.id)
     assert.equal(new Set(ids).size, ids.length)
-    assert.equal(tamSelect.input.getAttribute("aria-expanded"), "true")
+    assert.equal(tamSelect.trigger.getAttribute("aria-expanded"), "true")
     assert.ok(tamSelect.input.getAttribute("aria-activedescendant"))
   } finally {
     cleanup()
+  }
+})
+
+test("single-select search opens below a simple field while multiple search stays inline", () => {
+  const singleCleanup = setupDOM(localSelect())
+  try {
+    const single = new TamSelect(document.querySelector("select"))
+    assert.equal(single.trigger.parentElement, single.control)
+    assert.equal(single.input.parentElement, single.searchPanel)
+    assert.equal(single.searchPanel.parentElement, single.dropdown)
+    assert.equal(single.searchPanel.nextElementSibling, single.results)
+
+    single.open()
+    assert.equal(document.activeElement, single.input)
+    assert.equal(single.values.classList.contains("hidden"), false)
+  } finally {
+    singleCleanup()
+  }
+
+  const multipleCleanup = setupDOM(localSelect({ multiple: true }))
+  try {
+    const multiple = new TamSelect(document.querySelector("select"))
+    assert.equal(multiple.searchPanel, undefined)
+    assert.equal(multiple.input.parentElement, multiple.control)
+    assert.equal(multiple.results.parentElement, multiple.dropdown)
+  } finally {
+    multipleCleanup()
   }
 })
 
@@ -296,13 +325,16 @@ test("non-searchable selects use a focusable button combobox and preserve disabl
   }
 })
 
-test("DaisyUI theme applies semantic control and option classes", () => {
+test("DaisyUI theme uses semantic colors without component classes", () => {
   const cleanup = setupDOM(localSelect())
   try {
     const tamSelect = new TamSelect(document.querySelector("select"), { theme: "daisyui" })
 
-    assert.ok(tamSelect.control.classList.contains("input"))
-    assert.equal(tamSelect.control.classList.contains("min-h-10"), false)
+    assert.ok(tamSelect.control.classList.contains("bg-base-100"))
+    assert.ok(tamSelect.control.classList.contains("min-h-11"))
+    for (const componentClass of ["input", "select", "badge", "badge-primary", "badge-ghost", "loading", "loading-spinner", "rounded-box", "rounded-btn", "rounded-field"]) {
+      assert.equal(Object.values(tamSelect.classes).join(" ").split(/\s+/).includes(componentClass), false)
+    }
 
     tamSelect.open()
     const activeOption = tamSelect.dropdown.querySelector('[role="option"]')
@@ -310,26 +342,26 @@ test("DaisyUI theme applies semantic control and option classes", () => {
 
     tamSelect.select.setAttribute("aria-invalid", "true")
     tamSelect.syncAria()
-    assert.ok(tamSelect.control.classList.contains("input-error"))
+    assert.ok(tamSelect.control.classList.contains("border-error"))
 
     tamSelect.select.disabled = true
     tamSelect.applyDisabled()
-    assert.ok(tamSelect.control.classList.contains("bg-base-200"))
-    assert.ok(tamSelect.control.classList.contains("opacity-50"))
+    assert.ok(tamSelect.control.classList.contains("bg-base-200/70"))
+    assert.ok(tamSelect.control.classList.contains("opacity-70"))
     assert.equal(Object.values(tamSelect.classes).join(" ").includes("dark:"), false)
   } finally {
     cleanup()
   }
 })
 
-test("DaisyUI controls match input height and only grow for multiple selection", () => {
+test("DaisyUI controls use stable Tailwind sizing and only grow for multiple selection", () => {
   const singleCleanup = setupDOM(localSelect())
   try {
     const single = new TamSelect(document.querySelector("select"), { theme: "daisyui" })
-    assert.equal(
-      single.control.className,
-      "input relative w-full cursor-text rounded-field overflow-hidden text-base-content focus:[--input-color:var(--color-primary)] focus:outline-none focus:outline-offset-0 focus:shadow-none focus-visible:[--input-color:var(--color-primary)] focus-visible:outline-none focus-visible:outline-offset-0 focus-visible:shadow-none focus-within:[--input-color:var(--color-primary)] focus-within:outline-none focus-within:outline-offset-0 focus-within:shadow-none"
-    )
+    assert.ok(single.control.classList.contains("min-h-11"))
+    assert.ok(single.control.classList.contains("rounded-xl"))
+    assert.ok(single.control.classList.contains("shadow-sm"))
+    assert.equal(single.control.classList.contains("h-auto"), false)
   } finally {
     singleCleanup()
   }
@@ -337,7 +369,7 @@ test("DaisyUI controls match input height and only grow for multiple selection",
   const multipleCleanup = setupDOM(localSelect({ multiple: true }))
   try {
     const multiple = new TamSelect(document.querySelector("select"), { theme: "daisyui" })
-    assert.ok(multiple.control.classList.contains("min-h-10"))
+    assert.ok(multiple.control.classList.contains("min-h-11"))
     assert.ok(multiple.control.classList.contains("h-auto"))
     assert.ok(multiple.control.classList.contains("flex-wrap"))
   } finally {
@@ -350,9 +382,9 @@ test("auto theme detects DaisyUI input and select classes", () => {
   try {
     const detected = new TamSelect(document.querySelector("select"), { theme: "auto" })
     assert.equal(detected.theme, "daisyui")
-    assert.ok(detected.control.classList.contains("input"))
-    assert.ok(detected.control.classList.contains("rounded-field"))
-    assert.ok(detected.input.classList.contains("rounded-field"))
+    assert.ok(detected.control.classList.contains("bg-base-100"))
+    assert.ok(detected.control.classList.contains("rounded-xl"))
+    assert.equal(detected.control.classList.contains("input"), false)
   } finally {
     cleanup()
   }
@@ -373,9 +405,9 @@ test("native invalid events are reflected without removing native required valid
     const select = document.querySelector("select")
     const tamSelect = new TamSelect(select)
     select.dispatchEvent(new Event("invalid", { bubbles: false, cancelable: true }))
-    assert.equal(tamSelect.input.getAttribute("aria-invalid"), "true")
+    assert.equal(tamSelect.trigger.getAttribute("aria-invalid"), "true")
     assert.equal(select.required, true)
-    assert.equal(document.activeElement, tamSelect.input)
+    assert.equal(document.activeElement, tamSelect.trigger)
 
     tamSelect.selectValue("aa")
     assert.equal(tamSelect.input.hasAttribute("aria-invalid"), false)
@@ -900,10 +932,10 @@ test("focus and blur control the focus target", () => {
   try {
     const tamSelect = new TamSelect(document.querySelector("select"))
     tamSelect.focus()
-    assert.equal(document.activeElement, tamSelect.input)
+    assert.equal(document.activeElement, tamSelect.trigger)
 
     tamSelect.blur()
-    assert.notEqual(document.activeElement, tamSelect.input)
+    assert.notEqual(document.activeElement, tamSelect.trigger)
   } finally {
     cleanup()
   }

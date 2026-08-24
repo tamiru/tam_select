@@ -177,16 +177,18 @@ color and component classes with the `daisyui` theme preset:
       } %>
 ```
 
-The preset keeps the native select hidden as the source of truth and styles the
-search control, dropdown, badges, focus state, validation state, and selected
-options to match DaisyUI. It can be combined with `classes` for local changes.
+The preset keeps the native select hidden as the source of truth. Tam Select
+owns its layout, spacing, borders, focus state, validation state, and selected
+options; DaisyUI contributes only semantic color utilities such as
+`base-content`, `primary`, and `error`. It deliberately avoids DaisyUI
+component classes such as `input`, `select`, `badge`, and `loading`, so a
+DaisyUI update cannot unexpectedly resize or reshape the generated UI.
 
-The closed single-select control uses DaisyUI's `input` component class, so its
-height, inline padding, border, radius, typography, focus outline, disabled
-state, and `input-error` validation state match a standard `input w-full` field.
-Multiple selects keep the same minimum height and grow only when tags wrap.
-All colors use DaisyUI semantic tokens, so changing `data-theme` updates the
-component without rebuilding or reconnecting it.
+The closed single-select looks like a normal Tailwind form field. Its search
+box appears at the top of the dropdown below the field, leaving the selected
+value visible while results are filtered. Multiple selects retain inline
+search so tags and keyboard entry remain natural. The control keeps a stable
+minimum height and grows only when multiple-selection tags wrap.
 
 Generated Rails helpers use `theme: "auto"`. A native select carrying DaisyUI's
 `input` or `select` class automatically receives this preset; other selects keep

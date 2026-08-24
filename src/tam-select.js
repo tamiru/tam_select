@@ -15,7 +15,9 @@ const DEFAULT_CLASSES = {
   clear: "relative z-20 ms-auto shrink-0 rounded p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-700 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-zinc-500 dark:hover:bg-zinc-800 dark:hover:text-zinc-200 dark:focus:ring-blue-400",
   chevron: "pointer-events-none relative z-10 ms-auto size-4 shrink-0 text-zinc-400 transition-transform",
   chevronOpen: "rotate-180",
-  dropdown: "absolute z-50 mt-1.5 max-h-72 w-full overflow-auto rounded-xl border border-zinc-200 bg-white p-1.5 shadow-2xl ring-1 ring-black/5 dark:border-zinc-700 dark:bg-zinc-900 dark:shadow-black/50 dark:ring-white/10",
+  dropdown: "absolute z-50 mt-1.5 flex w-full flex-col overflow-hidden rounded-xl border border-zinc-200 bg-white p-1.5 shadow-2xl ring-1 ring-black/5 dark:border-zinc-700 dark:bg-zinc-900 dark:shadow-black/50 dark:ring-white/10",
+  dropdownSearch: "mb-1 flex shrink-0 items-center gap-2 rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 shadow-inner transition focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-500/10 dark:border-zinc-700 dark:bg-zinc-800/70 dark:focus-within:border-blue-400 dark:focus-within:ring-blue-400/10",
+  results: "max-h-64 overflow-y-auto overscroll-contain scroll-py-1",
   dropdownAnimation: "origin-top-center",
   dropdownClosed: "mt-1.5 max-h-72 w-full scale-y-[0.98] opacity-0 pointer-events-none",
   dropdownOpen: "scale-y-100 opacity-100 pointer-events-auto",
@@ -39,40 +41,47 @@ const DEFAULT_CLASSES = {
   tagDragOver: "border-l-2 border-l-blue-500"
 }
 
-// DaisyUI's semantic color classes are used when the host application has
-// DaisyUI installed.
+// DaisyUI contributes semantic colors only. Layout, spacing, borders and
+// interaction states stay under Tam Select's control so DaisyUI component
+// styles cannot unexpectedly reshape the generated field.
 const THEME_CLASSES = {
   daisyui: {
     wrapper: "tam-select relative w-full text-base-content",
-    control: "input relative w-full cursor-text rounded-field overflow-hidden text-base-content focus:[--input-color:var(--color-primary)] focus:outline-none focus:outline-offset-0 focus:shadow-none focus-visible:[--input-color:var(--color-primary)] focus-visible:outline-none focus-visible:outline-offset-0 focus-visible:shadow-none focus-within:[--input-color:var(--color-primary)] focus-within:outline-none focus-within:outline-offset-0 focus-within:shadow-none",
-    controlMultiple: "min-h-10 h-auto flex-wrap py-1.5",
-    controlOpen: "",
-    controlInvalid: "input-error",
-    controlDisabled: "cursor-not-allowed bg-base-200 opacity-50",
-    input: "min-w-16 flex-1 shrink basis-0 bg-transparent p-0 text-start text-base-content outline-none placeholder:text-base-content/50 focus:outline-none focus:ring-0",
-    inputClosed: "absolute inset-0 z-0 h-full w-full cursor-pointer rounded-field opacity-0",
-    trigger: "absolute inset-0 z-0 h-full w-full cursor-pointer rounded-field border-0 bg-transparent p-0 focus:outline-none disabled:cursor-not-allowed",
+    control: "relative flex min-h-11 w-full cursor-pointer flex-wrap items-center gap-2 overflow-hidden rounded-xl border border-base-300 bg-base-100 px-3 py-2 text-sm text-base-content shadow-sm transition duration-150 hover:border-base-content/30 focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10",
+    controlMultiple: "h-auto cursor-text py-1.5",
+    controlOpen: "border-primary ring-4 ring-primary/10",
+    controlInvalid: "border-error ring-4 ring-error/10",
+    controlDisabled: "cursor-not-allowed bg-base-200/70 text-base-content/50 opacity-70 shadow-none",
+    input: "min-w-16 flex-1 shrink basis-0 border-0 bg-transparent p-0 text-start text-sm text-base-content outline-none placeholder:text-base-content/50 focus:outline-none focus:ring-0",
+    inputClosed: "",
+    trigger: "absolute inset-0 z-0 h-full w-full cursor-pointer rounded-xl border-0 bg-transparent p-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary disabled:cursor-not-allowed",
     searchIcon: "size-4 shrink-0 text-base-content/50",
     placeholder: "pointer-events-none shrink truncate text-base-content/50",
-    tag: "badge badge-primary relative z-10 max-w-full shrink-0 gap-1",
-    tagRemove: "me-0.5 shrink-0 rounded-btn p-0.5 hover:bg-primary-focus focus:outline-none focus:ring-2 focus:ring-primary",
-    clear: "relative z-20 ms-auto shrink-0 rounded-btn p-1 text-base-content/50 transition-colors hover:bg-base-200 hover:text-base-content focus:outline-none focus:ring-2 focus:ring-primary",
+    tag: "relative z-10 inline-flex max-w-full shrink-0 items-center gap-1 rounded-lg bg-primary/10 px-2 py-1 text-xs font-medium text-primary ring-1 ring-inset ring-primary/20",
+    tagRemove: "me-0.5 shrink-0 rounded p-0.5 transition-colors hover:bg-primary/15 focus:outline-none focus:ring-2 focus:ring-primary",
+    clear: "relative z-20 ms-auto shrink-0 rounded-md p-1 text-base-content/50 transition-colors hover:bg-base-200 hover:text-base-content focus:outline-none focus:ring-2 focus:ring-primary",
     chevron: "pointer-events-none relative z-10 ms-auto size-4 shrink-0 text-base-content/50 transition-transform",
-    dropdown: "absolute z-50 mt-1.5 max-h-72 w-full overflow-auto rounded-box border border-base-300 bg-base-100 p-2 shadow-xl",
+    dropdown: "absolute z-50 mt-1.5 flex w-full flex-col overflow-hidden rounded-xl border border-base-300 bg-base-100 p-1.5 shadow-2xl ring-1 ring-base-content/5",
+    dropdownSearch: "mb-1 flex shrink-0 items-center gap-2 rounded-lg border border-base-300 bg-base-200/40 px-3 py-2 shadow-inner transition focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10",
+    results: "max-h-64 overflow-y-auto overscroll-contain scroll-py-1",
     dropdownAnimation: "origin-top-center",
     dropdownClosed: "mt-1.5 max-h-72 w-full scale-y-[0.98] opacity-0 pointer-events-none",
     dropdownOpen: "scale-y-100 opacity-100 pointer-events-auto",
     groupHeader: "px-3 pt-3 pb-1 text-xs font-semibold text-base-content/60 select-none",
-    option: "flex min-h-11 cursor-pointer items-center justify-between gap-3 rounded-btn px-3 py-2 text-sm text-base-content outline-none transition-colors duration-100 hover:bg-base-200",
+    option: "flex min-h-11 cursor-pointer items-center justify-between gap-3 rounded-lg px-3 py-2 text-sm text-base-content outline-none transition-colors duration-100 hover:bg-base-200",
+    optionContent: "flex min-w-0 flex-1 items-center gap-3",
+    optionText: "flex min-w-0 flex-1 flex-col",
+    optionLabel: "font-normal",
     optionDetail: "text-xs font-normal text-base-content/60",
     optionImage: "size-9 shrink-0 rounded-full bg-base-200 object-cover",
-    optionMeta: "badge badge-ghost shrink-0",
-    optionActive: "bg-primary text-primary-content",
-    optionSelected: "bg-primary/10 font-medium text-primary",
+    optionMeta: "shrink-0 rounded-md bg-base-200 px-1.5 py-0.5 text-xs font-medium text-base-content/70",
+    optionActive: "bg-primary text-primary-content shadow-sm [&_*]:text-primary-content",
+    optionSelected: "bg-primary/10 font-medium text-primary ring-1 ring-inset ring-primary/10",
     optionDisabled: "cursor-not-allowed opacity-50",
     highlight: "rounded-sm bg-warning/30 px-0.5 text-inherit",
     message: "px-3 py-6 text-center text-sm text-base-content/60",
-    spinner: "loading loading-spinner loading-sm text-primary",
+    status: "sr-only",
+    spinner: "size-4 animate-spin rounded-full border-2 border-base-300 border-t-primary",
     error: "px-3 py-3 text-sm text-error",
     tagDragging: "opacity-50 ring-2 ring-primary",
     tagDragOver: "border-l-2 border-l-primary"
@@ -93,7 +102,9 @@ const THEME_CLASSES = {
     tagRemove: "ms-0.5 shrink-0 rounded-none border-r border-gray-400 px-1 text-gray-500 hover:bg-gray-300 hover:text-gray-700 focus:outline-none focus:ring-1 focus:ring-gray-400",
     clear: "relative z-20 ms-auto shrink-0 rounded p-0.5 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 focus:outline-none focus:ring-1 focus:ring-gray-400",
     chevron: "pointer-events-none relative z-10 ms-auto size-4 shrink-0 text-gray-500 transition-transform",
-    dropdown: "absolute z-50 mt-0 max-h-52 w-full overflow-auto rounded border border-gray-400 bg-white p-0",
+    dropdown: "absolute z-50 mt-0 flex w-full flex-col overflow-hidden rounded border border-gray-400 bg-white p-0",
+    dropdownSearch: "flex shrink-0 items-center gap-2 border-b border-gray-300 bg-gray-50 px-2 py-1.5",
+    results: "max-h-52 overflow-y-auto overscroll-contain",
     dropdownAnimation: "origin-top-center",
     dropdownClosed: "mt-0 max-h-52 w-full scale-y-95 opacity-0 pointer-events-none",
     dropdownOpen: "scale-y-100 opacity-100 pointer-events-auto",
@@ -348,13 +359,21 @@ export class TamSelect {
       this.input.autocomplete = "off"
       this.input.spellcheck = false
       if (this.options.maximumInputLength > 0) this.input.maxLength = this.options.maximumInputLength
-      this.input.setAttribute("role", "combobox")
-      this.input.setAttribute("aria-haspopup", "listbox")
-      this.input.setAttribute("aria-expanded", "false")
       this.input.setAttribute("aria-controls", this.listboxId)
-      this.input.setAttribute("aria-autocomplete", "list")
-      this.focusTarget = this.input
-    } else {
+      if (this.multiple) {
+        this.input.setAttribute("role", "combobox")
+        this.input.setAttribute("aria-haspopup", "listbox")
+        this.input.setAttribute("aria-expanded", "false")
+        this.input.setAttribute("aria-autocomplete", "list")
+        this.focusTarget = this.input
+      } else {
+        this.input.type = "search"
+        this.input.setAttribute("role", "searchbox")
+        this.input.setAttribute("aria-label", this.options.searchPlaceholder)
+      }
+    }
+
+    if (!this.multiple || !this.searchable) {
       this.trigger = document.createElement("button")
       this.trigger.type = "button"
       this.trigger.className = this.classes.trigger
@@ -376,7 +395,7 @@ export class TamSelect {
     this.chevron.innerHTML = ICONS.chevron
 
     this.dropdown = document.createElement("div")
-    this.dropdown.id = this.listboxId
+    this.dropdown.id = `${this.id}-dropdown`
     this.dropdown.className = `${this.classes.dropdown} hidden`
     if (this.options.animations) {
       const preset = this.options.animationPreset ? ANIMATION_PRESETS[this.options.animationPreset] : null
@@ -389,8 +408,20 @@ export class TamSelect {
       this.dropdown.style.setProperty("--tam-easing", easing)
       this.dropdown.style.transition = `all var(--tam-duration) var(--tam-easing)`
     }
-    this.dropdown.setAttribute("role", "listbox")
-    if (this.multiple) this.dropdown.setAttribute("aria-multiselectable", "true")
+    this.results = document.createElement("div")
+    this.results.id = this.listboxId
+    this.results.className = this.classes.results
+    this.results.setAttribute("role", "listbox")
+    if (this.multiple) this.results.setAttribute("aria-multiselectable", "true")
+
+    if (this.searchable && !this.multiple) {
+      this.searchPanel = document.createElement("div")
+      this.searchPanel.className = this.classes.dropdownSearch
+      this.searchPanel.append(this.searchIcon, this.input)
+      this.dropdown.append(this.searchPanel, this.results)
+    } else {
+      this.dropdown.append(this.results)
+    }
 
     this.status = document.createElement("div")
     this.status.className = this.classes.status
@@ -398,7 +429,7 @@ export class TamSelect {
     this.status.setAttribute("aria-live", "polite")
     this.status.setAttribute("aria-atomic", "true")
 
-    const focusControl = this.searchable ? [this.searchIcon, this.input] : [this.trigger]
+    const focusControl = this.multiple && this.searchable ? [this.searchIcon, this.input] : [this.trigger]
     this.control.append(this.values, ...focusControl, this.clearButton, this.chevron)
     this.wrapper.append(this.control, this.status)
     this.select.after(this.wrapper)
@@ -433,7 +464,7 @@ export class TamSelect {
     }
     this.onKeydown = event => this.handleKeydown(event)
     this.onClear = event => { event.stopPropagation(); this.clear() }
-    this.onTrigger = event => { event.preventDefault(); this.open(); this.trigger.focus() }
+    this.onTrigger = event => { event.preventDefault(); this.open() }
     this.onOutside = event => {
       if (!this.wrapper.contains(event.target) && !this.dropdown.contains(event.target)) this.close()
     }
@@ -452,7 +483,7 @@ export class TamSelect {
     }
     this.onScroll = () => {
       if (this.options.remoteUrl && this.hasMore && !this.loading) {
-        if (this.dropdown.scrollTop + this.dropdown.clientHeight >= this.dropdown.scrollHeight - 32) {
+        if (this.results.scrollTop + this.results.clientHeight >= this.results.scrollHeight - 32) {
           this.loadRemote(this.nextPage || this.page + 1, true)
         }
       }
@@ -470,10 +501,11 @@ export class TamSelect {
 
     this.control.addEventListener("click", this.onControlClick)
     this.focusTarget.addEventListener("keydown", this.onKeydown)
+    if (this.input && this.input !== this.focusTarget) this.input.addEventListener("keydown", this.onKeydown)
     if (this.input) this.input.addEventListener("input", this.onInput)
     if (this.trigger) this.trigger.addEventListener("click", this.onTrigger)
     this.clearButton.addEventListener("click", this.onClear)
-    this.dropdown.addEventListener("scroll", this.onScroll)
+    this.results.addEventListener("scroll", this.onScroll)
     this.select.addEventListener("change", this.onNativeChange)
     this.select.addEventListener("invalid", this.onNativeInvalid)
     this.labelElements.forEach(label => label.addEventListener("click", this.onLabelClick))
@@ -749,10 +781,11 @@ export class TamSelect {
     const hasValue = selected.length > 0
     const atLimit = this.multiple && this.options.maximumSelectionLength > 0 && selected.length >= this.options.maximumSelectionLength
     this.selectionLimitReached = atLimit
-    this.values.classList.toggle("hidden", !this.multiple && this.opened)
-    this.searchIcon.classList.toggle("hidden", !this.searchable || !this.searchVisible || (!this.multiple && !this.opened))
+    this.values.classList.remove("hidden")
+    this.searchIcon.classList.toggle("hidden", !this.searchable || !this.searchVisible)
+    if (this.searchPanel) this.searchPanel.classList.toggle("hidden", !this.searchVisible)
     if (this.input) {
-      toggleClasses(this.input, this.classes.inputClosed, !this.multiple && !this.opened)
+      toggleClasses(this.input, this.classes.inputClosed, false)
       this.input.placeholder = this.multiple && !hasValue ? this.options.placeholder : this.options.searchPlaceholder
       if (atLimit) this.input.disabled = true
       else this.input.disabled = this.select.disabled
@@ -859,8 +892,8 @@ export class TamSelect {
 
   renderDropdown() {
     if (!this.opened) return
-    this.dropdown.replaceChildren()
-    this.dropdown.setAttribute("aria-busy", String(this.loading))
+    this.results.replaceChildren()
+    this.results.setAttribute("aria-busy", String(this.loading))
 
     const remaining = Math.max(0, this.options.minQueryLength - this.query.trim().length)
     if (this.options.remoteUrl && remaining > 0) {
@@ -874,7 +907,7 @@ export class TamSelect {
       error.className = this.classes.error
       error.setAttribute("role", "alert")
       error.textContent = this.error
-      this.dropdown.append(error)
+      this.results.append(error)
       this.updateStatus(this.error)
       return this.syncActiveDescendant()
     }
@@ -889,7 +922,7 @@ export class TamSelect {
       empty.className = this.classes.message
       if (typeof this.options.emptyState === "function") this.options.emptyState(empty)
       else empty.textContent = this.options.emptyState
-      this.dropdown.append(empty)
+      this.results.append(empty)
       this.updateStatus("")
       return this.syncActiveDescendant()
     }
@@ -907,7 +940,7 @@ export class TamSelect {
         noResults.className = this.classes.message
         if (typeof this.options.noResultsState === "function") this.options.noResultsState(noResults)
         else noResults.textContent = this.options.noResultsState
-        this.dropdown.append(noResults)
+        this.results.append(noResults)
       } else {
         this.renderMessage(this.options.noResultsText)
       }
@@ -925,10 +958,10 @@ export class TamSelect {
   renderStandardDropdown() {
     for (const entry of this.visibleItems) {
       if (entry.type === "group-header") {
-        this.dropdown.append(this.makeGroupHeader(entry))
+        this.results.append(this.makeGroupHeader(entry))
       } else {
         const index = this.visibleItems.indexOf(entry)
-        this.dropdown.append(this.makeOption(entry, index))
+        this.results.append(this.makeOption(entry, index))
       }
     }
   }
@@ -939,8 +972,8 @@ export class TamSelect {
     const buffer = this.options.virtualScrollBuffer
     const total = this.visibleItems.length
     const totalHeight = total * itemHeight
-    const scrollTop = this.dropdown.scrollTop || 0
-    const viewportHeight = this.dropdown.clientHeight || 288
+    const scrollTop = this.results.scrollTop || 0
+    const viewportHeight = this.results.clientHeight || 288
     const start = Math.max(0, Math.floor(scrollTop / itemHeight) - buffer)
     const end = Math.min(total, Math.ceil((scrollTop + viewportHeight) / itemHeight) + buffer)
 
@@ -948,15 +981,15 @@ export class TamSelect {
       const topSpacer = document.createElement("div")
       topSpacer.style.height = `${start * itemHeight}px`
       topSpacer.dataset.virtualSpacer = "top"
-      this.dropdown.append(topSpacer)
+      this.results.append(topSpacer)
     }
 
     for (let i = start; i < end; i++) {
       const entry = this.visibleItems[i]
       if (entry.type === "group-header") {
-        this.dropdown.append(this.makeGroupHeader(entry))
+        this.results.append(this.makeGroupHeader(entry))
       } else {
-        this.dropdown.append(this.makeOption(entry, i))
+        this.results.append(this.makeOption(entry, i))
       }
     }
 
@@ -964,13 +997,13 @@ export class TamSelect {
       const bottomSpacer = document.createElement("div")
       bottomSpacer.style.height = `${(total - end) * itemHeight}px`
       bottomSpacer.dataset.virtualSpacer = "bottom"
-      this.dropdown.append(bottomSpacer)
+      this.results.append(bottomSpacer)
     }
   }
 
   rerenderVirtualItems() {
     if (!this.isVirtualScroll || !this.opened) return
-    const children = Array.from(this.dropdown.children)
+    const children = Array.from(this.results.children)
     children.forEach(child => child.remove())
     this.renderVirtualDropdown()
     this.syncActiveDescendant()
@@ -1174,7 +1207,7 @@ export class TamSelect {
       state.setAttribute("role", "status")
       if (typeof this.options.loadingState === "function") this.options.loadingState(state)
       else state.textContent = this.options.loadingState
-      this.dropdown.append(state)
+      this.results.append(state)
       return
     }
     const message = document.createElement("div")
@@ -1190,7 +1223,7 @@ export class TamSelect {
     } else {
       message.textContent = text
     }
-    this.dropdown.append(message)
+    this.results.append(message)
   }
 
   handleKeydown(event) {
@@ -1217,7 +1250,7 @@ export class TamSelect {
       const last = this.selectedItems().at(-1)
       if (last) this.deselect(last.value)
     } else if (event.key === "Tab") {
-      this.close()
+      this.close(false)
     } else if (event.key === "Home" && this.opened) {
       event.preventDefault()
       this.moveActiveToFirst()
@@ -1277,7 +1310,7 @@ export class TamSelect {
   }
 
   updateActiveOption() {
-    this.dropdown.querySelectorAll("[data-tam-select-entry]").forEach(option => {
+    this.results.querySelectorAll("[data-tam-select-entry]").forEach(option => {
       const index = Number(option.dataset.tamSelectEntry)
       const entry = this.visibleItems[index]
       if (entry && entry.type !== "group-header") {
@@ -1289,12 +1322,13 @@ export class TamSelect {
 
   syncActiveDescendant(scroll = false) {
     const entry = this.visibleItems[this.activeIndex]
-    const active = entry && this.dropdown.querySelector(`[data-tam-select-entry="${this.activeIndex}"]`)
+    const active = entry && this.results.querySelector(`[data-tam-select-entry="${this.activeIndex}"]`)
+    const activeTarget = this.opened && this.input && !this.multiple ? this.input : this.focusTarget
+    this.focusTarget.removeAttribute("aria-activedescendant")
+    if (this.input && this.input !== this.focusTarget) this.input.removeAttribute("aria-activedescendant")
     if (this.opened && active && !entry.disabled && entry.type !== "group-header") {
-      this.focusTarget.setAttribute("aria-activedescendant", entry.id)
+      activeTarget.setAttribute("aria-activedescendant", entry.id)
       if (scroll) active.scrollIntoView({ block: "nearest" })
-    } else {
-      this.focusTarget.removeAttribute("aria-activedescendant")
     }
   }
 
@@ -1518,11 +1552,12 @@ export class TamSelect {
       const scheduleFrame = window.requestAnimationFrame || (callback => window.setTimeout(callback, 0))
       scheduleFrame(() => this.updateDropdownPosition())
     }
-    this.focusTarget.focus({ preventScroll: true })
+    const openTarget = this.searchable && !this.multiple ? this.input : this.focusTarget
+    openTarget.focus({ preventScroll: true })
     this.emit("tam-select:open")
   }
 
-  close() {
+  close(restoreFocus = true) {
     if (!this.opened) return
     if (!this.emit("tam-select:closing", {}, true)) return
     this.opened = false
@@ -1534,6 +1569,7 @@ export class TamSelect {
     this.focusTarget.setAttribute("aria-expanded", "false")
     toggleClasses(this.control, this.classes.controlOpen, false)
     this.focusTarget.removeAttribute("aria-activedescendant")
+    if (this.input && this.input !== this.focusTarget) this.input.removeAttribute("aria-activedescendant")
     toggleClasses(this.chevron, this.classes.chevronOpen, false)
     if (this.input) this.input.value = ""
     this.query = ""
@@ -1551,6 +1587,9 @@ export class TamSelect {
       this.filterLocal(false)
     }
     this.renderSelection()
+    if (restoreFocus && !this.multiple && this.input && document.activeElement === this.input) {
+      this.focusTarget.focus({ preventScroll: true })
+    }
 
     if (this.options.animations) {
       toggleClasses(this.dropdown, this.classes.dropdownOpen, false)
@@ -1836,6 +1875,9 @@ export class TamSelect {
     this.mutationObserver?.disconnect()
     this.select.removeEventListener("change", this.onNativeChange)
     this.select.removeEventListener("invalid", this.onNativeInvalid)
+    this.focusTarget.removeEventListener("keydown", this.onKeydown)
+    if (this.input && this.input !== this.focusTarget) this.input.removeEventListener("keydown", this.onKeydown)
+    this.results.removeEventListener("scroll", this.onScroll)
     this.labelElements.forEach(label => label.removeEventListener("click", this.onLabelClick))
     this.wrapper.remove()
     if (this.portalDropdown) this.dropdown.remove()
