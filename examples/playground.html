@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tam Select – Playground</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: { extend: { fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] } } }
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *{box-sizing:border-box}
+    body{font-family:'Inter',system-ui,sans-serif}
+    .dark{color-scheme:dark}
+  </style>
+</head>
+<body class="bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100 min-h-screen transition-colors">
+
+  <!-- Header -->
+  <div class="border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 sticky top-0 z-50">
+    <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+      <div>
+        <h1 class="text-lg font-bold tracking-tight">tam-select <span class="text-zinc-400 font-normal">playground</span></h1>
+        <p class="text-xs text-zinc-400 dark:text-zinc-500 mt-0.5">v1.3.0 — compact design refresh</p>
+      </div>
+      <div class="flex items-center gap-3">
+        <button id="themeToggle" class="inline-flex items-center gap-1.5 rounded-md border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-2.5 py-1.5 text-xs font-medium text-zinc-600 dark:text-zinc-300 shadow-sm hover:bg-zinc-50 dark:hover:bg-zinc-700 transition">
+          <span id="themeIcon">🌙</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="max-w-6xl mx-auto px-6 py-10 space-y-12">
+
+    <!-- Height Comparison -->
+    <section>
+      <h2 class="text-xs font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-4">Height Match</h2>
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+        <div class="space-y-1.5">
+          <label class="block text-xs text-zinc-400">text input</label>
+          <input type="text" placeholder="Standard input" class="min-h-11 w-full rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm font-medium text-zinc-800 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100">
+        </div>
+        <div class="space-y-1.5">
+          <label class="block text-xs text-zinc-400">tam-select</label>
+          <select id="height-cmp" data-placeholder="Standard input"></select>
+        </div>
+        <div class="space-y-1.5">
+          <label class="block text-xs text-zinc-400">select (native)</label>
+          <select class="min-h-11 w-full rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm font-medium text-zinc-800 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100">
+            <option>Choose one…</option>
+            <option>Option A</option>
+            <option>Option B</option>
+          </select>
+        </div>
+        <div class="space-y-1.5">
+          <label class="block text-xs text-zinc-400">textarea</label>
+          <textarea rows="1" placeholder="Standard textarea" class="min-h-11 w-full resize-none rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm font-medium text-zinc-800 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"></textarea>
+        </div>
+      </div>
+      <p class="text-xs text-zinc-400 mt-2">All four use <code class="text-zinc-500">min-h-11 px-3 py-2 text-sm</code> — identical 44px minimum height</p>
+    </section>
+
+    <!-- Basic Single + Multi -->
+    <section>
+      <h2 class="text-xs font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-4">Basic</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">Single Select</label>
+          <select id="basic-single" data-placeholder="Choose a fruit…">
+            <option value="">Choose a fruit…</option>
+            <option value="apple">Apple</option>
+            <option value="banana">Banana</option>
+            <option value="cherry">Cherry</option>
+            <option value="date">Date</option>
+            <option value="elderberry">Elderberry</option>
+            <option value="fig">Fig</option>
+            <option value="grape">Grape</option>
+          </select>
+          <p class="text-xs text-zinc-400">Click to search · Arrow keys to navigate</p>
+        </div>
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">Multi Select</label>
+          <select id="basic-multi" multiple data-placeholder="Pick colors…">
+            <option value="red">Red</option>
+            <option value="orange">Orange</option>
+            <option value="yellow">Yellow</option>
+            <option value="green">Green</option>
+            <option value="blue">Blue</option>
+            <option value="indigo">Indigo</option>
+            <option value="violet">Violet</option>
+          </select>
+          <p class="text-xs text-zinc-400">Click tags to remove · Type to search</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Details & Meta -->
+    <section>
+      <h2 class="text-xs font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-4">Details &amp; Meta</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">Users</label>
+          <select id="detail-select" data-placeholder="Select a user…">
+            <option value="">Select a user…</option>
+            <option value="alice" data-detail="alice@example.com" data-meta="Admin">Alice Johnson</option>
+            <option value="bob" data-detail="bob@example.com" data-meta="Editor">Bob Smith</option>
+            <option value="carol" data-detail="carol@example.com" data-meta="Viewer">Carol White</option>
+            <option value="dave" data-detail="dave@example.com" data-meta="Admin">Dave Brown</option>
+          </select>
+        </div>
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">Countries</label>
+          <select id="country-select" data-placeholder="Pick countries…">
+            <option value="us" data-detail="North America" data-meta="331M">United States</option>
+            <option value="uk" data-detail="Europe" data-meta="67M">United Kingdom</option>
+            <option value="jp" data-detail="Asia" data-meta="125M">Japan</option>
+            <option value="br" data-detail="South America" data-meta="214M">Brazil</option>
+            <option value="ng" data-detail="Africa" data-meta="211M">Nigeria</option>
+            <option value="in" data-detail="Asia" data-meta="1.4B">India</option>
+          </select>
+        </div>
+      </div>
+    </section>
+
+    <!-- States -->
+    <section>
+      <h2 class="text-xs font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-4">States</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">Disabled</label>
+          <select id="disabled-select" disabled data-placeholder="Cannot change…">
+            <option value="locked" selected>Locked Value</option>
+          </select>
+        </div>
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">Non-searchable</label>
+          <select id="no-search-select" data-placeholder="Pick one…">
+            <option value="">Pick one…</option>
+            <option value="a">Option A</option>
+            <option value="b">Option B</option>
+            <option value="c">Option C</option>
+          </select>
+        </div>
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">Creatable</label>
+          <select id="creatable-select" data-placeholder="Type to create…">
+            <option value="react">React</option>
+            <option value="vue">Vue</option>
+            <option value="svelte">Svelte</option>
+          </select>
+        </div>
+      </div>
+    </section>
+
+    <!-- Grouped -->
+    <section>
+      <h2 class="text-xs font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-4">Grouped Options</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">Frameworks</label>
+          <select id="grouped-select" data-placeholder="Select a framework…">
+            <option value="">Select a framework…</option>
+            <optgroup label="Frontend">
+              <option value="react">React</option>
+              <option value="vue">Vue</option>
+              <option value="angular">Angular</option>
+              <option value="svelte">Svelte</option>
+            </optgroup>
+            <optgroup label="Backend">
+              <option value="rails">Ruby on Rails</option>
+              <option value="django">Django</option>
+              <option value="laravel">Laravel</option>
+              <option value="spring">Spring Boot</option>
+            </optgroup>
+            <optgroup label="Full Stack">
+              <option value="next">Next.js</option>
+              <option value="nuxt">Nuxt</option>
+            </optgroup>
+          </select>
+        </div>
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">Timezones</label>
+          <select id="tz-select" data-placeholder="Choose timezone…">
+            <option value="">Choose timezone…</option>
+            <optgroup label="Americas">
+              <option value="est">Eastern (UTC-5)</option>
+              <option value="cst">Central (UTC-6)</option>
+              <option value="mst">Mountain (UTC-7)</option>
+              <option value="pst">Pacific (UTC-8)</option>
+            </optgroup>
+            <optgroup label="Europe">
+              <option value="gmt">GMT (UTC+0)</option>
+              <option value="cet">CET (UTC+1)</option>
+              <option value="eet">EET (UTC+2)</option>
+            </optgroup>
+            <optgroup label="Asia">
+              <option value="ist">IST (UTC+5:30)</option>
+              <option value="jst">JST (UTC+9)</option>
+            </optgroup>
+          </select>
+        </div>
+      </div>
+    </section>
+
+    <!-- Remote / API Search -->
+    <section>
+      <h2 class="text-xs font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-4">Remote / API Search</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <!-- GitHub Repos -->
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">GitHub Repos <span class="text-zinc-400 font-normal">(real API)</span></label>
+          <select id="remote-github" data-placeholder="Search repos…"></select>
+          <p class="text-xs text-zinc-400">Type ≥ 2 chars · Debounced 300ms · processResults transforms response</p>
+        </div>
+        <!-- Custom Transport -->
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">Custom Transport <span class="text-zinc-400 font-normal">(mock API)</span></label>
+          <select id="remote-transport" data-placeholder="Search users…"></select>
+          <p class="text-xs text-zinc-400">Custom fetch fn · Simulated 400ms delay · Min 1 char</p>
+        </div>
+        <!-- Paginated -->
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">Paginated <span class="text-zinc-400 font-normal">(infinite scroll)</span></label>
+          <select id="remote-paginated" data-placeholder="Search countries…"></select>
+          <p class="text-xs text-zinc-400">Scroll to load more · cacheRemote enabled · Min 1 char</p>
+        </div>
+      </div>
+      <!-- Event Log -->
+      <div class="mt-4 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50 p-3">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-[11px] font-semibold uppercase tracking-wider text-zinc-400">Event Log</span>
+          <button id="clearLog" class="text-[11px] text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition">Clear</button>
+        </div>
+        <div id="eventLog" class="max-h-32 overflow-y-auto font-mono text-xs text-zinc-500 dark:text-zinc-400 space-y-0.5">
+          <div class="text-zinc-300 dark:text-zinc-600 italic">Events will appear here as you interact with the selects above…</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Animation Presets -->
+    <section>
+      <h2 class="text-xs font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-4">Animation Presets</h2>
+      <div class="grid grid-cols-2 md:grid-cols-5 gap-6">
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">Material</label>
+          <select id="anim-material" data-placeholder="Try me…">
+            <option value="">Try me…</option>
+            <option value="a">Alpha</option><option value="b">Beta</option><option value="c">Gamma</option>
+          </select>
+        </div>
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">Spring</label>
+          <select id="anim-spring" data-placeholder="Try me…">
+            <option value="">Try me…</option>
+            <option value="a">Alpha</option><option value="b">Beta</option><option value="c">Gamma</option>
+          </select>
+        </div>
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">Snappy</label>
+          <select id="anim-snappy" data-placeholder="Try me…">
+            <option value="">Try me…</option>
+            <option value="a">Alpha</option><option value="b">Beta</option><option value="c">Gamma</option>
+          </select>
+        </div>
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">Smooth</label>
+          <select id="anim-smooth" data-placeholder="Try me…">
+            <option value="">Try me…</option>
+            <option value="a">Alpha</option><option value="b">Beta</option><option value="c">Gamma</option>
+          </select>
+        </div>
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">Bounce</label>
+          <select id="anim-bounce" data-placeholder="Try me…">
+            <option value="">Try me…</option>
+            <option value="a">Alpha</option><option value="b">Beta</option><option value="c">Gamma</option>
+          </select>
+        </div>
+      </div>
+    </section>
+
+    <!-- Select2 Theme -->
+    <section>
+      <h2 class="text-xs font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-4">Select2 Theme</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">Single Select</label>
+          <select id="s2-single" data-placeholder="Choose a framework…">
+            <option value="">Choose a framework…</option>
+            <option value="react" data-detail="Meta · 200k+ stars" data-meta="FE">React</option>
+            <option value="vue" data-detail="Evan You · 205k+ stars" data-meta="FE">Vue</option>
+            <option value="angular" data-detail="Google · 93k+ stars" data-meta="FE">Angular</option>
+            <option value="svelte" data-detail="Rich Harris · 80k+ stars" data-meta="FE">Svelte</option>
+            <option value="next" data-detail="Vercel · 125k+ stars" data-meta="FS">Next.js</option>
+            <option value="nuxt" data-detail="NuxtLabs · 53k+ stars" data-meta="FS">Nuxt</option>
+          </select>
+          <p class="text-xs text-zinc-400">Gray border · blue hover fill · rounded-md</p>
+        </div>
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">Multi Select</label>
+          <select id="s2-multi" multiple data-placeholder="Pick colors…">
+            <option value="red">Red</option>
+            <option value="orange">Orange</option>
+            <option value="yellow">Yellow</option>
+            <option value="green">Green</option>
+            <option value="blue">Blue</option>
+            <option value="indigo">Indigo</option>
+            <option value="violet">Violet</option>
+          </select>
+          <p class="text-xs text-zinc-400">Gray tags · bordered · gray background</p>
+        </div>
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">With Details</label>
+          <select id="s2-detail" data-placeholder="Select a user…">
+            <option value="">Select a user…</option>
+            <option value="alice" data-detail="alice@example.com" data-meta="Admin">Alice Johnson</option>
+            <option value="bob" data-detail="bob@example.com" data-meta="Editor">Bob Smith</option>
+            <option value="carol" data-detail="carol@example.com" data-meta="Viewer">Carol White</option>
+            <option value="dave" data-detail="dave@example.com" data-meta="Admin">Dave Brown</option>
+          </select>
+          <p class="text-xs text-zinc-400">Sublabels + role badges</p>
+        </div>
+      </div>
+      <div class="mt-4 p-3 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50">
+        <p class="text-xs text-zinc-500 dark:text-zinc-400"><strong class="text-zinc-600 dark:text-zinc-300">Select2 theme</strong> — Gray palette, blue hover fill, gray bordered tags, compact proportions matching the default theme.</p>
+      </div>
+    </section>
+
+    <!-- Virtual Scroll -->
+    <section>
+      <h2 class="text-xs font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-4">Virtual Scroll</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">1500 Items <span class="text-zinc-400 font-normal">(virtualized)</span></label>
+          <select id="virtual-1500" data-placeholder="Search 1,500 items…"></select>
+          <p class="text-xs text-zinc-400">Only visible DOM nodes rendered · smooth 60fps scroll · 44px row height</p>
+        </div>
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">5000 Items <span class="text-zinc-400 font-normal">(large dataset)</span></label>
+          <select id="virtual-5000" multiple data-placeholder="Pick from 5,000…"></select>
+          <p class="text-xs text-zinc-400">Multi-select · virtualized · type to fuzzy-search the entire set</p>
+        </div>
+      </div>
+      <div class="mt-4 flex items-center gap-4">
+        <div id="virtualPerf" class="text-xs text-zinc-400 dark:text-zinc-500 font-mono"></div>
+      </div>
+    </section>
+
+    <!-- RTL Layout -->
+    <section dir="rtl">
+      <h2 class="text-xs font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-4">RTL Layout</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">عربي <span class="text-zinc-400 font-normal">(Arabic)</span></label>
+          <select id="rtl-arabic" data-placeholder="اختر مدينة…"></select>
+          <p class="text-xs text-zinc-400 text-left">dir=rtl · arrows, chevron, tags flip correctly</p>
+        </div>
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">עברית <span class="text-zinc-400 font-normal">(Hebrew multi)</span></label>
+          <select id="rtl-hebrew" multiple data-placeholder="בחר ערים…"></select>
+          <p class="text-xs text-zinc-400 text-left">RTL multi-select · tags flow right-to-left</p>
+        </div>
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">Mixed <span class="text-zinc-400 font-normal">(auto-detect)</span></label>
+          <select id="rtl-auto" data-placeholder="Mix of directions…"></select>
+          <p class="text-xs text-zinc-400 text-left">English + Arabic labels · dir=auto</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <div class="border-t border-zinc-200 dark:border-zinc-800 pt-8 pb-6 text-center text-xs text-zinc-400 space-y-1">
+      <p>tam-select v1.3.0 · compact design refresh</p>
+      <p>Theme: <strong>default</strong> · toggle dark mode above</p>
+      <p>Remote demos use <a href="https://docs.github.com/en/rest" class="underline hover:text-zinc-600">GitHub API</a> and a mock transport</p>
+    </div>
+
+  </div>
+
+  <script type="module">
+    import { TamSelect } from './tam-select.bundle.js'
+
+    const instances = []
+
+    function mount(theme) {
+      // Destroy existing
+      instances.forEach(i => i.destroy())
+      instances.length = 0
+
+      const opts = { theme }
+      const singleOpts = { ...opts }
+      const multiOpts = { ...opts }
+      const searchOff = { ...opts, searchable: false }
+      const creatable = { ...opts, creatable: true }
+
+      instances.push(new TamSelect(document.getElementById('basic-single'), singleOpts))
+      instances.push(new TamSelect(document.getElementById('basic-multi'), multiOpts))
+      instances.push(new TamSelect(document.getElementById('detail-select'), singleOpts))
+      instances.push(new TamSelect(document.getElementById('country-select'), multiOpts))
+      instances.push(new TamSelect(document.getElementById('disabled-select'), singleOpts))
+      instances.push(new TamSelect(document.getElementById('no-search-select'), searchOff))
+      instances.push(new TamSelect(document.getElementById('creatable-select'), creatable))
+      instances.push(new TamSelect(document.getElementById('grouped-select'), singleOpts))
+      instances.push(new TamSelect(document.getElementById('tz-select'), singleOpts))
+
+      // Animation presets
+      instances.push(new TamSelect(document.getElementById('anim-material'), { ...opts, animationPreset: 'material' }))
+      instances.push(new TamSelect(document.getElementById('anim-spring'), { ...opts, animationPreset: 'spring' }))
+      instances.push(new TamSelect(document.getElementById('anim-snappy'), { ...opts, animationPreset: 'snappy' }))
+      instances.push(new TamSelect(document.getElementById('anim-smooth'), { ...opts, animationPreset: 'smooth' }))
+      instances.push(new TamSelect(document.getElementById('anim-bounce'), { ...opts, animationPreset: 'bounce' }))
+
+      // Height comparison
+      const cmpSelect = document.getElementById('height-cmp')
+      if (cmpSelect) {
+        const opt1 = new Option('Choose one…', '')
+        const opt2 = new Option('Option A', 'a')
+        const opt3 = new Option('Option B', 'b')
+        cmpSelect.add(opt1)
+        cmpSelect.add(opt2)
+        cmpSelect.add(opt3)
+        instances.push(new TamSelect(cmpSelect, { ...opts, searchable: false }))
+      }
+    }
+
+    mount('default')
+
+    // ─── Select2 theme demos (always use select2 theme) ──────
+    const s2Single = new TamSelect(document.getElementById('s2-single'), { theme: 'select2' })
+    s2Single.on('tam-select:select', (e) => log(`Select2: selected ${e.detail.item.label}`))
+    instances.push(s2Single)
+    instances.push(new TamSelect(document.getElementById('s2-multi'), { theme: 'select2', closeAfterSelect: false }))
+    instances.push(new TamSelect(document.getElementById('s2-detail'), { theme: 'select2' }))
+
+    // ─── Remote search demos (independent of theme) ───────────
+    const logEl = document.getElementById('eventLog')
+    const log = (msg) => {
+      const line = document.createElement('div')
+      line.textContent = `${new Date().toLocaleTimeString()} ${msg}`
+      if (logEl.querySelector('.italic')) logEl.replaceChildren()
+      logEl.prepend(line)
+      if (logEl.children.length > 50) logEl.lastChild.remove()
+    }
+    document.getElementById('clearLog').addEventListener('click', () => {
+      logEl.innerHTML = '<div class="text-zinc-300 dark:text-zinc-600 italic">Cleared.</div>'
+    })
+
+    // 1) GitHub Repos — real API with processResults
+    const githubSelect = new TamSelect(document.getElementById('remote-github'), {
+      placeholder: 'Search GitHub repos…',
+      minQueryLength: 2,
+      debounce: 300,
+      clearable: true,
+      remoteUrl: 'https://api.github.com/search/repositories',
+      queryParam: 'q',
+      pageParam: 'page',
+      processResults: (data) => {
+        const items = (data.items || []).slice(0, 15).map(repo => ({
+          value: repo.full_name,
+          label: repo.name,
+          detail: repo.description || 'No description',
+          meta: `⭐ ${(repo.stargazers_count || 0).toLocaleString()}`,
+          image: repo.owner?.avatar_url || null
+        }))
+        return { items, pagination: { has_more: data.total_count > items.length } }
+      },
+      headers: { 'Accept': 'application/vnd.github.v3+json' }
+    })
+    githubSelect.on('tam-select:load', (e) => log(`GitHub: loaded ${e.detail.items.length} repos`))
+    githubSelect.on('tam-select:select', (e) => log(`GitHub: selected ${e.detail.item.label}`))
+    githubSelect.on('tam-select:error', (e) => log(`GitHub: error — ${e.detail.error}`))
+    instances.push(githubSelect)
+
+    // 2) Custom Transport — mock API with simulated delay
+    const MOCK_USERS = [
+      { value: '1', label: 'Alice Johnson', detail: 'alice@example.com', meta: 'Admin', image: 'https://i.pravatar.cc/80?u=1' },
+      { value: '2', label: 'Bob Smith', detail: 'bob@example.com', meta: 'Editor', image: 'https://i.pravatar.cc/80?u=2' },
+      { value: '3', label: 'Carol White', detail: 'carol@example.com', meta: 'Viewer', image: 'https://i.pravatar.cc/80?u=3' },
+      { value: '4', label: 'Dave Brown', detail: 'dave@example.com', meta: 'Admin', image: 'https://i.pravatar.cc/80?u=4' },
+      { value: '5', label: 'Eva Martinez', detail: 'eva@example.com', meta: 'Editor', image: 'https://i.pravatar.cc/80?u=5' },
+      { value: '6', label: 'Frank Lee', detail: 'frank@example.com', meta: 'Viewer', image: 'https://i.pravatar.cc/80?u=6' },
+      { value: '7', label: 'Grace Kim', detail: 'grace@example.com', meta: 'Admin', image: 'https://i.pravatar.cc/80?u=7' },
+      { value: '8', label: 'Hiro Tanaka', detail: 'hiro@example.com', meta: 'Editor', image: 'https://i.pravatar.cc/80?u=8' },
+      { value: '9', label: 'Iris Chen', detail: 'iris@example.com', meta: 'Viewer', image: 'https://i.pravatar.cc/80?u=9' },
+      { value: '10', label: 'Jake Wilson', detail: 'jake@example.com', meta: 'Admin', image: 'https://i.pravatar.cc/80?u=10' },
+      { value: '11', label: 'Karen Davis', detail: 'karen@example.com', meta: 'Editor', image: 'https://i.pravatar.cc/80?u=11' },
+      { value: '12', label: 'Leo Garcia', detail: 'leo@example.com', meta: 'Viewer', image: 'https://i.pravatar.cc/80?u=12' }
+    ]
+    const transportSelect = new TamSelect(document.getElementById('remote-transport'), {
+      placeholder: 'Search users…',
+      minQueryLength: 1,
+      debounce: 250,
+      clearable: true,
+      processResults: (data) => ({ items: data.items, pagination: {} }),
+      transport: async ({ url, query, signal }) => {
+        log(`Transport: fetching "${query}"…`)
+        await new Promise(r => setTimeout(r, 400))
+        const q = query.toLowerCase()
+        const items = MOCK_USERS.filter(u =>
+          u.label.toLowerCase().includes(q) || u.detail.toLowerCase().includes(q)
+        ).map(u => ({ ...u }))
+        log(`Transport: found ${items.length} results for "${query}"`)
+        return { items }
+      }
+    })
+    transportSelect.on('tam-select:select', (e) => log(`Transport: selected ${e.detail.item.label}`))
+    instances.push(transportSelect)
+
+    // 3) Paginated — infinite scroll with cacheRemote
+    const MOCK_COUNTRIES = [
+      { value: 'af', label: 'Afghanistan', detail: 'Asia', meta: '38.9M' },
+      { value: 'al', label: 'Albania', detail: 'Europe', meta: '2.9M' },
+      { value: 'dz', label: 'Algeria', detail: 'Africa', meta: '44.6M' },
+      { value: 'ar', label: 'Argentina', detail: 'South America', meta: '45.8M' },
+      { value: 'au', label: 'Australia', detail: 'Oceania', meta: '25.7M' },
+      { value: 'at', label: 'Austria', detail: 'Europe', meta: '9.1M' },
+      { value: 'bd', label: 'Bangladesh', detail: 'Asia', meta: '166.3M' },
+      { value: 'be', label: 'Belgium', detail: 'Europe', meta: '11.6M' },
+      { value: 'br', label: 'Brazil', detail: 'South America', meta: '214.0M' },
+      { value: 'bg', label: 'Bulgaria', detail: 'Europe', meta: '6.8M' },
+      { value: 'ca', label: 'Canada', detail: 'North America', meta: '38.2M' },
+      { value: 'cl', label: 'Chile', detail: 'South America', meta: '19.5M' },
+      { value: 'cn', label: 'China', detail: 'Asia', meta: '1.4B' },
+      { value: 'co', label: 'Colombia', detail: 'South America', meta: '51.3M' },
+      { value: 'hr', label: 'Croatia', detail: 'Europe', meta: '4.0M' },
+      { value: 'cz', label: 'Czech Republic', detail: 'Europe', meta: '10.7M' },
+      { value: 'dk', label: 'Denmark', detail: 'Europe', meta: '5.9M' },
+      { value: 'eg', label: 'Egypt', detail: 'Africa', meta: '104.3M' },
+      { value: 'fi', label: 'Finland', detail: 'Europe', meta: '5.5M' },
+      { value: 'fr', label: 'France', detail: 'Europe', meta: '67.4M' },
+      { value: 'de', label: 'Germany', detail: 'Europe', meta: '83.2M' },
+      { value: 'gr', label: 'Greece', detail: 'Europe', meta: '10.4M' },
+      { value: 'in', label: 'India', detail: 'Asia', meta: '1.4B' },
+      { value: 'id', label: 'Indonesia', detail: 'Asia', meta: '275.5M' },
+      { value: 'ie', label: 'Ireland', detail: 'Europe', meta: '5.1M' },
+      { value: 'il', label: 'Israel', detail: 'Asia', meta: '9.4M' },
+      { value: 'it', label: 'Italy', detail: 'Europe', meta: '59.1M' },
+      { value: 'jp', label: 'Japan', detail: 'Asia', meta: '125.7M' },
+      { value: 'ke', label: 'Kenya', detail: 'Africa', meta: '54.0M' },
+      { value: 'kr', label: 'South Korea', detail: 'Asia', meta: '51.7M' },
+      { value: 'mx', label: 'Mexico', detail: 'North America', meta: '128.9M' },
+      { value: 'nl', label: 'Netherlands', detail: 'Europe', meta: '17.5M' },
+      { value: 'ng', label: 'Nigeria', detail: 'Africa', meta: '211.4M' },
+      { value: 'no', label: 'Norway', detail: 'Europe', meta: '5.4M' },
+      { value: 'pk', label: 'Pakistan', detail: 'Asia', meta: '225.2M' },
+      { value: 'pe', label: 'Peru', detail: 'South America', meta: '33.4M' },
+      { value: 'pl', label: 'Poland', detail: 'Europe', meta: '37.7M' },
+      { value: 'pt', label: 'Portugal', detail: 'Europe', meta: '10.3M' },
+      { value: 'ro', label: 'Romania', detail: 'Europe', meta: '19.0M' },
+      { value: 'ru', label: 'Russia', detail: 'Europe', meta: '144.1M' },
+      { value: 'sa', label: 'Saudi Arabia', detail: 'Asia', meta: '35.0M' },
+      { value: 'za', label: 'South Africa', detail: 'Africa', meta: '60.0M' },
+      { value: 'es', label: 'Spain', detail: 'Europe', meta: '47.4M' },
+      { value: 'se', label: 'Sweden', detail: 'Europe', meta: '10.4M' },
+      { value: 'ch', label: 'Switzerland', detail: 'Europe', meta: '8.7M' },
+      { value: 'tr', label: 'Turkey', detail: 'Europe', meta: '85.0M' },
+      { value: 'ua', label: 'Ukraine', detail: 'Europe', meta: '43.5M' },
+      { value: 'ae', label: 'United Arab Emirates', detail: 'Asia', meta: '10.0M' },
+      { value: 'gb', label: 'United Kingdom', detail: 'Europe', meta: '67.3M' },
+      { value: 'us', label: 'United States', detail: 'North America', meta: '331.9M' },
+      { value: 'vn', label: 'Vietnam', detail: 'Asia', meta: '97.3M' }
+    ]
+    const PAGE_SIZE = 10
+    const paginatedSelect = new TamSelect(document.getElementById('remote-paginated'), {
+      placeholder: 'Search countries…',
+      minQueryLength: 1,
+      debounce: 200,
+      clearable: true,
+      cacheRemote: true,
+      processResults: (data, { page }) => {
+        const start = (page - 1) * PAGE_SIZE
+        const items = data.items.slice(start, start + PAGE_SIZE)
+        return {
+          items,
+          pagination: { has_more: start + PAGE_SIZE < data.items.length, next_page: page + 1 }
+        }
+      },
+      transport: async ({ query }) => {
+        await new Promise(r => setTimeout(r, 250))
+        const q = query.toLowerCase()
+        return { items: MOCK_COUNTRIES.filter(c => c.label.toLowerCase().includes(q) || c.detail.toLowerCase().includes(q)) }
+      }
+    })
+    paginatedSelect.on('tam-select:load', (e) => log(`Paginated: loaded page of ${e.detail.items.length} countries`))
+    paginatedSelect.on('tam-select:select', (e) => log(`Paginated: selected ${e.detail.item.label}`))
+    instances.push(paginatedSelect)
+
+    // ─── Virtual scroll demos ─────────────────────────────────
+    // Generate 1,500 items with realistic labels
+    const adjectives = ['Alpha','Brave','Calm','Dark','Eager','Fair','Grand','Happy','Icy','Keen','Loud','Mild','Noble','Old','Prime','Quick','Red','Sharp','True','Ultra','Vast','Warm','Young','Bold','Crisp','Deep','Free','Gold','High','Iron','Jade','Lime','Mesa','Neon','Onyx','Pearl','Ruby','Sage','Tidal','Ursa','Vivid','Wren','Xeno','Azure','Coral','Drift','Flint','Glacier','Haven','Indigo','Jasper','Krypton','Lunar','Mango','Nebula','Opal','Phoenix','Quartz','Ripple','Sierra','Topaz','Umber','Vapor','Willow','Zephyr','Aether','Breeze','Cobalt','Dusk','Echo','Fable','Glade','Haze','Ivory','Juniper','Kelp','Lichen','Mirth','Nimbus','Orbit','Pebble','Reed','Solace','Thorn','Unity','Verdant','Wander','Xylem','Yarrow','Zinnia']
+    const nouns = ['Falcon','Tiger','Dragon','Phoenix','Wolf','Bear','Eagle','Panther','Hawk','Lynx','Crane','Orca','Viper','Fox','Raven','Lion','Cobra','Stallion','Dolphin','Jaguar','Mantis','Falcon','Osprey','Badger','Cheetah','Coyote','Python','Robin','Sable','Otter','Panda','Gecko','Ibis','Pike','Swift','Wren','Dove','Heron','Marten','Finch','Raven','Crane','Swift','Tern','Moose','Elk','Ram','Puma','Sloth','Toucan','Wombat','Quail','Koala','Chinchilla','Pangolin','Platypus','Sugar Glider','Fennec','Jerboa','Chameleon','Axolotl','Tarantula','Mantis Shrimp','Narwhal','Beluga','Manatee','Dugong','Seahorse','Starfish','Nautilus','Jellyfish','Coral','Anemone','Urchin','Clam','Oyster','Scallop','Mussel','Limpet','Winkle','Cockle','Prawn','Shrimp','Lobster','Crab','Crayfish','Barnacle','Sponge','Worm','Slug','Snail','Leech']
+    const categories = ['Mountain','River','Forest','Desert','Ocean','Island','Valley','Canyon','Glacier','Volcano','Lake','Meadow','Prairie','Swamp','Tundra','Cavern','Lagoon','Fjord','Steppe','Savanna','Rainforest','Jungle','Wetland','Plateau','Ridge','Cliff','Gorge','Basin','Spring','Delta','Strait','Bay','Gulf','Cove','Inlet','Sound','Fjord','Atoll','Reef','Shoal','Sandbar','Dune','Oasis','Geyser','Spring','Falls','Rapids','Ridge','Bluff','Butte','Mesa','Knoll','Hill','Peak','Pinnacle','Spire','Tower','Summit','Crest','Crown','Apex','Zenith','Pole','Axis','Core','Nexus','Hub','Node','Link','Edge','Rim','Brink','Verge','Margin','Border','Frontier','Boundary','Threshold','Gateway','Portal','Doorway','Arch','Gate','Bridge','Path','Trail','Road','Way','Route','Course','Track','Lane','Alley','Boulevard','Square','Circle','Loop','Ring','Arc','Spiral','Helix','Wave','Pulse','Beat','Rhythm','Tempo','Cadence','Flow','Drift','Sway','Roll','Toss','Sweep','Glide','Slide','Sail','Fly','Soar','Rise','Lift','Float','Hover']
+    const makeItems = (count, elementId) => {
+      const select = document.getElementById(elementId)
+      for (let i = 0; i < count; i++) {
+        const adj = adjectives[i % adjectives.length]
+        const noun = nouns[i % nouns.length]
+        const cat = categories[Math.floor(i / (adjectives.length * nouns.length)) % categories.length]
+        const num = Math.floor(i / (adjectives.length * nouns.length * categories.length))
+        const label = num > 0 ? `${adj} ${noun} ${num}` : `${adj} ${noun}`
+        const detail = `${cat} · #${String(i + 1).padStart(4, '0')}`
+        const meta = i % 7 === 0 ? 'Featured' : i % 13 === 0 ? 'New' : null
+        const option = new Option(label, `item-${i}`)
+        if (detail) option.dataset.detail = detail
+        if (meta) option.dataset.meta = meta
+        select.add(option)
+      }
+    }
+    makeItems(1500, 'virtual-1500')
+    makeItems(5000, 'virtual-5000')
+
+    const virtualPerf = document.getElementById('virtualPerf')
+
+    // 1500 single-select with virtual scroll
+    const t0a = performance.now()
+    const virtual1500 = new TamSelect(document.getElementById('virtual-1500'), {
+      placeholder: 'Search 1,500 items…',
+      virtualScroll: true,
+      virtualItemHeight: 44,
+      virtualScrollBuffer: 5,
+      clearable: true,
+      cacheRemote: false,
+      debounce: 100
+    })
+    const t1a = performance.now()
+    virtual1500.on('tam-select:select', (e) => log(`Virtual 1.5k: selected ${e.detail.item.label}`))
+    virtual1500.on('tam-select:open', () => log(`Virtual 1.5k: opened — DOM nodes in listbox: ${virtual1500.results.children.length}`))
+    virtual1500.on('tam-select:close', () => log(`Virtual 1.5k: closed`))
+    instances.push(virtual1500)
+
+    // 5000 multi-select with virtual scroll
+    const t0b = performance.now()
+    const virtual5000 = new TamSelect(document.getElementById('virtual-5000'), {
+      placeholder: 'Pick from 5,000…',
+      virtualScroll: true,
+      virtualItemHeight: 44,
+      virtualScrollBuffer: 5,
+      clearable: true,
+      debounce: 100,
+      closeAfterSelect: false
+    })
+    const t1b = performance.now()
+    virtual5000.on('tam-select:select', (e) => log(`Virtual 5k: selected ${e.detail.item.label}`))
+    virtual5000.on('tam-select:open', () => log(`Virtual 5k: opened — DOM nodes: ${virtual5000.results.children.length}`))
+    instances.push(virtual5000)
+
+    // Show init perf
+    const ms = (t1a - t0a + t1b - t0b).toFixed(1)
+    virtualPerf.textContent = `Initialized 6,500 options in ${ms}ms` +
+      ` · 1.5k items in ${(t1a - t0a).toFixed(1)}ms` +
+      ` · 5k items in ${(t1b - t0b).toFixed(1)}ms`
+
+    // ─── RTL demos ────────────────────────────────────────────
+    const addOption = (selectId, value, label, detail, meta) => {
+      const select = document.getElementById(selectId)
+      const opt = new Option(label, value)
+      if (detail) opt.dataset.detail = detail
+      if (meta) opt.dataset.meta = meta
+      select.add(opt)
+    }
+
+    // Arabic cities
+    addOption('rtl-arabic', 'riyadh', 'الرياض', 'العاصمة', '7.5M')
+    addOption('rtl-arabic', 'jeddah', 'جدة', 'ميناء الحجاز', '4.6M')
+    addOption('rtl-arabic', 'mecca', 'مكة المكرمة', 'مدينة مقدسة', '2.0M')
+    addOption('rtl-arabic', 'medina', 'المدينة المنورة', 'مدينة النبي', '1.5M')
+    addOption('rtl-arabic', 'dammam', 'الدمام', 'المنطقة الشرقية', '1.3M')
+    addOption('rtl-arabic', 'tabuk', 'تبوك', 'شمال المملكة', '0.6M')
+    addOption('rtl-arabic', 'abha', 'أبها', 'منطقة عسير', '0.4M')
+    addOption('rtl-arabic', 'khobar', 'الخبر', 'المنطقة الشرقية', '0.4M')
+    addOption('rtl-arabic', 'buraidah', 'بريدة', 'منطقة القصيم', '0.6M')
+    addOption('rtl-arabic', 'hail', 'حائل', 'منطقة حائل', '0.4M')
+
+    const rtlArabic = new TamSelect(document.getElementById('rtl-arabic'), {
+      dir: 'rtl',
+      placeholder: 'اختر مدينة…',
+      clearable: true
+    })
+    rtlArabic.on('tam-select:select', (e) => log(`RTL Arabic: ${e.detail.item.label}`))
+    instances.push(rtlArabic)
+
+    // Hebrew cities
+    addOption('rtl-hebrew', 'jerusalem', 'ירושלים', 'בירת ישראל', '980K')
+    addOption('rtl-hebrew', 'tel-aviv', 'תל אביב', 'עיר ללא הפסקה', '460K')
+    addOption('rtl-hebrew', 'haifa', 'חיפה', 'עיר הכרמל', '285K')
+    addOption('rtl-hebrew', 'beer-sheva', 'באר שבע', 'בירת הנגב', '210K')
+    addOption('rtl-hebrew', 'netanya', 'נתניה', 'שרון צפוני', '220K')
+    addOption('rtl-hebrew', 'rishon-lezion', 'ראשון לציון', 'שפלה', '260K')
+    addOption('rtl-hebrew', 'petah-tikva', 'פתח תקווה', 'אם המושבות', '250K')
+    addOption('rtl-hebrew', 'ashdod', 'אשדוד', 'דרום', '225K')
+    addOption('rtl-hebrew', 'eilat', 'אילת', 'דרום הנגב', '52K')
+    addOption('rtl-hebrew', 'nazareth', 'נצרת', 'גליל תחתון', '77K')
+
+    const rtlHebrew = new TamSelect(document.getElementById('rtl-hebrew'), {
+      dir: 'rtl',
+      placeholder: 'בחר ערים…',
+      clearable: true,
+      closeAfterSelect: false
+    })
+    rtlHebrew.on('tam-select:select', (e) => log(`RTL Hebrew: ${e.detail.item.label}`))
+    instances.push(rtlHebrew)
+
+    // Mixed direction (auto-detect)
+    addOption('rtl-auto', 'en-1', 'Hello World', 'English greeting', 'EN')
+    addOption('rtl-auto', 'ar-1', 'مرحبا بالعالم', 'تحية عربية', 'AR')
+    addOption('rtl-auto', 'en-2', 'Good Morning', 'English morning', 'EN')
+    addOption('rtl-auto', 'ar-2', 'صباح الخير', 'تحية صباحية', 'AR')
+    addOption('rtl-auto', 'en-3', 'Thank You', 'English gratitude', 'EN')
+    addOption('rtl-auto', 'ar-3', 'شكراً جزيلاً', 'امتنان عربي', 'AR')
+    addOption('rtl-auto', 'en-4', 'How are you?', 'English question', 'EN')
+    addOption('rtl-auto', 'ar-4', 'كيف حالك؟', 'سؤال عربي', 'AR')
+    addOption('rtl-auto', 'en-5', 'See You Later', 'English farewell', 'EN')
+    addOption('rtl-auto', 'ar-5', 'مع السلامة', 'وداع عربي', 'AR')
+
+    const rtlAuto = new TamSelect(document.getElementById('rtl-auto'), {
+      dir: 'auto',
+      placeholder: 'Mix of directions…',
+      clearable: true
+    })
+    rtlAuto.on('tam-select:select', (e) => log(`RTL Auto: ${e.detail.item.label}`))
+    instances.push(rtlAuto)
+
+    // Dark mode toggle
+    const toggle = document.getElementById('themeToggle')
+    const icon = document.getElementById('themeIcon')
+    toggle.addEventListener('click', () => {
+      document.documentElement.classList.toggle('dark')
+      icon.textContent = document.documentElement.classList.contains('dark') ? '☀️' : '🌙'
+    })
+  </script>
+</body>
+</html>

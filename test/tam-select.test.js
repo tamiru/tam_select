@@ -284,6 +284,12 @@ test("single-select search opens below a simple field while multiple search stay
     assert.equal(single.input.parentElement, single.searchPanel)
     assert.equal(single.searchPanel.parentElement, single.dropdown)
     assert.equal(single.searchPanel.nextElementSibling, single.results)
+    for (const element of [single.dropdown, single.searchPanel, single.input, single.results]) {
+      assert.equal(element.style.width, "100%")
+      assert.equal(element.style.minWidth, "0px")
+      assert.equal(element.style.maxWidth, "100%")
+      assert.equal(element.style.boxSizing, "border-box")
+    }
 
     single.open()
     assert.equal(document.activeElement, single.input)
@@ -322,80 +328,6 @@ test("non-searchable selects use a focusable button combobox and preserve disabl
     assert.equal(select.value, "aa")
   } finally {
     cleanup()
-  }
-})
-
-test("DaisyUI theme uses semantic colors without component classes", () => {
-  const cleanup = setupDOM(localSelect())
-  try {
-    const tamSelect = new TamSelect(document.querySelector("select"), { theme: "daisyui" })
-
-    assert.ok(tamSelect.control.classList.contains("bg-base-100"))
-    assert.ok(tamSelect.control.classList.contains("min-h-11"))
-    for (const componentClass of ["input", "select", "badge", "badge-primary", "badge-ghost", "loading", "loading-spinner", "rounded-box", "rounded-btn", "rounded-field"]) {
-      assert.equal(Object.values(tamSelect.classes).join(" ").split(/\s+/).includes(componentClass), false)
-    }
-
-    tamSelect.open()
-    const activeOption = tamSelect.dropdown.querySelector('[role="option"]')
-    assert.match(activeOption.className, /bg-primary/)
-
-    tamSelect.select.setAttribute("aria-invalid", "true")
-    tamSelect.syncAria()
-    assert.ok(tamSelect.control.classList.contains("border-error"))
-
-    tamSelect.select.disabled = true
-    tamSelect.applyDisabled()
-    assert.ok(tamSelect.control.classList.contains("bg-base-200/70"))
-    assert.ok(tamSelect.control.classList.contains("opacity-70"))
-    assert.equal(Object.values(tamSelect.classes).join(" ").includes("dark:"), false)
-  } finally {
-    cleanup()
-  }
-})
-
-test("DaisyUI controls use stable Tailwind sizing and only grow for multiple selection", () => {
-  const singleCleanup = setupDOM(localSelect())
-  try {
-    const single = new TamSelect(document.querySelector("select"), { theme: "daisyui" })
-    assert.ok(single.control.classList.contains("min-h-11"))
-    assert.ok(single.control.classList.contains("rounded-xl"))
-    assert.ok(single.control.classList.contains("shadow-sm"))
-    assert.equal(single.control.classList.contains("h-auto"), false)
-  } finally {
-    singleCleanup()
-  }
-
-  const multipleCleanup = setupDOM(localSelect({ multiple: true }))
-  try {
-    const multiple = new TamSelect(document.querySelector("select"), { theme: "daisyui" })
-    assert.ok(multiple.control.classList.contains("min-h-11"))
-    assert.ok(multiple.control.classList.contains("h-auto"))
-    assert.ok(multiple.control.classList.contains("flex-wrap"))
-  } finally {
-    multipleCleanup()
-  }
-})
-
-test("auto theme detects DaisyUI input and select classes", () => {
-  const cleanup = setupDOM(localSelect({ extra: 'class="input w-full"' }))
-  try {
-    const detected = new TamSelect(document.querySelector("select"), { theme: "auto" })
-    assert.equal(detected.theme, "daisyui")
-    assert.ok(detected.control.classList.contains("bg-base-100"))
-    assert.ok(detected.control.classList.contains("rounded-xl"))
-    assert.equal(detected.control.classList.contains("input"), false)
-  } finally {
-    cleanup()
-  }
-
-  const defaultCleanup = setupDOM(localSelect())
-  try {
-    const fallback = new TamSelect(document.querySelector("select"), { theme: "auto" })
-    assert.equal(fallback.theme, "default")
-    assert.equal(fallback.control.classList.contains("input"), false)
-  } finally {
-    defaultCleanup()
   }
 })
 
@@ -621,7 +553,7 @@ test("dropdown gets animation classes when opened and closed", () => {
     assert.ok(tamSelect.dropdown.classList.contains("pointer-events-auto"))
 
     tamSelect.close()
-    assert.ok(tamSelect.dropdown.classList.contains("scale-y-[0.98]"))
+    assert.ok(tamSelect.dropdown.classList.contains("scale-y-[0.97]"))
     assert.ok(tamSelect.dropdown.classList.contains("opacity-0"))
     assert.ok(tamSelect.dropdown.classList.contains("pointer-events-none"))
   } finally {
@@ -905,6 +837,20 @@ test("sorter applies custom sort to filtered results", () => {
 
 // ─── Width ────────────────────────────────────────────────────────────
 
+test("control height matches standard inputs in every theme", () => {
+  for (const theme of ["default", "select2"]) {
+    const cleanup = setupDOM(localSelect({ multiple: true }))
+    try {
+      const tamSelect = new TamSelect(document.querySelector("select"), { theme })
+      assert.ok(tamSelect.control.classList.contains("min-h-11"))
+      assert.equal(tamSelect.control.classList.contains("h-10"), false)
+      assert.equal(tamSelect.control.classList.contains("min-h-10"), false)
+    } finally {
+      cleanup()
+    }
+  }
+})
+
 test("width option sets wrapper inline style", () => {
   const cleanup = setupDOM(localSelect())
   try {
@@ -915,11 +861,13 @@ test("width option sets wrapper inline style", () => {
   }
 })
 
-test("width resolve does not set inline style", () => {
+test("width resolve fills the available parent width", () => {
   const cleanup = setupDOM(localSelect())
   try {
     const tamSelect = new TamSelect(document.querySelector("select"), { width: "resolve" })
-    assert.equal(tamSelect.wrapper.style.width, "")
+    assert.equal(tamSelect.wrapper.style.width, "100%")
+    assert.equal(tamSelect.wrapper.style.maxWidth, "100%")
+    assert.equal(tamSelect.wrapper.style.minWidth, "0px")
   } finally {
     cleanup()
   }
@@ -1171,9 +1119,30 @@ test("control does not grow beyond wrapper width with long values", () => {
   try {
     const tamSelect = new TamSelect(document.querySelector("select"))
     assert.ok(tamSelect.control.classList.contains("overflow-hidden"))
-    assert.equal(tamSelect.wrapper.style.width, "")
+    assert.equal(tamSelect.wrapper.style.width, "100%")
     const content = tamSelect.values.querySelector("span")
     assert.ok(content, "content element exists")
+  } finally {
+    cleanup()
+  }
+})
+
+test("pointer hover updates the active option without scrolling it", () => {
+  const cleanup = setupDOM(localSelect())
+  try {
+    const tamSelect = new TamSelect(document.querySelector("select"))
+    tamSelect.open()
+    const targetIndex = tamSelect.visibleItems.findIndex(entry => entry.item?.value === "sn")
+    const target = tamSelect.results.querySelector(`[data-tam-select-entry="${targetIndex}"]`)
+    let scrollCount = 0
+    target.scrollIntoView = () => { scrollCount += 1 }
+
+    target.dispatchEvent(new Event("pointerenter"))
+
+    assert.equal(tamSelect.activeIndex, targetIndex)
+    assert.equal(scrollCount, 0)
+    assert.ok(target.classList.contains("bg-blue-50"))
+    assert.ok(target.className.includes("hover:bg-zinc-100"))
   } finally {
     cleanup()
   }

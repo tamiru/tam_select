@@ -1,5 +1,26 @@
 # Changelog
 
+## Unreleased
+
+- Make the default resolved width fill its parent reliably in flex and grid layouts.
+- Keep pointer hover and keyboard active states visually consistent without scrolling the menu on pointer movement.
+- Tighten control and dropdown corners from 12px to 8px.
+- Refresh the default theme with compact, proportional styling: thinner borders,
+  tighter padding, faster transitions, and a cohesive dropdown that matches the
+  control border and radius exactly.
+- Replace heavy box-shadow focus rings with outline-based halos that render
+  correctly over `overflow-hidden` controls.
+- Switch hover highlight from a solid blue fill to a subtle `bg-zinc-100` tint,
+  with keyboard-active and selected states using soft blue backgrounds instead.
+- Remove the DaisyUI theme preset and its auto-detection logic; the `default`
+  theme is now the only style that resolves from `"auto"`.
+- Add a remote/API search demo section to the playground (GitHub API,
+  custom transport, paginated infinite scroll) with a live event log.
+- Add a virtual scroll demo section to the playground with 1 500 and 5 000
+  item datasets, performance metrics, and DOM node counts.
+- Add an RTL layout demo section to the playground with Arabic, Hebrew,
+  and mixed-direction selects.
+
 ## 1.3.0 - 2026-08-24
 
 - Add secure custom result and selection templates.

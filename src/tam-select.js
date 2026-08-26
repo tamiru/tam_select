@@ -1,132 +1,89 @@
-const DEFAULT_CLASSES = {
-  wrapper: "tam-select relative w-full text-zinc-900 [color-scheme:light] dark:text-zinc-100 dark:[color-scheme:dark]",
-  control: "relative flex min-h-11 w-full cursor-text flex-wrap items-center gap-2 overflow-hidden rounded-xl border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm transition duration-150 hover:border-zinc-400 focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-500/10 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:shadow-black/20 dark:hover:border-zinc-600 dark:focus-within:border-blue-400 dark:focus-within:ring-blue-400/10",
-  controlMultiple: "h-auto py-1.5",
-  controlOpen: "border-blue-500 ring-4 ring-blue-500/10 dark:border-blue-400 dark:ring-blue-400/10",
-  controlInvalid: "border-red-500 ring-4 ring-red-500/10 dark:border-red-400 dark:ring-red-400/10",
-  controlDisabled: "cursor-not-allowed bg-zinc-100 opacity-60 dark:bg-zinc-800 dark:text-zinc-400",
-  input: "min-w-16 flex-1 shrink basis-0 border-0 bg-transparent p-0 text-start text-sm text-zinc-900 outline-none placeholder:text-zinc-400 focus:ring-0 dark:text-zinc-100 dark:placeholder:text-zinc-500",
-  inputClosed: "absolute inset-0 z-0 h-full w-full cursor-pointer opacity-0",
-  trigger: "absolute inset-0 z-0 h-full w-full cursor-pointer rounded-xl border-0 bg-transparent p-0 focus:outline-none disabled:cursor-not-allowed",
-  searchIcon: "size-4 shrink-0 text-zinc-400 dark:text-zinc-500",
-  placeholder: "pointer-events-none shrink truncate text-zinc-400 dark:text-zinc-500",
-  tag: "relative z-10 inline-flex max-w-full shrink-0 items-center gap-1 rounded-lg bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-200 transition-colors dark:bg-blue-950/50 dark:text-blue-300 dark:ring-blue-800",
-  tagRemove: "me-0.5 shrink-0 rounded p-0.5 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:hover:bg-blue-900",
-  clear: "relative z-20 ms-auto shrink-0 rounded p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-700 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-zinc-500 dark:hover:bg-zinc-800 dark:hover:text-zinc-200 dark:focus:ring-blue-400",
-  chevron: "pointer-events-none relative z-10 ms-auto size-4 shrink-0 text-zinc-400 transition-transform",
-  chevronOpen: "rotate-180",
-  dropdown: "absolute z-50 mt-1.5 flex w-full flex-col overflow-hidden rounded-xl border border-zinc-200 bg-white p-1.5 shadow-2xl ring-1 ring-black/5 dark:border-zinc-700 dark:bg-zinc-900 dark:shadow-black/50 dark:ring-white/10",
-  dropdownSearch: "mb-1 flex shrink-0 items-center gap-2 rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 shadow-inner transition focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-500/10 dark:border-zinc-700 dark:bg-zinc-800/70 dark:focus-within:border-blue-400 dark:focus-within:ring-blue-400/10",
-  results: "max-h-64 overflow-y-auto overscroll-contain scroll-py-1",
-  dropdownAnimation: "origin-top-center",
-  dropdownClosed: "mt-1.5 max-h-72 w-full scale-y-[0.98] opacity-0 pointer-events-none",
-  dropdownOpen: "scale-y-100 opacity-100 pointer-events-auto",
-  groupHeader: "px-3 pt-3 pb-1 text-xs font-semibold text-zinc-500 select-none dark:text-zinc-400",
-  option: "flex min-h-11 cursor-pointer items-center justify-between gap-3 rounded-lg px-3 py-2 text-sm text-zinc-700 outline-none transition-colors duration-100 hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-800",
-  optionContent: "flex min-w-0 flex-1 items-center gap-3",
-  optionText: "flex min-w-0 flex-1 flex-col",
-  optionLabel: "font-normal",
-  optionDetail: "text-xs font-normal text-zinc-500 dark:text-zinc-400",
-  optionImage: "size-9 shrink-0 rounded-full bg-zinc-100 object-cover dark:bg-zinc-800",
-  optionMeta: "shrink-0 rounded bg-zinc-100 px-1.5 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300",
-  optionActive: "bg-blue-600 text-white shadow-sm [&_*]:text-white dark:bg-blue-500 dark:text-white",
-  optionSelected: "bg-blue-50 font-medium text-blue-700 dark:bg-blue-950/60 dark:text-blue-300",
-  optionDisabled: "cursor-not-allowed opacity-50",
-  highlight: "rounded-sm bg-amber-200/80 px-0.5 text-inherit dark:bg-amber-400/30",
-  status: "sr-only",
-  message: "px-3 py-6 text-center text-sm text-zinc-500 dark:text-zinc-400",
-  spinner: "size-4 animate-spin rounded-full border-2 border-zinc-300 border-t-blue-600",
-  error: "px-3 py-3 text-sm text-red-600 dark:text-red-400",
-  tagDragging: "opacity-50 ring-2 ring-blue-400",
-  tagDragOver: "border-l-2 border-l-blue-500"
-}
-
-// DaisyUI contributes semantic colors only. Layout, spacing, borders and
-// interaction states stay under Tam Select's control so DaisyUI component
-// styles cannot unexpectedly reshape the generated field.
 const THEME_CLASSES = {
-  daisyui: {
-    wrapper: "tam-select relative w-full text-base-content",
-    control: "relative flex min-h-11 w-full cursor-pointer flex-wrap items-center gap-2 overflow-hidden rounded-xl border border-base-300 bg-base-100 px-3 py-2 text-sm text-base-content shadow-sm transition duration-150 hover:border-base-content/30 focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10",
-    controlMultiple: "h-auto cursor-text py-1.5",
-    controlOpen: "border-primary ring-4 ring-primary/10",
-    controlInvalid: "border-error ring-4 ring-error/10",
-    controlDisabled: "cursor-not-allowed bg-base-200/70 text-base-content/50 opacity-70 shadow-none",
-    input: "min-w-16 flex-1 shrink basis-0 border-0 bg-transparent p-0 text-start text-sm text-base-content outline-none placeholder:text-base-content/50 focus:outline-none focus:ring-0",
-    inputClosed: "",
-    trigger: "absolute inset-0 z-0 h-full w-full cursor-pointer rounded-xl border-0 bg-transparent p-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary disabled:cursor-not-allowed",
-    searchIcon: "size-4 shrink-0 text-base-content/50",
-    placeholder: "pointer-events-none shrink truncate text-base-content/50",
-    tag: "relative z-10 inline-flex max-w-full shrink-0 items-center gap-1 rounded-lg bg-primary/10 px-2 py-1 text-xs font-medium text-primary ring-1 ring-inset ring-primary/20",
-    tagRemove: "me-0.5 shrink-0 rounded p-0.5 transition-colors hover:bg-primary/15 focus:outline-none focus:ring-2 focus:ring-primary",
-    clear: "relative z-20 ms-auto shrink-0 rounded-md p-1 text-base-content/50 transition-colors hover:bg-base-200 hover:text-base-content focus:outline-none focus:ring-2 focus:ring-primary",
-    chevron: "pointer-events-none relative z-10 ms-auto size-4 shrink-0 text-base-content/50 transition-transform",
-    dropdown: "absolute z-50 mt-1.5 flex w-full flex-col overflow-hidden rounded-xl border border-base-300 bg-base-100 p-1.5 shadow-2xl ring-1 ring-base-content/5",
-    dropdownSearch: "mb-1 flex shrink-0 items-center gap-2 rounded-lg border border-base-300 bg-base-200/40 px-3 py-2 shadow-inner transition focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10",
-    results: "max-h-64 overflow-y-auto overscroll-contain scroll-py-1",
-    dropdownAnimation: "origin-top-center",
-    dropdownClosed: "mt-1.5 max-h-72 w-full scale-y-[0.98] opacity-0 pointer-events-none",
-    dropdownOpen: "scale-y-100 opacity-100 pointer-events-auto",
-    groupHeader: "px-3 pt-3 pb-1 text-xs font-semibold text-base-content/60 select-none",
-    option: "flex min-h-11 cursor-pointer items-center justify-between gap-3 rounded-lg px-3 py-2 text-sm text-base-content outline-none transition-colors duration-100 hover:bg-base-200",
-    optionContent: "flex min-w-0 flex-1 items-center gap-3",
-    optionText: "flex min-w-0 flex-1 flex-col",
-    optionLabel: "font-normal",
-    optionDetail: "text-xs font-normal text-base-content/60",
-    optionImage: "size-9 shrink-0 rounded-full bg-base-200 object-cover",
-    optionMeta: "shrink-0 rounded-md bg-base-200 px-1.5 py-0.5 text-xs font-medium text-base-content/70",
-    optionActive: "bg-primary text-primary-content shadow-sm [&_*]:text-primary-content",
-    optionSelected: "bg-primary/10 font-medium text-primary ring-1 ring-inset ring-primary/10",
-    optionDisabled: "cursor-not-allowed opacity-50",
-    highlight: "rounded-sm bg-warning/30 px-0.5 text-inherit",
-    message: "px-3 py-6 text-center text-sm text-base-content/60",
-    status: "sr-only",
-    spinner: "size-4 animate-spin rounded-full border-2 border-base-300 border-t-primary",
-    error: "px-3 py-3 text-sm text-error",
-    tagDragging: "opacity-50 ring-2 ring-primary",
-    tagDragOver: "border-l-2 border-l-primary"
-  },
   select2: {
     wrapper: "tam-select relative w-full text-sm text-gray-700",
-    control: "relative flex min-h-7 w-full cursor-text flex-wrap items-center gap-1 overflow-hidden rounded border border-gray-400 bg-white px-1 py-0.5 text-sm text-gray-700 transition duration-150 hover:border-gray-500 focus-within:border-gray-600 focus-within:ring-1 focus-within:ring-gray-300",
-    controlMultiple: "min-h-8 h-auto flex-wrap py-1",
-    controlOpen: "border-gray-600",
-    controlInvalid: "border-red-500",
-    controlDisabled: "cursor-not-allowed bg-gray-100 opacity-60",
-    input: "min-w-20 flex-1 shrink basis-0 border-0 bg-transparent p-0 text-start text-sm text-gray-700 outline-none placeholder:text-gray-400 focus:ring-0",
-    inputClosed: "absolute inset-0 z-0 h-full w-full cursor-pointer border-0 opacity-0",
-    trigger: "absolute inset-0 z-0 h-full w-full cursor-pointer rounded border-0 bg-transparent p-0 focus:outline-none disabled:cursor-not-allowed",
-    searchIcon: "size-4 shrink-0 text-gray-400",
-    placeholder: "pointer-events-none shrink truncate text-gray-400",
-    tag: "relative z-10 inline-flex max-w-full shrink-0 items-center gap-1 rounded border border-gray-400 bg-gray-200 px-1.5 py-0.5 text-xs text-gray-700",
-    tagRemove: "ms-0.5 shrink-0 rounded-none border-r border-gray-400 px-1 text-gray-500 hover:bg-gray-300 hover:text-gray-700 focus:outline-none focus:ring-1 focus:ring-gray-400",
-    clear: "relative z-20 ms-auto shrink-0 rounded p-0.5 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 focus:outline-none focus:ring-1 focus:ring-gray-400",
-    chevron: "pointer-events-none relative z-10 ms-auto size-4 shrink-0 text-gray-500 transition-transform",
-    dropdown: "absolute z-50 mt-0 flex w-full flex-col overflow-hidden rounded border border-gray-400 bg-white p-0",
-    dropdownSearch: "flex shrink-0 items-center gap-2 border-b border-gray-300 bg-gray-50 px-2 py-1.5",
-    results: "max-h-52 overflow-y-auto overscroll-contain",
+    control: "relative flex min-h-11 w-full cursor-text flex-wrap items-center gap-1.5 overflow-hidden rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-800 transition duration-150 hover:border-gray-400 focus-within:border-blue-500 focus-within:outline-2 focus-within:outline-blue-500/20 focus-within:outline-offset-2",
+    controlMultiple: "h-auto min-h-11 py-1.5",
+    controlOpen: "border-blue-500 outline-2 outline-blue-500/20 outline-offset-2",
+    controlInvalid: "border-red-500 outline-2 outline-red-500/20 outline-offset-2",
+    controlDisabled: "cursor-not-allowed bg-gray-50 opacity-60",
+    input: "min-w-20 flex-1 shrink basis-0 border-0 bg-transparent p-0 text-start text-sm font-medium text-gray-800 outline-none placeholder:font-normal placeholder:text-gray-400 focus:ring-0",
+    inputClosed: "absolute inset-0 z-[1] h-full w-full cursor-pointer opacity-0",
+    trigger: "absolute inset-0 z-0 h-full w-full cursor-pointer rounded-md border-0 bg-transparent p-0 focus:outline-none disabled:cursor-not-allowed",
+    searchIcon: "size-3.5 shrink-0 text-gray-400",
+    placeholder: "pointer-events-none shrink truncate font-normal text-gray-400",
+    tag: "relative z-10 inline-flex max-w-full shrink-0 items-center gap-1 rounded bg-gray-100 border border-gray-300 px-1.5 py-0.5 text-xs font-medium text-gray-700",
+    tagRemove: "me-0.5 shrink-0 rounded p-0.5 hover:bg-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500",
+    clear: "relative z-20 ms-auto shrink-0 rounded p-0.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 focus:outline-none focus:ring-1 focus:ring-blue-500",
+    chevron: "pointer-events-none relative z-10 ms-auto size-3.5 shrink-0 text-gray-400 transition-transform",
+    chevronOpen: "rotate-180",
+    dropdown: "absolute z-50 mt-1 flex w-full min-w-0 max-w-full flex-col overflow-hidden rounded-md border border-gray-300 bg-white shadow-lg",
+    dropdownSearch: "mb-0.5 flex w-full min-w-0 max-w-full shrink-0 items-center gap-1.5 rounded bg-gray-50 px-2 py-1.5",
+    results: "max-h-56 w-full min-w-0 max-w-full overflow-y-auto overscroll-contain scroll-py-0.5",
     dropdownAnimation: "origin-top-center",
-    dropdownClosed: "mt-0 max-h-52 w-full scale-y-95 opacity-0 pointer-events-none",
+    dropdownClosed: "mt-1 max-h-64 w-full scale-y-[0.97] opacity-0 pointer-events-none",
     dropdownOpen: "scale-y-100 opacity-100 pointer-events-auto",
-    groupHeader: "px-2 pt-2 pb-1 text-xs font-bold text-gray-600 select-none",
-    option: "flex min-h-7 cursor-pointer items-center justify-between gap-2 rounded-none px-2 py-1 text-sm text-gray-700 outline-none transition-colors duration-75 hover:bg-blue-500 hover:text-white",
+    groupHeader: "px-2.5 pt-2.5 pb-0.5 text-[11px] font-semibold uppercase tracking-wider text-gray-400 select-none",
+    option: "flex min-h-10 cursor-pointer items-center justify-between gap-2 rounded px-3 py-2 text-sm text-gray-700 outline-none transition-colors duration-75 hover:bg-blue-500 hover:text-white",
     optionContent: "flex min-w-0 flex-1 items-center gap-2",
     optionText: "flex min-w-0 flex-1 flex-col",
     optionLabel: "font-normal",
-    optionDetail: "text-xs font-normal text-gray-500",
-    optionImage: "size-7 shrink-0 rounded bg-gray-100 object-cover",
-    optionMeta: "shrink-0 rounded bg-gray-200 px-1 py-0.5 text-xs font-medium text-gray-600",
+    optionDetail: "text-xs font-normal text-gray-400",
+    optionImage: "size-8 shrink-0 rounded bg-gray-100 object-cover",
+    optionMeta: "shrink-0 rounded bg-gray-200 px-1.5 py-0.5 text-[11px] font-medium text-gray-600",
     optionActive: "bg-blue-500 text-white [&_*]:text-white",
-    optionSelected: "bg-gray-200 font-medium text-gray-700",
-    optionDisabled: "cursor-not-allowed opacity-50",
+    optionSelected: "bg-gray-100 font-medium text-gray-800",
+    optionDisabled: "pointer-events-none cursor-not-allowed opacity-50",
     highlight: "rounded-sm bg-amber-200/80 px-0.5 text-inherit",
     status: "sr-only",
-    message: "px-2 py-4 text-center text-sm text-gray-500",
-    spinner: "size-4 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600",
-    error: "px-2 py-4 text-center text-sm text-red-600",
-    tagDragging: "opacity-50 ring-2 ring-blue-400",
+    message: "px-2.5 py-5 text-center text-sm text-gray-400",
+    spinner: "size-3.5 animate-spin rounded-full border-2 border-gray-200 border-t-blue-600",
+    error: "px-2.5 py-2.5 text-sm text-red-600",
+    tagDragging: "opacity-50 ring-1 ring-blue-400",
     tagDragOver: "border-l-2 border-l-blue-500"
   }
+}
+
+const DEFAULT_CLASSES = {
+  wrapper: "tam-select relative block w-full min-w-0 max-w-full self-stretch text-zinc-900 [color-scheme:light] dark:text-zinc-100 dark:[color-scheme:dark]",
+  control: "relative flex min-h-11 w-full cursor-text flex-wrap items-center gap-1.5 overflow-hidden rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm font-medium text-zinc-800 shadow-sm transition duration-150 hover:border-zinc-300 focus-within:border-blue-500 focus-within:outline-2 focus-within:outline-blue-500/20 focus-within:outline-offset-2 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:shadow-black/20 dark:hover:border-zinc-600 dark:focus-within:border-blue-400 dark:focus-within:outline-blue-400/20",
+  controlMultiple: "h-auto min-h-11 py-1.5",
+  controlOpen: "border-blue-500 outline-2 outline-blue-500/20 outline-offset-2 dark:border-blue-400 dark:outline-blue-400/20",
+  controlInvalid: "border-red-500 outline-2 outline-red-500/20 outline-offset-2 dark:border-red-400 dark:outline-red-400/20",
+  controlDisabled: "cursor-not-allowed bg-zinc-50 opacity-60 dark:bg-zinc-800 dark:text-zinc-400",
+  input: "min-w-12 flex-1 shrink basis-0 border-0 bg-transparent p-0 text-start text-sm font-medium text-zinc-800 outline-none placeholder:font-normal placeholder:text-zinc-400 focus:ring-0 dark:text-zinc-100 dark:placeholder:text-zinc-500",
+  inputClosed: "absolute inset-0 z-[1] h-full w-full cursor-pointer opacity-0",
+  trigger: "absolute inset-0 z-0 h-full w-full cursor-pointer rounded-md border-0 bg-transparent p-0 focus:outline-none disabled:cursor-not-allowed",
+  searchIcon: "size-3.5 shrink-0 text-zinc-400 dark:text-zinc-500",
+  placeholder: "pointer-events-none shrink truncate font-normal text-zinc-400 dark:text-zinc-500",
+  tag: "relative z-10 inline-flex max-w-full shrink-0 items-center gap-1 rounded bg-blue-50 px-1.5 py-0.5 text-xs font-medium text-blue-700 transition-colors dark:bg-blue-950/50 dark:text-blue-300",
+  tagRemove: "me-0.5 shrink-0 rounded p-0.5 hover:bg-blue-100 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:hover:bg-blue-900",
+  clear: "relative z-20 ms-auto shrink-0 rounded p-0.5 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:text-zinc-500 dark:hover:bg-zinc-800 dark:hover:text-zinc-200 dark:focus:ring-blue-400",
+  chevron: "pointer-events-none relative z-10 ms-auto size-3.5 shrink-0 text-zinc-400 transition-transform",
+  chevronOpen: "rotate-180",
+  dropdown: "absolute z-50 mt-1 flex w-full min-w-0 max-w-full flex-col overflow-hidden rounded-md border border-zinc-200 bg-white shadow-lg dark:border-zinc-700 dark:bg-zinc-900 dark:shadow-black/50",
+  dropdownSearch: "mb-0.5 flex w-full min-w-0 max-w-full shrink-0 items-center gap-1.5 rounded bg-zinc-50 px-2 py-1.5 transition dark:bg-zinc-800/70",
+  results: "max-h-56 w-full min-w-0 max-w-full overflow-y-auto overscroll-contain scroll-py-0.5",
+  dropdownAnimation: "origin-top-center",
+  dropdownClosed: "mt-1 max-h-64 w-full scale-y-[0.97] opacity-0 pointer-events-none",
+  dropdownOpen: "scale-y-100 opacity-100 pointer-events-auto",
+  groupHeader: "px-2.5 pt-2.5 pb-0.5 text-[11px] font-semibold uppercase tracking-wider text-zinc-400 select-none dark:text-zinc-500",
+  option: "flex min-h-10 cursor-pointer items-center justify-between gap-2 rounded px-3 py-2 text-sm text-zinc-700 outline-none transition-colors duration-75 hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-800",
+  optionContent: "flex min-w-0 flex-1 items-center gap-2",
+  optionText: "flex min-w-0 flex-1 flex-col",
+  optionLabel: "font-normal",
+  optionDetail: "text-xs font-normal text-zinc-400 dark:text-zinc-500",
+  optionImage: "size-8 shrink-0 rounded-full bg-zinc-100 object-cover dark:bg-zinc-800",
+  optionMeta: "shrink-0 rounded bg-zinc-100 px-1.5 py-0.5 text-[11px] font-medium text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400",
+  optionActive: "bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300",
+  optionSelected: "bg-blue-50 font-medium text-blue-700 dark:bg-blue-950/60 dark:text-blue-300",
+  optionDisabled: "pointer-events-none cursor-not-allowed opacity-50",
+  highlight: "rounded-sm bg-amber-200/80 px-0.5 text-inherit dark:bg-amber-400/30",
+  status: "sr-only",
+  message: "px-2.5 py-5 text-center text-sm text-zinc-400 dark:text-zinc-500",
+  spinner: "size-3.5 animate-spin rounded-full border-2 border-zinc-200 border-t-blue-500",
+  error: "px-2.5 py-2.5 text-sm text-red-600 dark:text-red-400",
+  tagDragging: "opacity-50 ring-1 ring-blue-400",
+  tagDragOver: "border-l-2 border-l-blue-500"
 }
 
 const ICONS = {
@@ -272,8 +229,7 @@ export class TamSelect {
       }
     })
     this.dir = this.options.dir === "auto" ? this.detectDirection() : this.options.dir
-    const inferredTheme = ["input", "select"].some(className => select.classList.contains(className)) ? "daisyui" : "default"
-    this.theme = this.options.theme === "auto" ? inferredTheme : this.options.theme
+    this.theme = this.options.theme === "auto" ? "default" : this.options.theme
     const themeClasses = THEME_CLASSES[this.theme] || {}
     this.classes = { ...DEFAULT_CLASSES, ...themeClasses, ...this.options.classes }
     this.multiple = select.multiple
@@ -332,9 +288,9 @@ export class TamSelect {
     this.wrapper.className = this.classes.wrapper
     this.wrapper.dataset.tamSelectRoot = ""
     this.wrapper.setAttribute("dir", this.dir)
-    if (this.options.width !== "resolve") {
-      this.wrapper.style.width = this.options.width
-    }
+    this.wrapper.style.width = this.options.width === "resolve" ? "100%" : this.options.width
+    this.wrapper.style.maxWidth = "100%"
+    this.wrapper.style.minWidth = "0"
 
     this.control = document.createElement("div")
     this.control.className = [
@@ -397,6 +353,10 @@ export class TamSelect {
     this.dropdown = document.createElement("div")
     this.dropdown.id = `${this.id}-dropdown`
     this.dropdown.className = `${this.classes.dropdown} hidden`
+    this.dropdown.style.width = "100%"
+    this.dropdown.style.minWidth = "0"
+    this.dropdown.style.maxWidth = "100%"
+    this.dropdown.style.boxSizing = "border-box"
     if (this.options.animations) {
       const preset = this.options.animationPreset ? ANIMATION_PRESETS[this.options.animationPreset] : null
       const duration = preset ? preset.duration : this.options.animationDuration
@@ -411,12 +371,24 @@ export class TamSelect {
     this.results = document.createElement("div")
     this.results.id = this.listboxId
     this.results.className = this.classes.results
+    this.results.style.width = "100%"
+    this.results.style.minWidth = "0"
+    this.results.style.maxWidth = "100%"
+    this.results.style.boxSizing = "border-box"
     this.results.setAttribute("role", "listbox")
     if (this.multiple) this.results.setAttribute("aria-multiselectable", "true")
 
     if (this.searchable && !this.multiple) {
       this.searchPanel = document.createElement("div")
       this.searchPanel.className = this.classes.dropdownSearch
+      this.searchPanel.style.width = "100%"
+      this.searchPanel.style.minWidth = "0"
+      this.searchPanel.style.maxWidth = "100%"
+      this.searchPanel.style.boxSizing = "border-box"
+      this.input.style.width = "100%"
+      this.input.style.minWidth = "0"
+      this.input.style.maxWidth = "100%"
+      this.input.style.boxSizing = "border-box"
       this.searchPanel.append(this.searchIcon, this.input)
       this.dropdown.append(this.searchPanel, this.results)
     } else {
@@ -1052,7 +1024,11 @@ export class TamSelect {
       }
     }
 
-    option.addEventListener("pointermove", () => { if (!entry.disabled) { this.activeIndex = index; this.updateActiveOption() } })
+    option.addEventListener("pointerenter", () => {
+      if (entry.disabled || this.activeIndex === index) return
+      this.activeIndex = index
+      this.updateActiveOption(false)
+    })
     option.addEventListener("click", () => this.activateEntry(entry))
     return option
   }
@@ -1309,7 +1285,7 @@ export class TamSelect {
     this.commit()
   }
 
-  updateActiveOption() {
+  updateActiveOption(scroll = true) {
     this.results.querySelectorAll("[data-tam-select-entry]").forEach(option => {
       const index = Number(option.dataset.tamSelectEntry)
       const entry = this.visibleItems[index]
@@ -1317,7 +1293,7 @@ export class TamSelect {
         toggleClasses(option, this.classes.optionActive, index === this.activeIndex)
       }
     })
-    this.syncActiveDescendant(true)
+    this.syncActiveDescendant(scroll)
   }
 
   syncActiveDescendant(scroll = false) {

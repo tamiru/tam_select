@@ -665,8 +665,12 @@ Control the container width:
 
 ```js
 new TamSelect(select, { width: "300px" })  // Fixed width
-new TamSelect(select, { width: "100%" })   // Full width (default: "resolve")
+new TamSelect(select, { width: "100%" })   // Full width (also the "resolve" default)
 ```
+
+`"resolve"` fills the available parent width while keeping the control from
+overflowing narrow flex and grid layouts. Explicit CSS widths are still
+supported and are capped at the parent width.
 
 ### Templates, localization, and dropdown portals
 

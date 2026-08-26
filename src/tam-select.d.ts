@@ -114,8 +114,8 @@ export interface TamSelectOptions {
   paginationPath?: string
   /** Custom local matcher `(item, query) => boolean`. Default: `null` */
   matcher?: ((item: TamSelectItem, query: string) => boolean) | null
-  /** Visual theme: `"default"`, `"daisyui"`, or `"auto"`. Default: `"auto"` */
-  theme?: "default" | "daisyui" | "auto"
+  /** Visual theme: `"default"`, `"select2"`, or `"auto"`. Default: `"auto"` */
+  theme?: "default" | "select2" | "auto"
   /** Override any Tailwind class group. Default: `{}` */
   classes?: Record<string, string>
   /** Custom headers for remote requests. Default: `{}` */
@@ -162,7 +162,7 @@ export interface TamSelectOptions {
   cacheRemote?: boolean
   /** Element or selector used to portal the dropdown beyond clipping containers. */
   dropdownParent?: Element | string | null
-  /** Container width (CSS value or `"resolve"` for auto). Default: `"resolve"` */
+  /** Container width (CSS value or `"resolve"` for the full available width). Default: `"resolve"` */
   width?: string
   /** Text direction: `"ltr"`, `"rtl"`, or `"auto"`. Default: `"auto"` */
   dir?: "ltr" | "rtl" | "auto"
@@ -235,7 +235,7 @@ declare class TamSelect {
   /** Current resolved text direction */
   readonly dir: "ltr" | "rtl"
   /** Current resolved theme */
-  readonly theme: "default" | "daisyui"
+  readonly theme: "default" | "select2"
   /** Whether the dropdown is open */
   readonly opened: boolean
   /** Whether remote data is loading */
