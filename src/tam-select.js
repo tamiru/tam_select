@@ -1,20 +1,20 @@
 const THEME_CLASSES = {
   select2: {
     wrapper: "tam-select relative w-full text-sm text-gray-700",
-    control: "relative flex min-h-11 w-full cursor-text flex-wrap items-center gap-1.5 overflow-hidden rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-800 transition duration-150 hover:border-gray-400 focus-within:border-blue-500 focus-within:outline-2 focus-within:outline-blue-500/20 focus-within:outline-offset-2",
-    controlMultiple: "h-auto min-h-11 py-1.5",
+    control: "relative flex min-h-11 w-full touch-manipulation cursor-text flex-wrap items-center gap-1.5 overflow-hidden rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-normal text-gray-800 transition duration-150 hover:border-gray-400 focus-within:border-blue-500 focus-within:outline-2 focus-within:outline-blue-500/20 focus-within:outline-offset-2",
+    controlMultiple: "h-auto min-h-11 py-2",
     controlOpen: "border-blue-500 outline-2 outline-blue-500/20 outline-offset-2",
     controlInvalid: "border-red-500 outline-2 outline-red-500/20 outline-offset-2",
     controlDisabled: "cursor-not-allowed bg-gray-50 opacity-60",
-    input: "min-w-20 flex-1 shrink basis-0 border-0 bg-transparent p-0 text-start text-sm font-medium text-gray-800 outline-none placeholder:font-normal placeholder:text-gray-400 focus:ring-0",
+    input: "min-w-20 flex-1 shrink basis-0 border-0 bg-transparent p-0 text-start text-base font-normal text-gray-800 outline-none placeholder:font-normal placeholder:text-gray-400 focus:ring-0 sm:text-sm",
     inputClosed: "absolute inset-0 z-[1] h-full w-full cursor-pointer opacity-0",
-    trigger: "absolute inset-0 z-0 h-full w-full cursor-pointer rounded-md border-0 bg-transparent p-0 focus:outline-none disabled:cursor-not-allowed",
+    trigger: "absolute inset-0 z-0 h-full w-full touch-manipulation cursor-pointer rounded-md border-0 bg-transparent p-0 focus:outline-none disabled:cursor-not-allowed",
     searchIcon: "size-3.5 shrink-0 text-gray-400",
-    placeholder: "pointer-events-none shrink truncate font-normal text-gray-400",
+    placeholder: "pointer-events-none min-w-0 flex-1 truncate font-normal text-gray-400",
     tag: "relative z-10 inline-flex max-w-full shrink-0 items-center gap-1 rounded bg-gray-100 border border-gray-300 px-1.5 py-0.5 text-xs font-medium text-gray-700",
     tagRemove: "me-0.5 shrink-0 rounded p-0.5 hover:bg-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500",
-    clear: "relative z-20 ms-auto shrink-0 rounded p-0.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 focus:outline-none focus:ring-1 focus:ring-blue-500",
-    chevron: "pointer-events-none relative z-10 ms-auto size-3.5 shrink-0 text-gray-400 transition-transform",
+    clear: "relative z-20 inline-flex size-5 shrink-0 touch-manipulation items-center justify-center rounded text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 focus:outline-none focus:ring-1 focus:ring-blue-500",
+    chevron: "pointer-events-none relative z-10 size-3.5 shrink-0 text-gray-400 transition-transform",
     chevronOpen: "rotate-180",
     dropdown: "absolute z-50 mt-1 flex w-full min-w-0 max-w-full flex-col overflow-hidden rounded-md border border-gray-300 bg-white shadow-lg",
     dropdownSearch: "mb-0.5 flex w-full min-w-0 max-w-full shrink-0 items-center gap-1.5 rounded bg-gray-50 px-2 py-1.5",
@@ -23,15 +23,17 @@ const THEME_CLASSES = {
     dropdownClosed: "mt-1 max-h-64 w-full scale-y-[0.97] opacity-0 pointer-events-none",
     dropdownOpen: "scale-y-100 opacity-100 pointer-events-auto",
     groupHeader: "px-2.5 pt-2.5 pb-0.5 text-[11px] font-semibold uppercase tracking-wider text-gray-400 select-none",
-    option: "flex min-h-10 cursor-pointer items-center justify-between gap-2 rounded px-3 py-2 text-sm text-gray-700 outline-none transition-colors duration-75 hover:bg-blue-500 hover:text-white",
+    option: "flex min-h-8 touch-manipulation cursor-pointer select-none items-center justify-between gap-2 rounded px-2.5 py-1.5 text-sm leading-5 text-gray-700 outline-none transition-colors duration-75 hover:bg-blue-500 hover:text-white",
     optionContent: "flex min-w-0 flex-1 items-center gap-2",
     optionText: "flex min-w-0 flex-1 flex-col",
     optionLabel: "font-normal",
     optionDetail: "text-xs font-normal text-gray-400",
+    selectionContent: "flex min-w-0 flex-1 items-center overflow-hidden",
+    selectionLabel: "truncate text-sm font-normal",
     optionImage: "size-8 shrink-0 rounded bg-gray-100 object-cover",
     optionMeta: "shrink-0 rounded bg-gray-200 px-1.5 py-0.5 text-[11px] font-medium text-gray-600",
     optionActive: "bg-blue-500 text-white [&_*]:text-white",
-    optionSelected: "bg-gray-100 font-medium text-gray-800",
+    optionSelected: "bg-gray-100 font-normal text-gray-800",
     optionDisabled: "pointer-events-none cursor-not-allowed opacity-50",
     highlight: "rounded-sm bg-amber-200/80 px-0.5 text-inherit",
     status: "sr-only",
@@ -45,20 +47,20 @@ const THEME_CLASSES = {
 
 const DEFAULT_CLASSES = {
   wrapper: "tam-select relative block w-full min-w-0 max-w-full self-stretch text-zinc-900 [color-scheme:light] dark:text-zinc-100 dark:[color-scheme:dark]",
-  control: "relative flex min-h-11 w-full cursor-text flex-wrap items-center gap-1.5 overflow-hidden rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm font-medium text-zinc-800 shadow-sm transition duration-150 hover:border-zinc-300 focus-within:border-blue-500 focus-within:outline-2 focus-within:outline-blue-500/20 focus-within:outline-offset-2 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:shadow-black/20 dark:hover:border-zinc-600 dark:focus-within:border-blue-400 dark:focus-within:outline-blue-400/20",
-  controlMultiple: "h-auto min-h-11 py-1.5",
+  control: "relative flex min-h-11 w-full touch-manipulation cursor-text flex-wrap items-center gap-1.5 overflow-hidden rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm font-normal text-zinc-800 shadow-sm transition duration-150 hover:border-zinc-300 focus-within:border-blue-500 focus-within:outline-2 focus-within:outline-blue-500/20 focus-within:outline-offset-2 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:shadow-black/20 dark:hover:border-zinc-600 dark:focus-within:border-blue-400 dark:focus-within:outline-blue-400/20",
+  controlMultiple: "h-auto min-h-11 py-2",
   controlOpen: "border-blue-500 outline-2 outline-blue-500/20 outline-offset-2 dark:border-blue-400 dark:outline-blue-400/20",
   controlInvalid: "border-red-500 outline-2 outline-red-500/20 outline-offset-2 dark:border-red-400 dark:outline-red-400/20",
   controlDisabled: "cursor-not-allowed bg-zinc-50 opacity-60 dark:bg-zinc-800 dark:text-zinc-400",
-  input: "min-w-12 flex-1 shrink basis-0 border-0 bg-transparent p-0 text-start text-sm font-medium text-zinc-800 outline-none placeholder:font-normal placeholder:text-zinc-400 focus:ring-0 dark:text-zinc-100 dark:placeholder:text-zinc-500",
+  input: "min-w-12 flex-1 shrink basis-0 border-0 bg-transparent p-0 text-start text-base font-normal text-zinc-800 outline-none placeholder:font-normal placeholder:text-zinc-400 focus:ring-0 sm:text-sm dark:text-zinc-100 dark:placeholder:text-zinc-500",
   inputClosed: "absolute inset-0 z-[1] h-full w-full cursor-pointer opacity-0",
-  trigger: "absolute inset-0 z-0 h-full w-full cursor-pointer rounded-md border-0 bg-transparent p-0 focus:outline-none disabled:cursor-not-allowed",
+  trigger: "absolute inset-0 z-0 h-full w-full touch-manipulation cursor-pointer rounded-md border-0 bg-transparent p-0 focus:outline-none disabled:cursor-not-allowed",
   searchIcon: "size-3.5 shrink-0 text-zinc-400 dark:text-zinc-500",
-  placeholder: "pointer-events-none shrink truncate font-normal text-zinc-400 dark:text-zinc-500",
+  placeholder: "pointer-events-none min-w-0 flex-1 truncate font-normal text-zinc-400 dark:text-zinc-500",
   tag: "relative z-10 inline-flex max-w-full shrink-0 items-center gap-1 rounded bg-blue-50 px-1.5 py-0.5 text-xs font-medium text-blue-700 transition-colors dark:bg-blue-950/50 dark:text-blue-300",
   tagRemove: "me-0.5 shrink-0 rounded p-0.5 hover:bg-blue-100 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:hover:bg-blue-900",
-  clear: "relative z-20 ms-auto shrink-0 rounded p-0.5 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:text-zinc-500 dark:hover:bg-zinc-800 dark:hover:text-zinc-200 dark:focus:ring-blue-400",
-  chevron: "pointer-events-none relative z-10 ms-auto size-3.5 shrink-0 text-zinc-400 transition-transform",
+  clear: "relative z-20 inline-flex size-5 shrink-0 touch-manipulation items-center justify-center rounded text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:text-zinc-500 dark:hover:bg-zinc-800 dark:hover:text-zinc-200 dark:focus:ring-blue-400",
+  chevron: "pointer-events-none relative z-10 size-3.5 shrink-0 text-zinc-400 transition-transform",
   chevronOpen: "rotate-180",
   dropdown: "absolute z-50 mt-1 flex w-full min-w-0 max-w-full flex-col overflow-hidden rounded-md border border-zinc-200 bg-white shadow-lg dark:border-zinc-700 dark:bg-zinc-900 dark:shadow-black/50",
   dropdownSearch: "mb-0.5 flex w-full min-w-0 max-w-full shrink-0 items-center gap-1.5 rounded bg-zinc-50 px-2 py-1.5 transition dark:bg-zinc-800/70",
@@ -67,18 +69,29 @@ const DEFAULT_CLASSES = {
   dropdownClosed: "mt-1 max-h-64 w-full scale-y-[0.97] opacity-0 pointer-events-none",
   dropdownOpen: "scale-y-100 opacity-100 pointer-events-auto",
   groupHeader: "px-2.5 pt-2.5 pb-0.5 text-[11px] font-semibold uppercase tracking-wider text-zinc-400 select-none dark:text-zinc-500",
-  option: "flex min-h-10 cursor-pointer items-center justify-between gap-2 rounded px-3 py-2 text-sm text-zinc-700 outline-none transition-colors duration-75 hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-800",
+  option: "flex min-h-8 touch-manipulation cursor-pointer select-none items-center justify-between gap-2 rounded px-2.5 py-1.5 text-sm leading-5 text-zinc-700 outline-none transition-colors duration-75 hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-800",
   optionContent: "flex min-w-0 flex-1 items-center gap-2",
   optionText: "flex min-w-0 flex-1 flex-col",
   optionLabel: "font-normal",
+  optionLabelWrap: "whitespace-normal break-words [overflow-wrap:anywhere]",
   optionDetail: "text-xs font-normal text-zinc-400 dark:text-zinc-500",
+  optionDetailWrap: "whitespace-normal break-words [overflow-wrap:anywhere]",
+  selectionContent: "flex min-w-0 flex-1 items-center overflow-hidden",
+  selectionLabel: "truncate text-sm font-normal",
   optionImage: "size-8 shrink-0 rounded-full bg-zinc-100 object-cover dark:bg-zinc-800",
   optionMeta: "shrink-0 rounded bg-zinc-100 px-1.5 py-0.5 text-[11px] font-medium text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400",
   optionActive: "bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300",
-  optionSelected: "bg-blue-50 font-medium text-blue-700 dark:bg-blue-950/60 dark:text-blue-300",
+  optionSelected: "bg-blue-50 font-normal text-blue-700 dark:bg-blue-950/60 dark:text-blue-300",
   optionDisabled: "pointer-events-none cursor-not-allowed opacity-50",
   highlight: "rounded-sm bg-amber-200/80 px-0.5 text-inherit dark:bg-amber-400/30",
   status: "sr-only",
+  selectionToolbar: "flex shrink-0 flex-wrap items-center gap-1.5 border-b border-zinc-200 bg-zinc-50/80 px-2 py-1.5 text-sm dark:border-zinc-700 dark:bg-zinc-800/60",
+  selectionAction: "inline-flex min-h-9 touch-manipulation items-center gap-1.5 rounded-md px-2.5 text-xs font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-blue-500 disabled:cursor-not-allowed disabled:opacity-40",
+  selectionActionSelect: "bg-blue-600 text-white shadow-sm hover:bg-blue-700 dark:bg-blue-500 dark:text-zinc-950 dark:hover:bg-blue-400",
+  selectionActionClear: "border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700 dark:hover:text-white",
+  selectionActionIcon: "size-3.5 shrink-0",
+  selectionShortcut: "hidden rounded border border-zinc-200 bg-white px-1.5 py-0.5 font-mono text-[10px] text-zinc-400 shadow-sm sm:inline-flex dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-500",
+  selectionCount: "ms-auto rounded-full bg-zinc-200/70 px-2 py-1 text-[11px] font-semibold text-zinc-600 dark:bg-zinc-700 dark:text-zinc-300",
   message: "px-2.5 py-5 text-center text-sm text-zinc-400 dark:text-zinc-500",
   spinner: "size-3.5 animate-spin rounded-full border-2 border-zinc-200 border-t-blue-500",
   error: "px-2.5 py-2.5 text-sm text-red-600 dark:text-red-400",
@@ -191,9 +204,17 @@ export class TamSelect {
       virtualScroll: false,
       virtualScrollThreshold: 100,
       virtualScrollBuffer: 5,
-      virtualItemHeight: 44,
+      virtualItemHeight: 32,
+      wrapOptionText: null,
+      optionTooltip: true,
       draggable: false,
       maximumSelectionLength: 0,
+      bulkActions: false,
+      showSelectionCount: false,
+      hideSelected: false,
+      selectAllText: count => `Select all${count > 0 ? ` ${count}` : ""}`,
+      deselectAllText: count => `Clear${count > 0 ? ` ${count}` : ""}`,
+      selectionCountText: (count, limit) => limit > 0 ? `${count} / ${limit} selected` : `${count} selected`,
       maximumInputLength: 0,
       minimumResultsForSearch: 0,
       selectOnClose: false,
@@ -206,6 +227,9 @@ export class TamSelect {
       remoteParams: {},
       cacheRemote: false,
       dropdownParent: null,
+      dropdownWidth: "trigger",
+      maxDropdownHeight: 360,
+      viewportPadding: 8,
       width: "resolve",
       dir: "auto",
       ...options
@@ -221,7 +245,10 @@ export class TamSelect {
       results: "resultsText",
       clear: "clearLabel",
       remove: "removeLabel",
-      selectionLimit: "selectionLimitText"
+      selectionLimit: "selectionLimitText",
+      selectAll: "selectAllText",
+      deselectAll: "deselectAllText",
+      selectionCount: "selectionCountText"
     }
     Object.entries(languageOptions).forEach(([languageKey, optionKey]) => {
       if (hasOwn(this.options.language, languageKey) && !hasOwn(options, optionKey)) {
@@ -259,6 +286,7 @@ export class TamSelect {
     this.typeaheadTimer = null
     this.groupTree = []
     this.closeTimer = null
+    this.closeTransitionHandler = null
     this.lazyObserver = null
     this.selectionLimitReached = false
     this.searchVisible = this.options.minimumResultsForSearch <= 0
@@ -268,6 +296,8 @@ export class TamSelect {
     this.remoteCache = new Map()
     this.destroyed = false
     this.refreshQueued = false
+    this.composing = false
+    this.animationsEnabled = this.options.animations && !(typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches)
     this.build()
     this.bind()
     this.readNativeOptions()
@@ -314,6 +344,9 @@ export class TamSelect {
       this.input.className = this.classes.input
       this.input.autocomplete = "off"
       this.input.spellcheck = false
+      this.input.autocapitalize = "none"
+      this.input.setAttribute("autocorrect", "off")
+      this.input.setAttribute("enterkeyhint", "search")
       if (this.options.maximumInputLength > 0) this.input.maxLength = this.options.maximumInputLength
       this.input.setAttribute("aria-controls", this.listboxId)
       if (this.multiple) {
@@ -357,7 +390,7 @@ export class TamSelect {
     this.dropdown.style.minWidth = "0"
     this.dropdown.style.maxWidth = "100%"
     this.dropdown.style.boxSizing = "border-box"
-    if (this.options.animations) {
+    if (this.animationsEnabled) {
       const preset = this.options.animationPreset ? ANIMATION_PRESETS[this.options.animationPreset] : null
       const duration = preset ? preset.duration : this.options.animationDuration
       const easing = preset ? preset.easing : this.options.animationEasing
@@ -366,7 +399,12 @@ export class TamSelect {
       toggleClasses(this.dropdown, this.classes.dropdownAnimation, true)
       this.dropdown.style.setProperty("--tam-duration", `${duration}ms`)
       this.dropdown.style.setProperty("--tam-easing", easing)
-      this.dropdown.style.transition = `all var(--tam-duration) var(--tam-easing)`
+      // Geometry is calculated at runtime for portaled menus. Animating `all`
+      // also animated width/max-height, causing a large-to-small flash.
+      this.dropdown.style.transition = [
+        `opacity var(--tam-duration) var(--tam-easing)`,
+        `transform var(--tam-duration) var(--tam-easing)`
+      ].join(", ")
     }
     this.results = document.createElement("div")
     this.results.id = this.listboxId
@@ -395,6 +433,8 @@ export class TamSelect {
       this.dropdown.append(this.results)
     }
 
+    this.buildSelectionToolbar()
+
     this.status = document.createElement("div")
     this.status.className = this.classes.status
     this.status.setAttribute("role", "status")
@@ -402,7 +442,7 @@ export class TamSelect {
     this.status.setAttribute("aria-atomic", "true")
 
     const focusControl = this.multiple && this.searchable ? [this.searchIcon, this.input] : [this.trigger]
-    this.control.append(this.values, ...focusControl, this.clearButton, this.chevron)
+    this.control.append(this.values, ...focusControl, this.chevron, this.clearButton)
     this.wrapper.append(this.control, this.status)
     this.select.after(this.wrapper)
     this.dropdownParent = this.resolveDropdownParent()
@@ -410,6 +450,10 @@ export class TamSelect {
     if (this.portalDropdown) {
       this.dropdownParent.append(this.dropdown)
       this.dropdown.style.position = "fixed"
+      this.dropdown.style.marginTop = "0"
+      // Keep the unpositioned portal out of the first paint. It is revealed
+      // synchronously after open() has measured and constrained it.
+      this.dropdown.style.visibility = "hidden"
     } else {
       this.wrapper.append(this.dropdown)
     }
@@ -419,13 +463,108 @@ export class TamSelect {
     this.initLazyObserver()
   }
 
+  buildSelectionToolbar() {
+    if (!this.multiple || !(this.options.bulkActions || this.options.showSelectionCount)) return
+    this.selectionToolbar = document.createElement("div")
+    this.selectionToolbar.className = this.classes.selectionToolbar
+    this.selectionToolbar.dataset.tamSelectToolbar = ""
+    if (this.options.bulkActions) {
+      const makeAction = (action, icon, variantClass) => {
+        const button = document.createElement("button")
+        button.type = "button"
+        button.className = `${this.classes.selectionAction} ${variantClass}`
+        button.setAttribute("aria-controls", this.listboxId)
+        const iconElement = document.createElement("span")
+        iconElement.className = this.classes.selectionActionIcon
+        iconElement.setAttribute("aria-hidden", "true")
+        iconElement.innerHTML = icon
+        const labelElement = document.createElement("span")
+        button.append(iconElement, labelElement)
+        button.addEventListener("click", event => {
+          event.stopPropagation()
+          if (!button.disabled) action()
+        })
+        return { button, labelElement }
+      }
+      const selectAction = makeAction(() => this.selectAll(), ICONS.check, this.classes.selectionActionSelect)
+      const clearAction = makeAction(() => this.deselectAll(), ICONS.close, this.classes.selectionActionClear)
+      this.selectAllButton = selectAction.button
+      this.selectAllLabel = selectAction.labelElement
+      this.deselectAllButton = clearAction.button
+      this.deselectAllLabel = clearAction.labelElement
+      this.selectionShortcut = document.createElement("kbd")
+      this.selectionShortcut.className = this.classes.selectionShortcut
+      this.selectionShortcut.textContent = /Mac|iPhone|iPad/.test(navigator.platform || "") ? "⌘ A" : "Ctrl A"
+      this.selectionShortcut.title = "Toggle all matching options"
+      this.selectionToolbar.append(this.selectAllButton, this.deselectAllButton, this.selectionShortcut)
+      this.selectionToolbar.addEventListener("keydown", event => {
+        if (event.key === "Escape") {
+          event.preventDefault()
+          this.close(false)
+          this.focusTarget.focus()
+        } else if (event.key === "Tab") {
+          const enabledActions = [this.selectAllButton, this.deselectAllButton].filter(button => !button.disabled)
+          if (event.shiftKey && event.target === enabledActions[0]) {
+            event.preventDefault()
+            this.focusTarget.focus()
+          } else if (!event.shiftKey && event.target === enabledActions.at(-1)) {
+            // Restore the control's place in document tab order for body portals.
+            this.focusTarget.focus()
+            this.close(false)
+          }
+        }
+      })
+    }
+    if (this.options.showSelectionCount) {
+      this.selectionCount = document.createElement("span")
+      this.selectionCount.className = this.classes.selectionCount
+      this.selectionCount.setAttribute("role", "status")
+      this.selectionCount.setAttribute("aria-live", "polite")
+      this.selectionCount.setAttribute("aria-atomic", "true")
+      this.selectionToolbar.append(this.selectionCount)
+    }
+    this.dropdown.insertBefore(this.selectionToolbar, this.results)
+  }
+
+  updateSelectionToolbar() {
+    if (!this.selectionToolbar) return
+    const count = this.selectedItems().length
+    const limit = this.options.maximumSelectionLength
+    if (this.selectionCount) {
+      const text = typeof this.options.selectionCountText === "function"
+        ? this.options.selectionCountText(count, limit)
+        : this.options.selectionCountText
+      if (this.selectionCount.textContent !== String(text)) this.selectionCount.textContent = text
+    }
+    if (this.selectAllButton) {
+      const matches = this.bulkCandidates()
+      const selectedMatches = matches.filter(item => item.selected).length
+      const selectableMatches = matches.length - selectedMatches
+      const selectText = typeof this.options.selectAllText === "function"
+        ? this.options.selectAllText(matches.length)
+        : this.options.selectAllText
+      const deselectText = typeof this.options.deselectAllText === "function"
+        ? this.options.deselectAllText(selectedMatches)
+        : this.options.deselectAllText
+      this.selectAllLabel.textContent = selectText
+      this.deselectAllLabel.textContent = deselectText
+      this.selectAllButton.setAttribute("aria-label", selectText)
+      this.deselectAllButton.setAttribute("aria-label", deselectText)
+      this.selectAllButton.disabled = this.select.disabled || (limit > 0 && count >= limit) || selectableMatches === 0
+      this.deselectAllButton.disabled = this.select.disabled || selectedMatches === 0
+      this.selectAllButton.setAttribute("aria-disabled", String(this.selectAllButton.disabled))
+      this.deselectAllButton.setAttribute("aria-disabled", String(this.deselectAllButton.disabled))
+    }
+  }
+
   bind() {
     this.onControlClick = event => {
       if (!this.searchable || this.select.disabled || event.target.closest("button")) return
       this.open()
       this.input.focus()
     }
-    this.onInput = () => {
+    this.onInput = event => {
+      if (this.destroyed || this.composing || event?.isComposing) return
       this.query = this.input.value
       if (this.multiple && this.options.tokenSeparators.length && this.options.creatable) {
         this.tokenizeInput()
@@ -433,6 +572,13 @@ export class TamSelect {
       this.open(false)
       if (this.options.remoteUrl) this.scheduleRemote()
       else this.filterLocal()
+    }
+    this.onCompositionStart = () => { this.composing = true }
+    this.onCompositionEnd = () => {
+      this.composing = false
+      queueMicrotask(() => {
+        if (!this.destroyed && this.query !== this.input.value) this.onInput()
+      })
     }
     this.onKeydown = event => this.handleKeydown(event)
     this.onClear = event => { event.stopPropagation(); this.clear() }
@@ -469,12 +615,23 @@ export class TamSelect {
       this.focusTarget.focus()
     }
     this.onFormReset = () => queueMicrotask(() => this.refresh())
-    this.onViewportChange = () => { if (this.opened && this.portalDropdown) this.updateDropdownPosition() }
+    this.onViewportChange = event => {
+      if (!this.opened || !this.portalDropdown) return
+      // The window scroll listener uses capture so it can follow scrolling
+      // containers. It also sees the results panel's own scroll events, which
+      // do not change the control's viewport position and must not resize it.
+      if (event?.type === "scroll" && event.target === this.results) return
+      this.updateDropdownPosition()
+    }
 
     this.control.addEventListener("click", this.onControlClick)
     this.focusTarget.addEventListener("keydown", this.onKeydown)
     if (this.input && this.input !== this.focusTarget) this.input.addEventListener("keydown", this.onKeydown)
-    if (this.input) this.input.addEventListener("input", this.onInput)
+    if (this.input) {
+      this.input.addEventListener("input", this.onInput)
+      this.input.addEventListener("compositionstart", this.onCompositionStart)
+      this.input.addEventListener("compositionend", this.onCompositionEnd)
+    }
     if (this.trigger) this.trigger.addEventListener("click", this.onTrigger)
     this.clearButton.addEventListener("click", this.onClear)
     this.results.addEventListener("scroll", this.onScroll)
@@ -485,6 +642,8 @@ export class TamSelect {
     this.select.form?.addEventListener("reset", this.onFormReset)
     window.addEventListener("resize", this.onViewportChange)
     window.addEventListener("scroll", this.onViewportChange, true)
+    window.visualViewport?.addEventListener("resize", this.onViewportChange)
+    window.visualViewport?.addEventListener("scroll", this.onViewportChange)
     this.mutationObserver = new MutationObserver(() => this.queueRefresh())
     this.mutationObserver.observe(this.select, {
       childList: true,
@@ -514,12 +673,100 @@ export class TamSelect {
     if (!this.portalDropdown) return
     const rect = this.control.getBoundingClientRect()
     const gap = 6
-    const estimatedHeight = Math.min(this.dropdown.scrollHeight || 288, 288)
-    const placeAbove = window.innerHeight - rect.bottom < estimatedHeight + gap && rect.top > estimatedHeight + gap
-    this.dropdown.style.left = `${rect.left}px`
-    this.dropdown.style.width = `${rect.width}px`
-    this.dropdown.style.top = `${placeAbove ? Math.max(gap, rect.top - estimatedHeight - gap) : rect.bottom + gap}px`
+    const padding = Math.max(0, Number(this.options.viewportPadding) || 0)
+    const visualViewport = window.visualViewport
+    const viewportLeft = visualViewport?.offsetLeft || 0
+    const viewportTop = visualViewport?.offsetTop || 0
+    const viewportWidth = visualViewport?.width || document.documentElement.clientWidth || window.innerWidth
+    const viewportHeight = visualViewport?.height || document.documentElement.clientHeight || window.innerHeight
+    const viewportRight = viewportLeft + viewportWidth
+    const viewportBottom = viewportTop + viewportHeight
+    const maximumHeight = Math.max(96, Number(this.options.maxDropdownHeight) || 360)
+    const searchHeight = this.searchPanel && !this.searchPanel.classList.contains("hidden")
+      ? (this.searchPanel.getBoundingClientRect().height || 44)
+      : 0
+    const toolbarHeight = this.selectionToolbar?.getBoundingClientRect().height || (this.selectionToolbar ? 52 : 0)
+    const dropdownChrome = Math.max(0, this.dropdown.offsetHeight - this.dropdown.clientHeight)
+    // `dropdown.scrollHeight` reflects a previously applied max-height because
+    // results is its own scrolling region. Measure the results' full content
+    // instead so the menu can grow again when viewport space becomes available.
+    const naturalHeight = this.results.scrollHeight > 0
+      ? this.results.scrollHeight + searchHeight + toolbarHeight + dropdownChrome
+      : (this.dropdown.scrollHeight || 288)
+    const desiredHeight = Math.min(naturalHeight, maximumHeight)
+    const availableBelow = Math.max(0, viewportBottom - rect.bottom - gap - padding)
+    const availableAbove = Math.max(0, rect.top - viewportTop - gap - padding)
+    const placeAbove = availableBelow < Math.min(desiredHeight, 192) && availableAbove > availableBelow
+    const availableHeight = placeAbove ? availableAbove : availableBelow
+    const dropdownHeight = Math.max(96, Math.min(desiredHeight, availableHeight || desiredHeight))
+    const availableWidth = Math.max(0, viewportWidth - (padding * 2))
+    const dropdownWidth = ["auto", "content"].includes(this.options.dropdownWidth)
+      ? this.measureDropdownContentWidth(rect.width, availableWidth || rect.width)
+      : Math.min(rect.width, availableWidth || rect.width)
+    const maximumLeft = viewportRight - padding - dropdownWidth
+    const left = Math.min(Math.max(rect.left, viewportLeft + padding), Math.max(viewportLeft + padding, maximumLeft))
+
+    this.dropdown.style.left = `${left}px`
+    this.dropdown.style.width = `${dropdownWidth}px`
+    this.dropdown.style.maxWidth = `${availableWidth || dropdownWidth}px`
+    this.dropdown.style.maxHeight = `${dropdownHeight}px`
+    this.results.style.maxHeight = `${Math.max(48, dropdownHeight - searchHeight - toolbarHeight - dropdownChrome)}px`
+    this.dropdown.style.top = `${placeAbove ? Math.max(viewportTop + padding, rect.top - dropdownHeight - gap) : rect.bottom + gap}px`
     this.dropdown.dataset.placement = placeAbove ? "top" : "bottom"
+  }
+
+  measureDropdownContentWidth(triggerWidth, maximumWidth) {
+    let measuredWidth = triggerWidth
+    const renderedEntries = this.results.querySelectorAll("[data-tam-select-entry]")
+    renderedEntries.forEach(entry => {
+      let widestContent = 0
+      entry.querySelectorAll("*").forEach(element => {
+        if (element.childElementCount === 0) {
+          const visibleWidth = element.clientWidth || element.getBoundingClientRect().width || 0
+          // Flex children often stretch to the popup's current width. Only use
+          // DOM width when content genuinely overflows that stretched box.
+          if (element.scrollWidth > visibleWidth + 1) {
+            widestContent = Math.max(widestContent, element.scrollWidth)
+          }
+        }
+      })
+      // Reserve room for option padding, gaps, metadata, images, and checks.
+      measuredWidth = Math.max(measuredWidth, widestContent + 72)
+    })
+
+    // Virtual scrolling may not have rendered the widest row yet. Estimate all
+    // visible labels as a safe fallback; rendered DOM measurements win when
+    // available and the viewport remains the final upper bound.
+    const option = renderedEntries[0]
+    const view = this.select.ownerDocument.defaultView
+    const optionStyle = option ? view.getComputedStyle(option) : null
+    const fontSize = Number.parseFloat(optionStyle?.fontSize || "16") || 16
+    const averageCharacterWidth = fontSize * 0.58
+    let context = null
+    if (!/jsdom/i.test(view.navigator.userAgent)) {
+      try {
+        context = this.select.ownerDocument.createElement("canvas").getContext("2d")
+        if (context) {
+          context.font = optionStyle?.font || `${optionStyle?.fontWeight || 400} ${fontSize}px ${optionStyle?.fontFamily || "sans-serif"}`
+        }
+      } catch {
+        context = null
+      }
+    }
+    const textWidth = value => {
+      const text = String(value || "")
+      return context ? context.measureText(text).width : Array.from(text).length * averageCharacterWidth
+    }
+    this.visibleItems.forEach(entry => {
+      const item = entry.item
+      const primaryWidth = item
+        ? Math.max(textWidth(item.label), textWidth(item.detail))
+        : textWidth(entry.label)
+      const accessories = 48 + (item?.image ? 40 : 0) + (item?.meta ? textWidth(item.meta) + 20 : 0)
+      measuredWidth = Math.max(measuredWidth, primaryWidth + accessories)
+    })
+
+    return Math.min(Math.ceil(measuredWidth), maximumWidth)
   }
 
   detectDirection() {
@@ -595,7 +842,7 @@ export class TamSelect {
       detail: option.dataset.detail || null,
       meta: option.dataset.meta || null,
       image: option.dataset.image || null,
-      disabled: option.disabled,
+      disabled: option.disabled || Boolean(option.closest("optgroup")?.disabled),
       selected: option.selected,
       option,
       group: null
@@ -668,6 +915,8 @@ export class TamSelect {
   }
 
   updateVisibleItems(candidateItems, preserveActive = true) {
+    this.matchedItems = candidateItems
+    candidateItems = candidateItems.filter(item => !(this.multiple && this.options.hideSelected && item.selected))
     const previousId = preserveActive ? this.visibleItems[this.activeIndex]?.id : null
     const hasGroups = this.groupTree.some(group => group.type !== "ungrouped")
 
@@ -709,6 +958,7 @@ export class TamSelect {
   createEntry() {
     const label = this.query.trim()
     if (!this.options.creatable || !label) return null
+    if (this.multiple && this.options.maximumSelectionLength > 0 && this.selectedItems().length >= this.options.maximumSelectionLength) return null
     const value = typeof this.options.createValue === "function" ? this.options.createValue(label) : label
     const normalizedValue = normalize(value)
     const normalizedLabel = normalize(label)
@@ -759,10 +1009,10 @@ export class TamSelect {
     if (this.input) {
       toggleClasses(this.input, this.classes.inputClosed, false)
       this.input.placeholder = this.multiple && !hasValue ? this.options.placeholder : this.options.searchPlaceholder
-      if (atLimit) this.input.disabled = true
-      else this.input.disabled = this.select.disabled
+      this.input.disabled = this.select.disabled
     }
     this.clearButton.classList.toggle("hidden", !this.options.clearable || !hasValue || this.select.disabled)
+    this.updateSelectionToolbar()
     this.syncAria()
   }
 
@@ -864,6 +1114,7 @@ export class TamSelect {
 
   renderDropdown() {
     if (!this.opened) return
+    this.updateSelectionToolbar()
     this.results.replaceChildren()
     this.results.setAttribute("aria-busy", String(this.loading))
 
@@ -872,7 +1123,7 @@ export class TamSelect {
       const text = typeof this.options.inputTooShortText === "function" ? this.options.inputTooShortText(remaining) : this.options.inputTooShortText
       this.renderMessage(text)
       this.updateStatus(text)
-      return this.syncActiveDescendant()
+      return this.finishDropdownRender()
     }
     if (this.error) {
       const error = document.createElement("div")
@@ -881,12 +1132,12 @@ export class TamSelect {
       error.textContent = this.error
       this.results.append(error)
       this.updateStatus(this.error)
-      return this.syncActiveDescendant()
+      return this.finishDropdownRender()
     }
     if (this.loading && this.loadingPage === 1) {
       this.renderMessage(this.options.loadingText, true)
       this.updateStatus(this.options.loadingText)
-      return this.syncActiveDescendant()
+      return this.finishDropdownRender()
     }
 
     if (this.options.emptyState && !this.visibleItems.length && !this.loading) {
@@ -896,10 +1147,16 @@ export class TamSelect {
       else empty.textContent = this.options.emptyState
       this.results.append(empty)
       this.updateStatus("")
-      return this.syncActiveDescendant()
+      return this.finishDropdownRender()
     }
 
-    const shouldVirtual = this.options.virtualScroll || this.visibleItems.length > this.options.virtualScrollThreshold
+    // Wrapped rows have variable heights, while this virtualizer deliberately
+    // uses a fixed row height. Render the full list so multiline rows never
+    // overlap, disappear, or produce incorrect scroll spacers.
+    const largeList = this.options.virtualScroll || this.visibleItems.length > this.options.virtualScrollThreshold
+    this.wrapOptionText = this.options.wrapOptionText ?? !largeList
+    const shouldVirtual = !this.wrapOptionText && largeList
+    this.isVirtualScroll = shouldVirtual
     if (shouldVirtual && this.visibleItems.length > 0) {
       this.renderVirtualDropdown()
     } else {
@@ -924,7 +1181,12 @@ export class TamSelect {
         ? (typeof this.options.resultsText === "function" ? this.options.resultsText(resultCount) : this.options.resultsText)
         : this.options.noResultsText
     this.updateStatus(statusText)
+    this.finishDropdownRender()
+  }
+
+  finishDropdownRender() {
     this.syncActiveDescendant()
+    if (this.portalDropdown) this.updateDropdownPosition()
   }
 
   renderStandardDropdown() {
@@ -938,13 +1200,13 @@ export class TamSelect {
     }
   }
 
-  renderVirtualDropdown() {
+  renderVirtualDropdown(preservedScrollTop = null, container = this.results) {
     this.isVirtualScroll = true
     const itemHeight = this.options.virtualItemHeight
     const buffer = this.options.virtualScrollBuffer
     const total = this.visibleItems.length
     const totalHeight = total * itemHeight
-    const scrollTop = this.results.scrollTop || 0
+    const scrollTop = preservedScrollTop ?? this.results.scrollTop ?? 0
     const viewportHeight = this.results.clientHeight || 288
     const start = Math.max(0, Math.floor(scrollTop / itemHeight) - buffer)
     const end = Math.min(total, Math.ceil((scrollTop + viewportHeight) / itemHeight) + buffer)
@@ -953,15 +1215,15 @@ export class TamSelect {
       const topSpacer = document.createElement("div")
       topSpacer.style.height = `${start * itemHeight}px`
       topSpacer.dataset.virtualSpacer = "top"
-      this.results.append(topSpacer)
+      container.append(topSpacer)
     }
 
     for (let i = start; i < end; i++) {
       const entry = this.visibleItems[i]
       if (entry.type === "group-header") {
-        this.results.append(this.makeGroupHeader(entry))
+        container.append(this.makeGroupHeader(entry))
       } else {
-        this.results.append(this.makeOption(entry, i))
+        container.append(this.makeOption(entry, i))
       }
     }
 
@@ -969,15 +1231,19 @@ export class TamSelect {
       const bottomSpacer = document.createElement("div")
       bottomSpacer.style.height = `${(total - end) * itemHeight}px`
       bottomSpacer.dataset.virtualSpacer = "bottom"
-      this.results.append(bottomSpacer)
+      container.append(bottomSpacer)
     }
   }
 
   rerenderVirtualItems() {
     if (!this.isVirtualScroll || !this.opened) return
-    const children = Array.from(this.results.children)
-    children.forEach(child => child.remove())
-    this.renderVirtualDropdown()
+    // Replacing virtual rows can make browsers clamp scrollTop to zero. Build
+    // the next window off-DOM, swap it atomically, then restore the position.
+    const scrollTop = this.results.scrollTop || 0
+    const fragment = document.createDocumentFragment()
+    this.renderVirtualDropdown(scrollTop, fragment)
+    this.results.replaceChildren(fragment)
+    this.results.scrollTop = scrollTop
     this.syncActiveDescendant()
   }
 
@@ -1035,13 +1301,24 @@ export class TamSelect {
 
   makeItemContent(item, selected = false) {
     const content = document.createElement("span")
-    content.className = this.classes.optionContent
+    content.className = selected ? this.classes.selectionContent : this.classes.optionContent
     content.style.minWidth = "0"
     content.style.maxWidth = "100%"
-    if (selected) content.classList.add("min-w-0", "flex-1")
     const template = this.renderTemplate(selected ? this.options.templateSelection : this.options.templateResult, item, selected ? "selection" : "result")
     if (template) {
       content.append(template)
+      return content
+    }
+    if (selected) {
+      const label = document.createElement("span")
+      label.className = this.classes.selectionLabel
+      label.style.minWidth = "0"
+      label.style.overflow = "hidden"
+      label.style.textOverflow = "ellipsis"
+      label.style.whiteSpace = "nowrap"
+      label.textContent = item.label
+      if (this.options.optionTooltip) label.title = item.label
+      content.append(label)
       return content
     }
     if (item.image) {
@@ -1059,21 +1336,31 @@ export class TamSelect {
     text.style.minWidth = "0"
     text.style.overflow = "hidden"
     const label = document.createElement("span")
-    label.className = `${this.classes.optionLabel} truncate`
-    label.style.overflow = "hidden"
-    label.style.textOverflow = "ellipsis"
-    label.style.whiteSpace = "nowrap"
-    if (selected) label.textContent = item.label
-    else this.renderHighlightedText(label, item.label)
+    label.className = [
+      this.classes.optionLabel,
+      this.wrapOptionText ? this.classes.optionLabelWrap : "truncate"
+    ].filter(Boolean).join(" ")
+    if (!this.wrapOptionText) {
+      label.style.overflow = "hidden"
+      label.style.textOverflow = "ellipsis"
+      label.style.whiteSpace = "nowrap"
+    }
+    if (this.options.optionTooltip) label.title = item.label
+    this.renderHighlightedText(label, item.label)
     text.append(label)
     if (item.detail) {
       const detail = document.createElement("span")
-      detail.className = `${this.classes.optionDetail} truncate`
-      detail.style.overflow = "hidden"
-      detail.style.textOverflow = "ellipsis"
-      detail.style.whiteSpace = "nowrap"
-      if (selected) detail.textContent = item.detail
-      else this.renderHighlightedText(detail, item.detail)
+      detail.className = [
+        this.classes.optionDetail,
+        this.wrapOptionText ? this.classes.optionDetailWrap : "truncate"
+      ].filter(Boolean).join(" ")
+      if (!this.wrapOptionText) {
+        detail.style.overflow = "hidden"
+        detail.style.textOverflow = "ellipsis"
+        detail.style.whiteSpace = "nowrap"
+      }
+      if (this.options.optionTooltip) detail.title = item.detail
+      this.renderHighlightedText(detail, item.detail)
       text.append(detail)
     }
     content.append(text)
@@ -1203,6 +1490,7 @@ export class TamSelect {
   }
 
   handleKeydown(event) {
+    if (this.composing || event.isComposing || event.keyCode === 229) return
     if (this.select.disabled || event.target.closest("button") && event.target !== this.trigger) return
 
     if (["ArrowDown", "ArrowUp"].includes(event.key)) {
@@ -1226,6 +1514,12 @@ export class TamSelect {
       const last = this.selectedItems().at(-1)
       if (last) this.deselect(last.value)
     } else if (event.key === "Tab") {
+      const action = this.selectionToolbar?.querySelector("button:not(:disabled)")
+      if (this.opened && !event.shiftKey && action) {
+        event.preventDefault()
+        action.focus()
+        return
+      }
       this.close(false)
     } else if (event.key === "Home" && this.opened) {
       event.preventDefault()
@@ -1271,18 +1565,44 @@ export class TamSelect {
   }
 
   toggleAll() {
-    const visibleEntries = this.visibleItems.filter(entry => entry.type === "item" && !entry.disabled)
-    const allSelected = visibleEntries.every(entry => entry.item.selected)
-    let selectedCount = this.selectedItems().length
-    visibleEntries.forEach(entry => {
-      const canSelect = this.options.maximumSelectionLength <= 0 || selectedCount < this.options.maximumSelectionLength
-      const nextSelected = allSelected ? false : (entry.item.selected || canSelect)
-      if (!entry.item.selected && nextSelected) selectedCount += 1
-      if (entry.item.selected && !nextSelected) selectedCount -= 1
-      entry.item.selected = nextSelected
-      if (entry.item.option) entry.item.option.selected = entry.item.selected
-    })
+    const matches = this.bulkCandidates()
+    if (matches.length && matches.every(item => item.selected)) this.deselectAll()
+    else this.selectAll()
+  }
+
+  bulkCandidates() {
+    if (this.options.remoteUrl && (this.loading || this.error || this.query.trim().length < this.options.minQueryLength)) return []
+    return (this.matchedItems || []).filter(item => !item.disabled)
+  }
+
+  /** Select loaded options matching the current search, up to the selection limit. */
+  selectAll() {
+    this.changeMatchingSelection(true)
+  }
+
+  /** Deselect loaded matches, including matches hidden by hideSelected. */
+  deselectAll() {
+    this.changeMatchingSelection(false)
+  }
+
+  changeMatchingSelection(selected) {
+    if (!this.multiple || this.select.disabled || this.destroyed) return
+    const changed = []
+    let count = this.selectedItems().length
+    for (const item of this.bulkCandidates()) {
+      if (item.selected === selected) continue
+      if (selected && this.options.maximumSelectionLength > 0 && count >= this.options.maximumSelectionLength) break
+      if (!this.emit(selected ? "tam-select:selecting" : "tam-select:unselecting", { item }, true)) continue
+      item.selected = selected
+      item.option.selected = selected
+      count += selected ? 1 : -1
+      changed.push(item)
+    }
+    if (!changed.length) return
     this.commit()
+    changed.forEach(item => this.emit(selected ? "tam-select:select" : "tam-select:unselect", { item }))
+    this.emit("tam-select:bulk-change", { action: selected ? "select" : "deselect", items: changed, value: this.value })
+    this.updateDropdownPosition()
   }
 
   updateActiveOption(scroll = true) {
@@ -1387,6 +1707,13 @@ export class TamSelect {
     if (existing) {
       this.selectValue(existing.value)
       return existing
+    }
+    if (this.multiple && this.options.maximumSelectionLength > 0 && this.selectedItems().length >= this.options.maximumSelectionLength) {
+      const text = typeof this.options.selectionLimitText === "function"
+        ? this.options.selectionLimitText(this.options.maximumSelectionLength)
+        : this.options.selectionLimitText
+      this.updateStatus(text)
+      return null
     }
     if (!this.emit("tam-select:creating", { label, value: String(value) }, true)) return null
     const item = this.addItem({ value, label, selected: false, created: true })
@@ -1507,14 +1834,19 @@ export class TamSelect {
     if (this.opened || this.select.disabled) return
     if (!this.emit("tam-select:opening", {}, true)) return
     clearTimeout(this.closeTimer)
+    if (this.closeTransitionHandler) {
+      this.dropdown.removeEventListener("transitionend", this.closeTransitionHandler)
+      this.closeTransitionHandler = null
+    }
     this.opened = true
     if (this.options.minimumResultsForSearch > 0) {
       const totalOptions = this.options.remoteUrl ? Infinity : this.items.length
       this.searchVisible = totalOptions >= this.options.minimumResultsForSearch
       this.renderSelection()
     }
+    if (this.portalDropdown) this.dropdown.style.visibility = "hidden"
     this.dropdown.classList.remove("hidden")
-    if (this.options.animations) {
+    if (this.animationsEnabled) {
       toggleClasses(this.dropdown, this.classes.dropdownClosed, false)
       toggleClasses(this.dropdown, this.classes.dropdownOpen, true)
     }
@@ -1525,8 +1857,12 @@ export class TamSelect {
     if (this.options.remoteUrl && loadRemote) this.startRemoteSearch(false)
     else this.renderDropdown()
     if (this.portalDropdown) {
+      // Position before returning control to the browser so an unconstrained,
+      // full-width portal can never flash for a frame.
+      this.updateDropdownPosition()
+      this.dropdown.style.visibility = ""
       const scheduleFrame = window.requestAnimationFrame || (callback => window.setTimeout(callback, 0))
-      scheduleFrame(() => this.updateDropdownPosition())
+      scheduleFrame(() => { if (this.opened) this.updateDropdownPosition() })
     }
     const openTarget = this.searchable && !this.multiple ? this.input : this.focusTarget
     openTarget.focus({ preventScroll: true })
@@ -1567,13 +1903,16 @@ export class TamSelect {
       this.focusTarget.focus({ preventScroll: true })
     }
 
-    if (this.options.animations) {
+    if (this.animationsEnabled) {
       toggleClasses(this.dropdown, this.classes.dropdownOpen, false)
       toggleClasses(this.dropdown, this.classes.dropdownClosed, true)
       const hide = () => {
+        if (this.opened) return
         this.dropdown.classList.add("hidden")
         this.dropdown.removeEventListener("transitionend", hide)
+        if (this.closeTransitionHandler === hide) this.closeTransitionHandler = null
       }
+      this.closeTransitionHandler = hide
       this.dropdown.addEventListener("transitionend", hide, { once: true })
       this.closeTimer = setTimeout(hide, this.options.animationDuration + 50)
     } else {
@@ -1842,17 +2181,28 @@ export class TamSelect {
     this.destroyed = true
     this.cancelRemoteWork()
     clearTimeout(this.closeTimer)
+    if (this.closeTransitionHandler) {
+      this.dropdown.removeEventListener("transitionend", this.closeTransitionHandler)
+      this.closeTransitionHandler = null
+    }
     clearTimeout(this.typeaheadTimer)
     if (this.lazyObserver) { this.lazyObserver.disconnect(); this.lazyObserver = null }
     document.removeEventListener("pointerdown", this.onOutside)
     window.removeEventListener("resize", this.onViewportChange)
     window.removeEventListener("scroll", this.onViewportChange, true)
+    window.visualViewport?.removeEventListener("resize", this.onViewportChange)
+    window.visualViewport?.removeEventListener("scroll", this.onViewportChange)
     this.select.form?.removeEventListener("reset", this.onFormReset)
     this.mutationObserver?.disconnect()
     this.select.removeEventListener("change", this.onNativeChange)
     this.select.removeEventListener("invalid", this.onNativeInvalid)
     this.focusTarget.removeEventListener("keydown", this.onKeydown)
     if (this.input && this.input !== this.focusTarget) this.input.removeEventListener("keydown", this.onKeydown)
+    if (this.input) {
+      this.input.removeEventListener("input", this.onInput)
+      this.input.removeEventListener("compositionstart", this.onCompositionStart)
+      this.input.removeEventListener("compositionend", this.onCompositionEnd)
+    }
     this.results.removeEventListener("scroll", this.onScroll)
     this.labelElements.forEach(label => label.removeEventListener("click", this.onLabelClick))
     this.wrapper.remove()

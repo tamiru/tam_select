@@ -7,6 +7,8 @@ class MetadataTest < Minitest::Test
 
     assert_equal "https://github.com/tamiru/tam_select", specification.homepage
     assert_equal specification.homepage, specification.metadata["source_code_uri"]
+    assert_equal "#{specification.homepage}/issues", specification.metadata["bug_tracker_uri"]
+    assert_equal "https://github.com/sponsors/tamiru", specification.metadata["funding_uri"]
     assert_equal "true", specification.metadata["rubygems_mfa_required"]
     assert_equal specification.version.to_s, package.fetch("version")
     assert_includes specification.files, "src/tam-select.js"

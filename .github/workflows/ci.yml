@@ -2,7 +2,6 @@ name: CI
 
 on:
   push:
-    branches: [main]
   pull_request:
 
 permissions:
@@ -10,27 +9,62 @@ permissions:
 
 jobs:
   javascript:
+    name: JavaScript / Node ${{ matrix.node }}
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ["22", "24"]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
-          node-version: "22"
+          node-version: ${{ matrix.node }}
           cache: npm
       - run: npm ci
       - run: npm test
       - run: npm run check
       - run: npm run typecheck
-      - run: npm audit --audit-level=high
 
   ruby:
+    name: Ruby ${{ matrix.ruby }} / Rails ${{ matrix.rails }}
+    strategy:
+      fail-fast: false
+      matrix:
+        ruby: ["3.2", "3.3", "3.4", "4.0"]
+        rails: ["8_0", "8_1"]
+        exclude:
+          - ruby: "4.0"
+            rails: "8_0"
     runs-on: ubuntu-latest
+    env:
+      BUNDLE_GEMFILE: gemfiles/rails_${{ matrix.rails }}.gemfile
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: ruby/setup-ruby@v1
         with:
-          ruby-version: "3.4"
+          ruby-version: ${{ matrix.ruby }}
           bundler-cache: true
       - run: bundle exec rake test
-      - run: gem build tam_select.gemspec --output /tmp/tam_select.gem
-      - run: gem check /tmp/tam_select.gem
+
+  package:
+    name: Validate release packages
+    needs: [javascript, ruby]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          cache: npm
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "4.0"
+          bundler-cache: true
+      - run: npm ci
+      - run: npm audit --audit-level=high
+      - run: npm pack --dry-run
+      - name: Build and validate gem
+        run: |
+          gem build tam_select.gemspec --output /tmp/tam_select.gem
+          gem check /tmp/tam_select.gem

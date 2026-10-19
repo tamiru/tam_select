@@ -42,6 +42,7 @@ bun add tam-select
 ## Features
 
 - Single and multi-select with inline tags
+- Filter-aware bulk selection, live selection counts, and optional hidden selections
 - Ranked fuzzy search with highlighted matches
 - Remote API search with debouncing and pagination
 - Option groups with section headers
@@ -134,11 +135,47 @@ For large datasets, enable virtual scrolling to render only visible options:
 ```js
 new TamSelect(select, {
   virtualScroll: true,
-  virtualItemHeight: 44
+  virtualItemHeight: 32
 })
 ```
 
 Auto-enables when visible items exceed `virtualScrollThreshold` (default: 100).
+
+## Advanced Multi-select
+
+```js
+new TamSelect(select, {
+  bulkActions: true,
+  showSelectionCount: true,
+  hideSelected: true,
+  maximumSelectionLength: 10
+})
+```
+
+The dropdown displays count-aware **Select all** and **Clear** actions with
+icons, a Ctrl/⌘-A shortcut hint, and a live selected-count badge (for example,
+`3 / 10 selected`). Actions apply to the current search,
+preserve its text, skip disabled options and groups, and respect cancelable
+`selecting` / `unselecting` events. Selections outside the search stay unchanged.
+With `hideSelected`, Clear still includes matching selected items that
+are hidden from the results. Empty group headings disappear automatically.
+
+Remote actions affect only loaded results; they never fetch or select unseen
+pages. Virtual scrolling selects all loaded matches, including rows outside the
+rendered viewport. Each bulk action emits one native `change`, one
+`tam-select:change`, per-item completion events, and a `tam-select:bulk-change`
+event with `{ action, items, value }`. No-op actions emit nothing.
+
+Tab moves from the search field to the action buttons; Shift+Tab returns to
+search and Escape closes the dropdown. Search remains available when the
+selection limit is reached. Composition-based keyboards can finish entering
+text before filtering or creating tags.
+
+Localize the toolbar through `language.selectAll`, `language.deselectAll`, and
+`language.selectionCount` (a string or `(count, limit) => string`). Override its
+appearance with `classes.selectionToolbar`, `classes.selectionAction`, and
+`classes.selectionCount`. These multi-select UI features are opt-in and do not
+change single-select controls.
 
 ## Animations
 
@@ -175,14 +212,23 @@ new TamSelect(select, { animationPreset: "spring" })
 | `minQueryLength` | `0` | Characters before remote search |
 | `debounce` | `250` | Remote request delay (ms) |
 | `maximumSelectionLength` | `0` | Max selectable items (0 = unlimited) |
+| `bulkActions` | `false` | Show count-aware Select all / Clear actions on multi-selects |
+| `showSelectionCount` | `false` | Show live selected count and configured limit |
+| `hideSelected` | `false` | Hide selected multi-select results |
 | `theme` | `"auto"` | `"default"`, `"select2"`, or `"auto"` |
 | `classes` | `{}` | Override any Tailwind class group |
 | `animationPreset` | `null` | Built-in animation preset |
 | `virtualScroll` | `false` | Enable virtual scrolling |
-| `virtualItemHeight` | `44` | Row height for virtual scroll |
+| `virtualItemHeight` | `32` | Row height for virtual scroll |
+| `wrapOptionText` | automatic | Wrap ordinary result labels/details; set `true` to wrap even large lists (disables fixed-height virtualization), or `false` to truncate |
+| `optionTooltip` | `true` | Show full option text in native hover tooltips |
 | `fuzzySearch` | `true` | Tolerate typing mistakes |
 | `highlightMatches` | `true` | Highlight search matches |
 | `sortByRelevance` | `true` | Rank strong matches first |
+| `dropdownParent` | `null` | Portal target used to escape clipped containers |
+| `dropdownWidth` | `"trigger"` | `"trigger"` or viewport-clamped `"auto"` width (`"content"` alias supported) |
+| `maxDropdownHeight` | `360` | Maximum menu height before results scroll |
+| `viewportPadding` | `8` | Space kept between a portaled menu and viewport edges |
 
 ## API
 
@@ -195,6 +241,8 @@ instance.focus()             // Focus search input
 instance.blur()              // Remove focus
 instance.setValue("apple")   // Set selected value
 instance.clear()             // Clear all selections
+instance.selectAll()         // Select loaded matches within the selection limit
+instance.deselectAll()       // Deselect loaded matches, preserving other selections
 instance.refresh()           // Re-read native options
 instance.addData({ value: "new", label: "New" })  // Add option
 instance.removeData("old")   // Remove option
@@ -219,6 +267,7 @@ select.addEventListener("tam-select:close", () => console.log("closed"))
 select.addEventListener("tam-select:select", (e) => console.log(e.detail.item))
 select.addEventListener("tam-select:create", (e) => console.log(e.detail.item))
 select.addEventListener("tam-select:error", (e) => console.error(e.detail.error))
+select.addEventListener("tam-select:bulk-change", (e) => console.log(e.detail.action, e.detail.items))
 ```
 
 Cancelable: `opening`, `closing`, `selecting`, `unselecting`, `clearing`, `creating`.
@@ -328,3 +377,13 @@ npm run typecheck         # TypeScript declarations
 ## License
 
 [MIT](LICENSE)
+
+### Compact sizing and long option text
+
+Controls use a 36px minimum height; simple dropdown options use 32px rows with 14px regular text and 6px vertical padding. Descriptions use 12px text. Long labels and descriptions wrap by default, and rich options grow to fit their content. For large virtualized lists, set `wrapOptionText: true` to show every line:
+
+```js
+new TamSelect(select, { wrapOptionText: true })
+```
+
+Wrapping applies to dropdown labels and details in both themes, including long words. Selected values stay on one line. Fixed-height virtual scrolling is disabled when wrapping is enabled. Set `wrapOptionText: false` to keep every result on one line.

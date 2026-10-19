@@ -41,6 +41,14 @@ export default class extends Controller {
     this.instance?.clear()
   }
 
+  selectAll() {
+    this.instance?.selectAll()
+  }
+
+  deselectAll() {
+    this.instance?.deselectAll()
+  }
+
   setValue({ params }) {
     this.instance?.setValue(params.value)
   }

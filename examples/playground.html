@@ -44,7 +44,7 @@
       <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
         <div class="space-y-1.5">
           <label class="block text-xs text-zinc-400">text input</label>
-          <input type="text" placeholder="Standard input" class="min-h-11 w-full rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm font-medium text-zinc-800 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100">
+          <input type="text" placeholder="Standard input" class="min-h-11 w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm font-medium text-zinc-800 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100">
         </div>
         <div class="space-y-1.5">
           <label class="block text-xs text-zinc-400">tam-select</label>
@@ -52,7 +52,7 @@
         </div>
         <div class="space-y-1.5">
           <label class="block text-xs text-zinc-400">select (native)</label>
-          <select class="min-h-11 w-full rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm font-medium text-zinc-800 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100">
+          <select class="min-h-11 w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm font-medium text-zinc-800 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100">
             <option>Choose one…</option>
             <option>Option A</option>
             <option>Option B</option>
@@ -60,7 +60,7 @@
         </div>
         <div class="space-y-1.5">
           <label class="block text-xs text-zinc-400">textarea</label>
-          <textarea rows="1" placeholder="Standard textarea" class="min-h-11 w-full resize-none rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm font-medium text-zinc-800 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"></textarea>
+          <textarea rows="1" placeholder="Standard textarea" class="min-h-9 w-full resize-none rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm font-medium text-zinc-800 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"></textarea>
         </div>
       </div>
       <p class="text-xs text-zinc-400 mt-2">All four use <code class="text-zinc-500">min-h-11 px-3 py-2 text-sm</code> — identical 44px minimum height</p>
@@ -95,7 +95,7 @@
             <option value="indigo">Indigo</option>
             <option value="violet">Violet</option>
           </select>
-          <p class="text-xs text-zinc-400">Click tags to remove · Type to search</p>
+          <p class="text-xs text-zinc-400">Select or clear search matches · Live count · Selected colors leave the menu</p>
         </div>
       </div>
     </section>
@@ -339,7 +339,7 @@
         <div class="space-y-2">
           <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">1500 Items <span class="text-zinc-400 font-normal">(virtualized)</span></label>
           <select id="virtual-1500" data-placeholder="Search 1,500 items…"></select>
-          <p class="text-xs text-zinc-400">Only visible DOM nodes rendered · smooth 60fps scroll · 44px row height</p>
+          <p class="text-xs text-zinc-400">Only visible DOM nodes rendered · smooth 60fps scroll · 32px row height</p>
         </div>
         <div class="space-y-2">
           <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">5000 Items <span class="text-zinc-400 font-normal">(large dataset)</span></label>
@@ -400,7 +400,9 @@
       const creatable = { ...opts, creatable: true }
 
       instances.push(new TamSelect(document.getElementById('basic-single'), singleOpts))
-      instances.push(new TamSelect(document.getElementById('basic-multi'), multiOpts))
+      instances.push(new TamSelect(document.getElementById('basic-multi'), {
+        ...multiOpts, bulkActions: true, showSelectionCount: true, hideSelected: true, maximumSelectionLength: 4
+      }))
       instances.push(new TamSelect(document.getElementById('detail-select'), singleOpts))
       instances.push(new TamSelect(document.getElementById('country-select'), multiOpts))
       instances.push(new TamSelect(document.getElementById('disabled-select'), singleOpts))
@@ -622,7 +624,7 @@
     const virtual1500 = new TamSelect(document.getElementById('virtual-1500'), {
       placeholder: 'Search 1,500 items…',
       virtualScroll: true,
-      virtualItemHeight: 44,
+      virtualItemHeight: 32,
       virtualScrollBuffer: 5,
       clearable: true,
       cacheRemote: false,
@@ -639,7 +641,7 @@
     const virtual5000 = new TamSelect(document.getElementById('virtual-5000'), {
       placeholder: 'Pick from 5,000…',
       virtualScroll: true,
-      virtualItemHeight: 44,
+      virtualItemHeight: 32,
       virtualScrollBuffer: 5,
       clearable: true,
       debounce: 100,

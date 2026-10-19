@@ -13,5 +13,7 @@ export default class TamSelectController extends Controller<HTMLSelectElement> {
   close(): void
   focus(): void
   clear(): void
+  selectAll(): void
+  deselectAll(): void
   setValue(event: { params: { value: string | string[] | null } }): void
 }

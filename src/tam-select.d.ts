@@ -55,6 +55,9 @@ export interface TamSelectLanguage {
   clear?: string
   remove?: string | ((item: TamSelectItem) => string)
   selectionLimit?: string | ((limit: number) => string)
+  selectAll?: string | ((matchCount: number) => string)
+  deselectAll?: string | ((selectedMatchCount: number) => string)
+  selectionCount?: string | ((count: number, limit: number) => string)
 }
 
 export interface TamSelectOptions {
@@ -138,6 +141,18 @@ export interface TamSelectOptions {
   lazyLoadImages?: boolean
   /** Max items selectable in multi-select (0 = unlimited). Default: `0` */
   maximumSelectionLength?: number
+  /** Show count-aware Select all / Clear actions for multi-selects. Default: `false` */
+  bulkActions?: boolean
+  /** Show a live selected count in the multi-select dropdown. Default: `false` */
+  showSelectionCount?: boolean
+  /** Hide selected results in multi-selects. Default: `false` */
+  hideSelected?: boolean
+  /** Bulk selection label or formatter receiving the eligible match count. */
+  selectAllText?: string | ((matchCount: number) => string)
+  /** Bulk deselection label or formatter receiving the selected match count. */
+  deselectAllText?: string | ((selectedMatchCount: number) => string)
+  /** Selected count label, receiving the count and limit (0 = unlimited). */
+  selectionCountText?: string | ((count: number, limit: number) => string)
   /** Max characters in search input (0 = unlimited). Default: `0` */
   maximumInputLength?: number
   /** Min options before showing search box. Default: `0` */
@@ -162,6 +177,12 @@ export interface TamSelectOptions {
   cacheRemote?: boolean
   /** Element or selector used to portal the dropdown beyond clipping containers. */
   dropdownParent?: Element | string | null
+  /** Open-menu width: match the trigger or fit the widest option. `"content"` aliases `"auto"`. Default: `"trigger"` */
+  dropdownWidth?: "trigger" | "auto" | "content"
+  /** Maximum dropdown height in CSS pixels before results scroll. Default: `360` */
+  maxDropdownHeight?: number
+  /** Minimum gap between a portaled dropdown and the visible viewport edge. Default: `8` */
+  viewportPadding?: number
   /** Container width (CSS value or `"resolve"` for the full available width). Default: `"resolve"` */
   width?: string
   /** Text direction: `"ltr"`, `"rtl"`, or `"auto"`. Default: `"auto"` */
@@ -174,8 +195,12 @@ export interface TamSelectOptions {
   virtualScrollThreshold?: number
   /** Extra items rendered above/below viewport. Default: `5` */
   virtualScrollBuffer?: number
-  /** Estimated height per item in pixels for virtual scroll. Default: `44` */
+  /** Estimated height per item in pixels for virtual scroll. Default: `32` */
   virtualItemHeight?: number
+  /** Wrap long result labels and details across multiple lines. By default, wraps ordinary lists and truncates virtualized lists. `true` disables fixed-height virtualization. */
+  wrapOptionText?: boolean
+  /** Add native title tooltips to option text and compact selected values. Default: `true` */
+  optionTooltip?: boolean
 }
 
 export interface TamSelectEventDetail {
@@ -208,6 +233,12 @@ export interface TamSelectDataEventDetail extends TamSelectEventDetail {
 export interface TamSelectReorderEventDetail extends TamSelectEventDetail {
   value: string | string[]
   items: TamSelectItem[]
+}
+
+export interface TamSelectBulkChangeEventDetail extends TamSelectEventDetail {
+  action: "select" | "deselect"
+  items: TamSelectItem[]
+  value: string[]
 }
 
 declare class TamSelect {
@@ -277,6 +308,10 @@ declare class TamSelect {
   setValue(value: string | string[] | null): void
   /** Clear all selections */
   clear(): void
+  /** Select loaded matches, respecting disabled options, cancellation, and limits. */
+  selectAll(): void
+  /** Deselect loaded matches, including those hidden by hideSelected. */
+  deselectAll(): void
   /** Re-read native options and re-render */
   refresh(): void
   /** Add one or more options programmatically */

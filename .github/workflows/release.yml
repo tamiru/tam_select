@@ -5,21 +5,30 @@ on:
     tags:
       - "v*.*.*"
 
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
 permissions:
   contents: read
 
 jobs:
   verify:
+    name: Verify release
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-node@v4
+      - name: Check out release tag
+        uses: actions/checkout@v7
         with:
-          node-version: "22"
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
           cache: npm
       - uses: ruby/setup-ruby@v1
         with:
-          ruby-version: "3.4"
+          ruby-version: "4.0"
           bundler-cache: true
       - name: Verify tag matches gem and npm versions
         env:
@@ -27,66 +36,111 @@ jobs:
         run: |
           gem_version="$(ruby -Ilib -rtam_select/version -e 'print TamSelect::VERSION')"
           npm_version="$(node -p 'require("./package.json").version')"
-          test "$RELEASE_TAG" = "v${gem_version}"
-          test "$gem_version" = "$npm_version"
+          test "$RELEASE_TAG" = "v${gem_version}" || {
+            echo "::error::Tag ${RELEASE_TAG} does not match gem version ${gem_version}"
+            exit 1
+          }
+          test "$gem_version" = "$npm_version" || {
+            echo "::error::Gem version ${gem_version} does not match npm version ${npm_version}"
+            exit 1
+          }
       - run: npm ci
       - run: npm test
       - run: npm run check
       - run: npm run typecheck
       - run: npm audit --audit-level=high
       - run: bundle exec rake test
+      - name: Validate release packages
+        run: |
+          npm pack --dry-run
+          gem build tam_select.gemspec --output /tmp/tam_select.gem
+          gem check /tmp/tam_select.gem
 
   rubygems:
+    name: Publish RubyGem
     needs: verify
     runs-on: ubuntu-latest
-    environment: release
+    environment:
+      name: release
+      url: https://rubygems.org/gems/tam_select
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - uses: ruby/setup-ruby@v1
         with:
-          ruby-version: "3.4"
+          ruby-version: "4.0"
       - name: Build and validate gem
         run: |
-          gem build tam_select.gemspec --output tam_select.gem
-          gem check tam_select.gem
+          version="$(ruby -Ilib -rtam_select/version -e 'print TamSelect::VERSION')"
+          mkdir -p pkg
+          gem build tam_select.gemspec --output "pkg/tam_select-${version}.gem"
+          gem check "pkg/tam_select-${version}.gem"
       - name: Publish to RubyGems
         env:
           GEM_HOST_API_KEY: ${{ secrets.RUBYGEMS_API_KEY }}
         run: |
-          test -n "$GEM_HOST_API_KEY" || { echo "::error::RUBYGEMS_API_KEY is not configured"; exit 1; }
-          gem push tam_select.gem --host https://rubygems.org </dev/null
+          test -n "$GEM_HOST_API_KEY" || {
+            echo "::error::RUBYGEMS_API_KEY is not configured"
+            exit 1
+          }
+          gem push pkg/tam_select-*.gem --host https://rubygems.org </dev/null
 
   npm:
+    name: Publish npm package
     needs: verify
     runs-on: ubuntu-latest
-    environment: release
+    environment:
+      name: release
+      url: https://www.npmjs.com/package/tam-select
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
         with:
-          node-version: "22"
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          cache: npm
           registry-url: https://registry.npmjs.org
       - run: npm ci
       - name: Publish to npm
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
-          test -n "$NODE_AUTH_TOKEN" || { echo "::error::NPM_TOKEN is not configured"; exit 1; }
+          test -n "$NODE_AUTH_TOKEN" || {
+            echo "::error::NPM_TOKEN is not configured"
+            exit 1
+          }
           npm publish --access public
 
   github-release:
+    name: Create GitHub release
     needs: [rubygems, npm]
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
       - uses: ruby/setup-ruby@v1
         with:
-          ruby-version: "3.4"
-      - run: gem build tam_select.gemspec --output tam_select.gem
+          ruby-version: "4.0"
+      - name: Build gem asset
+        run: |
+          version="$(ruby -Ilib -rtam_select/version -e 'print TamSelect::VERSION')"
+          mkdir -p pkg
+          gem build tam_select.gemspec --output "pkg/tam_select-${version}.gem"
       - name: Create GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ github.ref_name }}
-        run: gh release create "$RELEASE_TAG" tam_select.gem --verify-tag --generate-notes
+        run: |
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            echo "GitHub release $RELEASE_TAG already exists"
+          else
+            gh release create "$RELEASE_TAG" pkg/*.gem \
+              --verify-tag \
+              --generate-notes
+          fi

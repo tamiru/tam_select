@@ -309,6 +309,55 @@ test("single-select search opens below a simple field while multiple search stay
   }
 })
 
+test("mobile inputs and pointer targets use device-friendly defaults", () => {
+  const cleanup = setupDOM(localSelect())
+  try {
+    const tamSelect = new TamSelect(document.querySelector("select"))
+
+    assert.equal(tamSelect.input.autocomplete, "off")
+    assert.equal(tamSelect.input.autocapitalize, "none")
+    assert.equal(tamSelect.input.getAttribute("autocorrect"), "off")
+    assert.equal(tamSelect.input.getAttribute("enterkeyhint"), "search")
+    assert.ok(tamSelect.input.classList.contains("text-base"), "mobile search text avoids browser zoom")
+    assert.ok(tamSelect.input.classList.contains("sm:text-sm"))
+    assert.ok(tamSelect.control.classList.contains("touch-manipulation"))
+    assert.ok(tamSelect.trigger.classList.contains("touch-manipulation"))
+    assert.ok(tamSelect.clearButton.classList.contains("size-5"))
+    assert.equal(tamSelect.clearButton.classList.contains("size-11"), false)
+    assert.equal(tamSelect.clearButton.classList.contains("ms-auto"), false)
+    assert.equal(tamSelect.chevron.classList.contains("ms-auto"), false)
+
+    tamSelect.open()
+    const option = tamSelect.dropdown.querySelector('[role="option"]')
+    assert.ok(option.classList.contains("min-h-8"))
+    assert.ok(option.classList.contains("touch-manipulation"))
+  } finally {
+    cleanup()
+  }
+})
+
+test("single-select actions stay grouped at the right edge", () => {
+  for (const theme of ["default", "select2"]) {
+    const cleanup = setupDOM(localSelect({ selected: "aa" }))
+    try {
+      const tamSelect = new TamSelect(document.querySelector("select"), { theme })
+
+      assert.ok(tamSelect.values.firstElementChild.classList.contains("flex-1"))
+      assert.equal(tamSelect.clearButton.classList.contains("ms-auto"), false)
+      assert.equal(tamSelect.chevron.classList.contains("ms-auto"), false)
+      assert.equal(tamSelect.control.lastElementChild, tamSelect.clearButton)
+      assert.ok(tamSelect.clearButton.classList.contains("size-5"))
+
+      tamSelect.clear()
+      const placeholder = tamSelect.values.firstElementChild
+      assert.ok(placeholder.classList.contains("flex-1"))
+      assert.ok(placeholder.classList.contains("min-w-0"))
+    } finally {
+      cleanup()
+    }
+  }
+})
+
 test("non-searchable selects use a focusable button combobox and preserve disabled state", () => {
   const cleanup = setupDOM(localSelect())
   try {
@@ -577,6 +626,28 @@ test("animations can be disabled", () => {
   }
 })
 
+test("the operating system reduced-motion preference disables dropdown animation", () => {
+  const cleanup = setupDOM(localSelect())
+  try {
+    window.matchMedia = query => ({
+      matches: query === "(prefers-reduced-motion: reduce)",
+      media: query,
+      addEventListener() {},
+      removeEventListener() {}
+    })
+    const tamSelect = new TamSelect(document.querySelector("select"))
+
+    assert.equal(tamSelect.animationsEnabled, false)
+    assert.equal(tamSelect.dropdown.style.transition, "")
+    tamSelect.open()
+    assert.equal(tamSelect.dropdown.classList.contains("scale-y-100"), false)
+    tamSelect.close()
+    assert.ok(tamSelect.dropdown.classList.contains("hidden"))
+  } finally {
+    cleanup()
+  }
+})
+
 // ─── Type-ahead ───────────────────────────────────────────────────────
 
 test("type-ahead jumps to the first matching option on rapid typing", () => {
@@ -714,7 +785,7 @@ test("maximumSelectionLength prevents selecting beyond the limit", () => {
     tamSelect.selectValue("or")
     assert.deepEqual(tamSelect.value, ["aa", "or"])
     assert.ok(tamSelect.selectionLimitReached)
-    assert.ok(tamSelect.input.disabled)
+    assert.equal(tamSelect.input.disabled, false, "search remains available at the selection limit")
 
     tamSelect.selectValue("sn")
     assert.deepEqual(tamSelect.value, ["aa", "or"])
@@ -843,6 +914,7 @@ test("control height matches standard inputs in every theme", () => {
     try {
       const tamSelect = new TamSelect(document.querySelector("select"), { theme })
       assert.ok(tamSelect.control.classList.contains("min-h-11"))
+      assert.equal(tamSelect.control.classList.contains("min-h-9"), false)
       assert.equal(tamSelect.control.classList.contains("h-10"), false)
       assert.equal(tamSelect.control.classList.contains("min-h-10"), false)
     } finally {
@@ -1069,7 +1141,7 @@ test("placeholder truncates when control is narrow", () => {
   }
 })
 
-test("dropdown options truncate long labels", () => {
+test("dropdown options can still truncate long labels when requested", () => {
   const cleanup = setupDOM(`
     <select>
       <option value="">Select</option>
@@ -1077,7 +1149,7 @@ test("dropdown options truncate long labels", () => {
     </select>
   `)
   try {
-    const tamSelect = new TamSelect(document.querySelector("select"))
+    const tamSelect = new TamSelect(document.querySelector("select"), { wrapOptionText: false })
     tamSelect.open()
     const label = tamSelect.dropdown.querySelector("span.truncate")
     assert.ok(label, "option label has truncate class")
@@ -1089,7 +1161,68 @@ test("dropdown options truncate long labels", () => {
   }
 })
 
-test("long selected value with detail truncates both lines", () => {
+test("dropdown options wrap long labels and details by default in both themes", () => {
+  const selectedText = "The currently selected value stays compact in the closed control"
+  const labelText = "This is an extremely long option label that should wrap across multiple lines"
+  const detailText = "A long secondary description that should wrap independently"
+  for (const theme of ["default", "select2"]) {
+    const cleanup = setupDOM(`
+    <select>
+      <option value="selected" selected>${selectedText}</option>
+      <option value="long" data-detail="${detailText}">${labelText}</option>
+    </select>
+  `)
+    try {
+      const tamSelect = new TamSelect(document.querySelector("select"), { theme })
+
+      const selectedLabel = tamSelect.values.querySelector("span.truncate")
+      assert.equal(selectedLabel.title, selectedText, "compact selected value keeps a tooltip")
+      assert.equal(selectedLabel.style.whiteSpace, "nowrap", "selected value stays one line")
+
+      tamSelect.open()
+      const option = tamSelect.dropdown.querySelector('[data-value="long"]')
+      const label = Array.from(option.querySelectorAll("span")).find(span => span.textContent === labelText)
+      const detail = Array.from(option.querySelectorAll("span")).find(span => span.textContent === detailText)
+
+      assert.ok(label.classList.contains("whitespace-normal"))
+      assert.ok(label.className.includes("[overflow-wrap:anywhere]"))
+      assert.equal(label.classList.contains("truncate"), false)
+      assert.equal(label.style.whiteSpace, "")
+      assert.equal(label.title, labelText)
+      assert.ok(detail.classList.contains("whitespace-normal"))
+      assert.equal(detail.title, detailText)
+    } finally {
+      cleanup()
+    }
+  }
+})
+
+test("dropdown options use compact spacing and match selected text sizing", () => {
+  for (const theme of ["default", "select2"]) {
+    const cleanup = setupDOM(localSelect({ selected: "aa" }))
+    try {
+      const tamSelect = new TamSelect(document.querySelector("select"), { theme })
+      const selectedLabel = tamSelect.values.querySelector("span.truncate")
+
+      assert.ok(selectedLabel.classList.contains("text-sm"))
+      assert.ok(selectedLabel.classList.contains("font-normal"))
+      assert.ok(tamSelect.control.classList.contains("font-normal"))
+      assert.equal(tamSelect.values.textContent, "Addis Ababa")
+
+      tamSelect.open()
+      const option = tamSelect.dropdown.querySelector('[data-value="or"]')
+      assert.ok(option.classList.contains("text-sm"))
+      assert.ok(option.classList.contains("py-1.5"))
+      assert.ok(option.classList.contains("px-2.5"))
+      assert.ok(option.classList.contains("min-h-8"))
+      assert.ok(tamSelect.classes.optionSelected.includes("font-normal"))
+    } finally {
+      cleanup()
+    }
+  }
+})
+
+test("rich option details stay in the menu and selected values remain one line", () => {
   const cleanup = setupDOM(`
     <select>
       <option value="">Select</option>
@@ -1099,9 +1232,14 @@ test("long selected value with detail truncates both lines", () => {
   try {
     const tamSelect = new TamSelect(document.querySelector("select"))
     const spans = tamSelect.values.querySelectorAll("span.truncate")
-    assert.equal(spans.length, 2, "both label and detail are truncated")
+    assert.equal(spans.length, 1, "only the compact label is rendered in the control")
     assert.equal(spans[0].textContent, "Extremely long label that needs truncation")
-    assert.equal(spans[1].textContent, "This is also a very long detail line that should truncate independently from the label")
+    assert.equal(tamSelect.values.textContent.includes("This is also a very long detail line"), false)
+
+    tamSelect.clear()
+    tamSelect.open()
+    assert.match(tamSelect.dropdown.textContent, /This is also a very long detail line/)
+    assert.ok(tamSelect.dropdown.querySelector('[data-value="long"] span.text-xs'))
   } finally {
     cleanup()
   }
@@ -1197,6 +1335,51 @@ test("virtualScroll auto-enables when item count exceeds threshold", () => {
     assert.ok(tamSelect.isVirtualScroll, "virtual scroll auto-enabled")
     const optionElements = tamSelect.dropdown.querySelectorAll("[role=\"option\"]")
     assert.ok(optionElements.length < 50, `only ${optionElements.length} options rendered`)
+  } finally {
+    cleanup()
+  }
+})
+
+test("wrapped options render variable-height rows without fixed-height virtualization", () => {
+  const options = Array.from({ length: 120 }, (_, i) => `<option value="${i}">Long option ${i} that can wrap onto another line</option>`).join("")
+  const cleanup = setupDOM(`<select>${options}</select>`)
+  try {
+    const tamSelect = new TamSelect(document.querySelector("select"), {
+      virtualScroll: true,
+      wrapOptionText: true
+    })
+    tamSelect.open()
+
+    assert.equal(tamSelect.isVirtualScroll, false)
+    assert.equal(tamSelect.dropdown.querySelectorAll('[role="option"]').length, tamSelect.visibleItems.length)
+    assert.equal(tamSelect.dropdown.querySelector('[data-virtual-spacer]'), null)
+  } finally {
+    cleanup()
+  }
+})
+
+test("virtualScroll preserves its position while replacing the rendered window", () => {
+  const options = Array.from({ length: 200 }, (_, i) => `<option value="${i}">Item ${i}</option>`).join("")
+  const cleanup = setupDOM(`<select><option value="">Select</option>${options}</select>`)
+  try {
+    const tamSelect = new TamSelect(document.querySelector("select"), { virtualScroll: true })
+    tamSelect.open()
+    tamSelect.results.scrollTop = 440
+
+    // Real browsers clamp a scroller when all of its content is removed.
+    // Simulate that layout behavior because jsdom does not perform layout.
+    const replaceChildren = tamSelect.results.replaceChildren.bind(tamSelect.results)
+    tamSelect.results.replaceChildren = (...children) => {
+      replaceChildren(...children)
+      tamSelect.results.scrollTop = 0
+    }
+
+    tamSelect.rerenderVirtualItems()
+
+    assert.equal(tamSelect.results.scrollTop, 440)
+    const renderedIndexes = Array.from(tamSelect.results.querySelectorAll("[data-tam-select-entry]"), option => Number(option.dataset.tamSelectEntry))
+    assert.ok(Math.min(...renderedIndexes) > 0, "the replacement window remains near the scrolled position")
+    assert.ok(renderedIndexes.includes(10), "the option at the scroll position remains rendered")
   } finally {
     cleanup()
   }
@@ -1318,12 +1501,15 @@ test("dir defaults to ltr when no direction is set", () => {
   }
 })
 
-test("RTL layout uses logical properties for clear and chevron", () => {
+test("RTL layout keeps trailing actions grouped without physical margins", () => {
   const cleanup = setupDOM(localSelect())
   try {
     const tamSelect = new TamSelect(document.querySelector("select"), { dir: "rtl" })
-    assert.ok(tamSelect.clearButton.classList.contains("ms-auto"), "clear has ms-auto")
-    assert.ok(tamSelect.chevron.classList.contains("ms-auto"), "chevron has ms-auto")
+    assert.equal(tamSelect.clearButton.classList.contains("ms-auto"), false)
+    assert.equal(tamSelect.chevron.classList.contains("ms-auto"), false)
+    assert.equal(tamSelect.clearButton.classList.contains("ml-auto"), false)
+    assert.equal(tamSelect.chevron.classList.contains("mr-auto"), false)
+    assert.ok(tamSelect.values.firstElementChild.classList.contains("flex-1"))
     assert.ok(tamSelect.input.classList.contains("text-start"), "input has text-start")
   } finally {
     cleanup()
@@ -1813,6 +1999,98 @@ test("dropdownParent portals and positions the dropdown outside clipping contain
     assert.equal(tamSelect.dropdown.style.position, "fixed")
     assert.equal(tamSelect.dropdown.style.left, "10px")
     assert.equal(tamSelect.dropdown.style.width, "200px")
+  } finally {
+    cleanup()
+  }
+})
+
+test("auto-width portaled dropdown expands for its largest option without resizing the closed control", () => {
+  const cleanup = setupDOM(`<div id="portal"></div><select>
+    <option value="">Select</option>
+    <option value="short">Short</option>
+    <option value="long">A substantially longer option label that should determine the popup width</option>
+  </select>`)
+  try {
+    const tamSelect = new TamSelect(document.querySelector("select"), {
+      dropdownParent: document.querySelector("#portal"),
+      dropdownWidth: "auto"
+    })
+    tamSelect.control.getBoundingClientRect = () => ({ left: 20, top: 20, right: 140, bottom: 64, width: 120, height: 44 })
+
+    tamSelect.open()
+
+    assert.ok(parseFloat(tamSelect.dropdown.style.width) > 120, "the popup expands beyond the closed control")
+    assert.equal(tamSelect.wrapper.style.width, "100%", "the closed control keeps its configured width")
+    assert.ok(parseFloat(tamSelect.dropdown.style.width) < window.innerWidth - 16, "the popup fits its option instead of filling the viewport")
+  } finally {
+    cleanup()
+  }
+})
+
+test("portaled dropdowns fit the visual viewport and react to mobile viewport changes", async () => {
+  const cleanup = setupDOM(`<div id="portal"></div>${localSelect()}`)
+  try {
+    const listeners = new Map()
+    const removedListeners = new Map()
+    const visualViewport = {
+      width: 320,
+      height: 240,
+      offsetLeft: 5,
+      offsetTop: 10,
+      addEventListener(type, callback) { listeners.set(type, callback) },
+      removeEventListener(type, callback) { removedListeners.set(type, callback) }
+    }
+    Object.defineProperty(window, "visualViewport", { configurable: true, value: visualViewport })
+
+    const portal = document.querySelector("#portal")
+    const tamSelect = new TamSelect(document.querySelector("select"), {
+      dropdownParent: portal,
+      maxDropdownHeight: 360,
+      viewportPadding: 8
+    })
+    let controlRect = { left: 280, top: 180, right: 380, bottom: 224, width: 100, height: 44 }
+    tamSelect.control.getBoundingClientRect = () => controlRect
+    tamSelect.searchPanel.getBoundingClientRect = () => ({ height: 44 })
+    Object.defineProperty(tamSelect.results, "scrollHeight", { configurable: true, value: 256 })
+    Object.defineProperty(tamSelect.dropdown, "scrollHeight", {
+      configurable: true,
+      get() { return parseFloat(tamSelect.dropdown.style.maxHeight) || 300 }
+    })
+
+    assert.equal(tamSelect.dropdown.style.visibility, "hidden", "an unpositioned portal cannot paint")
+    tamSelect.open()
+
+    assert.equal(tamSelect.dropdown.style.visibility, "", "the positioned portal is revealed in the same task")
+    assert.doesNotMatch(tamSelect.dropdown.style.transition, /\ball\b/, "position and size are never animated")
+    assert.equal(tamSelect.dropdown.dataset.placement, "top")
+    assert.equal(tamSelect.dropdown.style.left, "217px", "menu stays inside the right viewport edge")
+    assert.equal(tamSelect.dropdown.style.top, "18px")
+    assert.equal(tamSelect.dropdown.style.maxHeight, "156px")
+    assert.equal(tamSelect.results.style.maxHeight, "112px")
+    assert.equal(typeof listeners.get("resize"), "function")
+    assert.equal(typeof listeners.get("scroll"), "function")
+
+    controlRect = { left: 12, top: 20, right: 212, bottom: 64, width: 200, height: 44 }
+    tamSelect.results.dispatchEvent(new Event("scroll"))
+    assert.equal(tamSelect.dropdown.style.maxHeight, "156px", "scrolling options does not resize the menu")
+    assert.equal(tamSelect.dropdown.style.left, "217px", "scrolling options does not reposition the menu")
+
+    listeners.get("resize")()
+    assert.equal(tamSelect.dropdown.style.maxHeight, "172px", "the menu can grow after an earlier viewport constraint")
+    assert.equal(tamSelect.dropdown.style.left, "13px")
+
+    tamSelect.results.replaceChildren(document.createElement("div"))
+    tamSelect.renderDropdown()
+    assert.equal(tamSelect.dropdown.style.left, "13px", "content updates retain the constrained position")
+
+    assert.equal(tamSelect.dropdown.dataset.placement, "bottom")
+    assert.equal(tamSelect.dropdown.style.left, "13px")
+    assert.equal(tamSelect.dropdown.style.top, "70px")
+    assert.equal(tamSelect.dropdown.style.maxHeight, "172px")
+
+    tamSelect.destroy()
+    assert.equal(removedListeners.get("resize"), listeners.get("resize"))
+    assert.equal(removedListeners.get("scroll"), listeners.get("scroll"))
   } finally {
     cleanup()
   }
