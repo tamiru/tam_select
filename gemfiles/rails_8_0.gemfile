@@ -2,3 +2,5 @@ source "https://rubygems.org"
 
 gemspec path: ".."
 gem "railties", "~> 8.0.0"
+# RBS 4.2 requires Ruby 3.3; CI also tests Ruby 3.2.
+gem "rbs", "~> 4.1.3"
