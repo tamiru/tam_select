@@ -421,3 +421,153 @@ test("the Stimulus controller restores the native select before Turbo caches the
     cleanup()
   }
 })
+
+test("a failed later page keeps loaded options and waits for Load more to retry", async () => {
+  const cleanup = setupDOM(regions())
+  try {
+    const pages = []
+    globalThis.fetch = async url => {
+      const page = Number(new URL(url, "http://localhost").searchParams.get("page"))
+      pages.push(page)
+      if (page === 2) return jsonResponse({}, { ok: false, status: 500 })
+      return jsonResponse({ items: [{ value: `p${page}`, label: `Page ${page}` }], pagination: { next_page: page + 1 } })
+    }
+    const tamSelect = new TamSelect(document.querySelector("select"), { remoteUrl: "/regions", debounce: 0, animations: false })
+    // A short first page that cannot scroll asks for the next page on its own.
+    Object.defineProperty(tamSelect.results, "clientHeight", { configurable: true, value: 200 })
+    Object.defineProperty(tamSelect.results, "scrollHeight", { configurable: true, value: 40 })
+    tamSelect.open()
+    for (let index = 0; index < 10; index += 1) await flush()
+
+    assert.deepEqual(pages, [1, 2], "the failing page is requested once, not in a loop")
+    assert.ok(tamSelect.results.querySelector('[data-value="p1"]'), "loaded options stay listed")
+    assert.ok(tamSelect.results.querySelector('[role="alert"]'), "the error is shown")
+
+    tamSelect.results.dispatchEvent(new Event("scroll"))
+    await flush()
+    assert.deepEqual(pages, [1, 2], "scrolling does not retry")
+
+    tamSelect.results.querySelector("button[data-tam-select-load-more]").click()
+    await flush()
+    assert.deepEqual(pages, [1, 2, 2], "Load more retries the failed page")
+  } finally {
+    cleanup()
+  }
+})
+
+test("selectValue accepts a copied or stale item object by its value", () => {
+  const cleanup = setupDOM(regions())
+  try {
+    const select = document.querySelector("select")
+    const tamSelect = new TamSelect(select)
+    const copy = { ...tamSelect.items.find(item => item.value === "or") }
+    tamSelect.selectValue(copy)
+    assert.equal(select.value, "or")
+    assert.equal([...select.options].some(option => option.value === "[object Object]"), false)
+
+    tamSelect.selectValue({ value: "zz", label: "Zanzibar" })
+    assert.equal(select.value, "zz")
+    assert.equal(select.selectedOptions[0].textContent, "Zanzibar")
+
+    tamSelect.selectValue({ label: "No value" })
+    assert.equal(select.value, "zz", "an object without a value is ignored")
+  } finally {
+    cleanup()
+  }
+})
+
+test("a dir=auto ancestor does not hide the document's RTL direction", () => {
+  const cleanup = setupDOM(`<div dir="auto">${regions()}</div>`)
+  try {
+    document.documentElement.setAttribute("dir", "rtl")
+    const tamSelect = new TamSelect(document.querySelector("select"))
+    assert.equal(tamSelect.dir, "rtl")
+  } finally {
+    cleanup()
+  }
+})
+
+test("snapshot recovery removes a stale portaled dropdown", () => {
+  const cleanup = setupDOM(`<div id="page"><select id="role"><option value="a">A</option></select></div><div id="portal"></div>`)
+  try {
+    const select = document.getElementById("role")
+    new TamSelect(select, { dropdownParent: "#portal" })
+    // Simulate a restored snapshot: the old markup is present, the instance is gone.
+    const page = document.getElementById("page")
+    const portal = document.getElementById("portal")
+    const snapshotPage = page.cloneNode(true)
+    const snapshotPortal = portal.cloneNode(true)
+    page.replaceWith(snapshotPage)
+    portal.replaceWith(snapshotPortal)
+
+    new TamSelect(snapshotPage.querySelector("select"), { dropdownParent: "#portal" })
+    assert.equal(document.querySelectorAll("#role-dropdown").length, 1)
+    assert.equal(document.querySelectorAll("#role-listbox").length, 1)
+  } finally {
+    cleanup()
+  }
+})
+
+test("the Stimulus controller rebuilds controls a cached frame navigation left on the page", async () => {
+  const cleanup = setupDOM(`<select data-controller="tam-select"><option value="aa">Addis</option></select>`)
+  const application = Application.start()
+  application.register("tam-select", TamSelectController)
+  try {
+    await flush()
+    const select = document.querySelector("select")
+    document.dispatchEvent(new Event("turbo:before-cache"))
+    assert.equal(TamSelect.getInstance(select), null)
+    document.dispatchEvent(new Event("turbo:load"))
+    assert.ok(TamSelect.getInstance(select), "the control is rebuilt while it stays on the page")
+    assert.equal(document.querySelectorAll("[data-tam-select-root]").length, 1)
+    document.dispatchEvent(new Event("turbo:load"))
+    assert.equal(document.querySelectorAll("[data-tam-select-root]").length, 1, "later loads do not duplicate it")
+  } finally {
+    application.stop()
+    cleanup()
+  }
+})
+
+test("an auto-width menu keeps its width while the search filters it", () => {
+  const cleanup = setupDOM(`<select>
+    <option value="">Pick</option>
+    <option value="a">Apple</option>
+    <option value="long">A much longer option label that sets the menu width</option>
+  </select>`)
+  try {
+    const tamSelect = new TamSelect(document.querySelector("select"), { animations: false })
+    tamSelect.control.getBoundingClientRect = () => ({ left: 0, top: 0, right: 80, bottom: 44, width: 80, height: 44 })
+    tamSelect.open()
+    const width = tamSelect.dropdown.style.width
+    assert.ok(parseFloat(width) > 80)
+    input(tamSelect.input, "Apple")
+    assert.equal(tamSelect.dropdown.style.width, width, "filtering out the widest option does not shrink the menu")
+    tamSelect.close()
+    tamSelect.open()
+    assert.equal(tamSelect.dropdown.style.width, width)
+  } finally {
+    cleanup()
+  }
+})
+
+test("inline auto-width menus stay inside an overflow-clipping ancestor", () => {
+  const cleanup = setupDOM(`<div id="card" style="overflow: hidden">${regions().replace("Oromia", "An option label noticeably wider than its narrow control")}</div>`)
+  try {
+    const card = document.getElementById("card")
+    card.getBoundingClientRect = () => ({ left: 20, top: 0, right: 220, bottom: 300, width: 200, height: 300 })
+    Object.defineProperty(card, "clientWidth", { configurable: true, value: 200 })
+    const tamSelect = new TamSelect(card.querySelector("select"), { classes: { wrapper: "tam-select" } })
+    const rect = { left: 30, top: 0, right: 110, bottom: 44, width: 80, height: 44 }
+    tamSelect.control.getBoundingClientRect = () => rect
+    tamSelect.wrapper.getBoundingClientRect = () => rect
+    tamSelect.open()
+
+    const width = parseFloat(tamSelect.dropdown.style.width)
+    const left = 30 + parseFloat(tamSelect.dropdown.style.left)
+    assert.ok(width > 80 && width <= 200, `width ${width} fits the card`)
+    assert.ok(left >= 20 && left + width <= 220, "the menu is inside the card")
+    assert.equal(tamSelect.wrapper.style.position, "relative", "a custom wrapper class still anchors the menu")
+  } finally {
+    cleanup()
+  }
+})

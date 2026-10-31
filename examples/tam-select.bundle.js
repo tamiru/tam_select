@@ -163,6 +163,8 @@ var TamSelect = class _TamSelect {
     }
     const stale = select.nextElementSibling;
     if (stale?.hasAttribute("data-tam-select-root")) stale.remove();
+    const staleDropdown = select.id ? select.ownerDocument.getElementById(`${select.id}-dropdown`) : null;
+    if (staleDropdown?.hasAttribute("data-tam-select-dropdown")) staleDropdown.remove();
     if (state) {
       if (!state.srOnly) select.classList.remove("sr-only");
       if (state.tabindex === null) select.removeAttribute("tabindex");
@@ -336,6 +338,7 @@ var TamSelect = class _TamSelect {
     document.fonts?.ready?.then(() => {
       if (this.destroyed) return;
       this.textWidthCache?.clear();
+      this.itemWidthCache = /* @__PURE__ */ new WeakMap();
       this.applyFitWidth();
     });
     _TamSelect.instances.set(select, this);
@@ -357,6 +360,7 @@ var TamSelect = class _TamSelect {
     this.wrapper.style.width = this.fitWidth ? "auto" : requestedWidth;
     this.wrapper.style.maxWidth = "100%";
     this.wrapper.style.minWidth = "0";
+    this.wrapper.style.position = "relative";
     if (this.fitWidth) {
       this.wrapper.style.display = "inline-block";
       this.wrapper.style.verticalAlign = "middle";
@@ -417,6 +421,7 @@ var TamSelect = class _TamSelect {
     this.chevron.innerHTML = ICONS.chevron;
     this.dropdown = document.createElement("div");
     this.dropdown.id = `${this.id}-dropdown`;
+    this.dropdown.dataset.tamSelectDropdown = "";
     this.dropdown.className = `${this.classes.dropdown} hidden`;
     this.dropdown.style.width = "100%";
     this.dropdown.style.minWidth = "0";
@@ -622,7 +627,7 @@ var TamSelect = class _TamSelect {
       this.focusTarget.focus();
     };
     this.onScroll = () => {
-      if (this.results.scrollTop + this.results.clientHeight >= this.results.scrollHeight - 32) this.loadNextPage();
+      if (!this.error && this.results.scrollTop + this.results.clientHeight >= this.results.scrollHeight - 32) this.loadNextPage();
       if (this.isVirtualScroll) {
         this.rerenderVirtualItems();
       }
@@ -695,7 +700,10 @@ var TamSelect = class _TamSelect {
   resolveDropdownWidth(triggerWidth, availableWidth) {
     const viewportLimit = availableWidth || triggerWidth;
     if (!["auto", "content"].includes(this.options.dropdownWidth)) return Math.min(triggerWidth, viewportLimit);
-    if (this.dropdownContentWidth == null) this.dropdownContentWidth = this.measureDropdownContentWidth();
+    if (this.dropdownContentWidth == null || this.dropdownWidthStale) {
+      this.dropdownContentWidth = Math.max(this.dropdownContentWidth || 0, this.measureDropdownContentWidth());
+      this.dropdownWidthStale = false;
+    }
     const configuredMaximum = Number(this.options.maxDropdownWidth);
     const maximum = configuredMaximum > 0 ? Math.max(triggerWidth, configuredMaximum) : Infinity;
     return Math.min(Math.max(triggerWidth, this.dropdownContentWidth), maximum, viewportLimit);
@@ -707,12 +715,33 @@ var TamSelect = class _TamSelect {
     const maximum = Math.max(minimum, viewport.right - viewport.padding - width);
     return Math.min(Math.max(start, minimum), maximum);
   }
+  // The horizontal space an inline menu may use: the viewport, narrowed by
+  // every ancestor that clips overflow (cards, modals, scrolling tables), so
+  // a wider menu is never cut off. Use dropdownParent to escape them.
+  inlineDropdownBounds() {
+    const viewport = this.viewportBox();
+    let left = viewport.left + viewport.padding;
+    let right = viewport.right - viewport.padding;
+    const view = this.select.ownerDocument.defaultView;
+    const root = this.select.ownerDocument.documentElement;
+    for (let element = this.wrapper.parentElement; element && element !== root && element !== this.select.ownerDocument.body; element = element.parentElement) {
+      const style = view.getComputedStyle(element);
+      const overflowX = [style.overflowX, String(style.overflow || "").split(/\s+/)[0]].find((value) => value && value !== "visible");
+      if (!overflowX) continue;
+      const box = element.getBoundingClientRect();
+      if (!box.width) continue;
+      const innerLeft = box.left + (element.clientLeft || 0);
+      left = Math.max(left, innerLeft);
+      right = Math.min(right, innerLeft + (element.clientWidth || box.width));
+    }
+    return { left, right: Math.max(left, right) };
+  }
   updateInlineDropdownWidth() {
     if (this.portalDropdown || !this.opened) return;
     const rect = this.control.getBoundingClientRect();
     if (!rect.width) return;
-    const viewport = this.viewportBox();
-    const width = this.resolveDropdownWidth(rect.width, Math.max(0, viewport.width - viewport.padding * 2));
+    const bounds = this.inlineDropdownBounds();
+    const width = this.resolveDropdownWidth(rect.width, Math.max(0, bounds.right - bounds.left));
     if (width <= rect.width + 0.5) {
       this.dropdown.style.width = "100%";
       this.dropdown.style.maxWidth = "100%";
@@ -720,10 +749,10 @@ var TamSelect = class _TamSelect {
       this.dropdown.style.right = "";
       return;
     }
-    const offsetParentLeft = this.wrapper.getBoundingClientRect().left;
+    const offsetParentLeft = this.wrapper.getBoundingClientRect().left + (this.wrapper.clientLeft || 0);
     this.dropdown.style.width = `${width}px`;
     this.dropdown.style.maxWidth = "none";
-    this.dropdown.style.left = `${this.resolveDropdownLeft(rect, width, viewport) - offsetParentLeft}px`;
+    this.dropdown.style.left = `${this.resolveDropdownLeft(rect, width, { ...bounds, padding: 0 }) - offsetParentLeft}px`;
     this.dropdown.style.right = "auto";
   }
   updateDropdownPosition() {
@@ -791,28 +820,45 @@ var TamSelect = class _TamSelect {
   }
   // The natural width of the open menu: its widest row plus option padding,
   // icons, and the scrollbar. Callers clamp it to the control and viewport.
+  // Item widths are cached, so repeat renders (each keystroke) only measure
+  // rows they have not seen, and only new rows trigger DOM layout reads.
   measureDropdownContentWidth() {
-    let measuredWidth = 0;
+    this.itemWidthCache ||= /* @__PURE__ */ new WeakMap();
     const renderedEntries = this.results.querySelectorAll("[data-tam-select-entry]");
-    renderedEntries.forEach((entry) => {
-      let widestContent = 0;
-      entry.querySelectorAll("*").forEach((element) => {
-        if (element.childElementCount === 0) {
-          const visibleWidth = element.clientWidth || element.getBoundingClientRect().width || 0;
-          if (element.scrollWidth > visibleWidth + 1) {
-            widestContent = Math.max(widestContent, element.scrollWidth);
-          }
-        }
-      });
-      if (widestContent) measuredWidth = Math.max(measuredWidth, widestContent + 72);
-    });
-    const textWidth = this.textMeasurer(renderedEntries[0] || this.results);
+    let textWidth = null;
+    const measureText = (value) => {
+      textWidth ||= this.textMeasurer(renderedEntries[0] || this.results);
+      return textWidth(value);
+    };
+    let measuredWidth = 0;
+    let sawNewItem = this.dropdownContentWidth == null;
     this.visibleItems.forEach((entry) => {
       const item = entry.item;
-      const primaryWidth = item ? Math.max(textWidth(item.label), textWidth(item.detail)) : textWidth(entry.label);
-      const accessories = 56 + (item?.image ? 40 : 0) + (item?.meta ? textWidth(item.meta) + 20 : 0);
-      measuredWidth = Math.max(measuredWidth, primaryWidth + accessories);
+      let width = item ? this.itemWidthCache.get(item) : void 0;
+      if (width === void 0) {
+        const primaryWidth = item ? Math.max(measureText(item.label), measureText(item.detail)) : measureText(entry.label);
+        width = primaryWidth + 56 + (item?.image ? 40 : 0) + (item?.meta ? measureText(item.meta) + 20 : 0);
+        if (item) {
+          this.itemWidthCache.set(item, width);
+          sawNewItem = true;
+        }
+      }
+      measuredWidth = Math.max(measuredWidth, width);
     });
+    if (sawNewItem) {
+      renderedEntries.forEach((entry) => {
+        let widestContent = 0;
+        entry.querySelectorAll("*").forEach((element) => {
+          if (element.childElementCount === 0) {
+            const visibleWidth = element.clientWidth || element.getBoundingClientRect().width || 0;
+            if (element.scrollWidth > visibleWidth + 1) {
+              widestContent = Math.max(widestContent, element.scrollWidth);
+            }
+          }
+        });
+        if (widestContent) measuredWidth = Math.max(measuredWidth, widestContent + 72);
+      });
+    }
     const scrollbarWidth = Math.max(0, (this.results.offsetWidth || 0) - (this.results.clientWidth || 0));
     return Math.ceil(measuredWidth + scrollbarWidth);
   }
@@ -843,8 +889,8 @@ var TamSelect = class _TamSelect {
     this.wrapper.style.width = `${width}px`;
   }
   detectDirection() {
-    const selectDir = this.select.closest("[dir]")?.getAttribute("dir");
-    if (selectDir) return selectDir;
+    const selectDir = this.select.closest('[dir="rtl" i], [dir="ltr" i]')?.getAttribute("dir");
+    if (selectDir) return selectDir.toLowerCase();
     const docDir = document.documentElement.getAttribute("dir") || document.body?.getAttribute("dir");
     if (docDir) return docDir;
     return "ltr";
@@ -1166,7 +1212,7 @@ var TamSelect = class _TamSelect {
       this.updateStatus(text);
       return this.finishDropdownRender();
     }
-    if (this.error) {
+    if (this.error && !this.errorAfterResults) {
       const error = document.createElement("div");
       error.className = this.classes.error;
       error.setAttribute("role", "alert");
@@ -1210,6 +1256,13 @@ var TamSelect = class _TamSelect {
         this.renderMessage(this.options.noResultsText);
       }
     }
+    if (this.error && this.errorAfterResults) {
+      const error = document.createElement("div");
+      error.className = this.classes.error;
+      error.setAttribute("role", "alert");
+      error.textContent = this.error;
+      this.results.append(error);
+    }
     if (this.loading && this.loadingPage > 1) this.renderMessage(this.options.loadingText, true);
     else if (this.hasMore) this.renderLoadMore();
     const resultCount = this.visibleItems.filter((entry) => entry.type === "item").length;
@@ -1219,10 +1272,10 @@ var TamSelect = class _TamSelect {
   }
   finishDropdownRender() {
     this.syncActiveDescendant();
-    this.dropdownContentWidth = null;
+    this.dropdownWidthStale = true;
     if (this.portalDropdown) this.updateDropdownPosition();
     else this.updateInlineDropdownWidth();
-    if (this.options.remoteUrl && this.hasMore && !this.loading && this.results.clientHeight > 0 && this.results.scrollHeight <= this.results.clientHeight + 32) {
+    if (this.options.remoteUrl && this.hasMore && !this.loading && !this.error && this.results.clientHeight > 0 && this.results.scrollHeight <= this.results.clientHeight + 32) {
       const scheduleFrame = window.requestAnimationFrame || ((callback) => window.setTimeout(callback, 0));
       scheduleFrame(() => {
         if (this.opened && !this.destroyed) this.onScroll();
@@ -1703,8 +1756,8 @@ var TamSelect = class _TamSelect {
   /** Select an item, or the first item with a value (creating it if needed). */
   selectValue(value) {
     if (this.select.disabled) return;
-    const item = this.items.includes(value) ? value : this.ensureNativeOption(value);
-    if (item.disabled) return;
+    const item = this.resolveItem(value);
+    if (!item || item.disabled) return;
     const alreadySelected = item.option?.selected && (this.multiple || this.selectedItems().length === 1);
     if (alreadySelected) {
       if (this.options.closeAfterSelect) this.close();
@@ -1862,6 +1915,16 @@ var TamSelect = class _TamSelect {
     }
     return this.optionIds.get(option);
   }
+  // Accepts an item from this instance, a copy or stale item (matched by its
+  // value), or a plain value.
+  resolveItem(value) {
+    if (this.items.includes(value)) return value;
+    if (value && typeof value === "object") {
+      if (value.value == null) return null;
+      return this.items.find((item) => String(item.value) === String(value.value)) || this.addItem({ value: value.value, label: value.label ?? value.value });
+    }
+    return this.ensureNativeOption(value);
+  }
   ensureNativeOption(value) {
     return this.items.find((item) => String(item.value) === String(value)) || this.addItem({ value, label: value });
   }
@@ -1895,6 +1958,7 @@ var TamSelect = class _TamSelect {
       this.closeTransitionHandler = null;
     }
     this.opened = true;
+    this.dropdownContentWidth = null;
     if (this.options.minimumResultsForSearch > 0) {
       const totalOptions = this.options.remoteUrl ? Infinity : this.items.length;
       this.searchVisible = totalOptions >= this.options.minimumResultsForSearch;
@@ -2034,6 +2098,7 @@ var TamSelect = class _TamSelect {
     this.loading = true;
     this.loadingPage = page;
     this.error = null;
+    this.errorAfterResults = false;
     this.renderDropdown();
     try {
       const url = new URL(this.options.remoteUrl, window.location.origin);
@@ -2081,6 +2146,7 @@ var TamSelect = class _TamSelect {
       if (this.activeRequest?.id !== requestId) return;
       if (error.name !== "AbortError") {
         this.error = error.message || "Unable to load options";
+        this.errorAfterResults = append && this.remoteResults.length > 0;
         this.emit("tam-select:error", { error });
       }
     } finally {

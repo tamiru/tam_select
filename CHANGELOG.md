@@ -11,6 +11,16 @@
 - Add `width: "auto"` (alias `"fit"`), which sizes the closed control to its
   widest option so choosing a shorter one never resizes it. `width: "resolve"`
   now honours an inline width on the native select.
+- Keep auto-width menus inside overflow-clipping ancestors (cards, modals,
+  scrolling tables), keep their width steady while filtering, and cache text
+  measurements so large lists stay fast.
+- Stop re-requesting a failed remote page in a loop: loaded options stay
+  listed with the error, and Load more retries.
+- `selectValue` accepts a copied or stale item object, `createItem` is typed
+  as possibly `null`, a `dir="auto"` ancestor no longer hides an RTL page,
+  and snapshot recovery also removes a stale portaled dropdown.
+- The Stimulus controller rebuilds selects left on the page after a cached
+  frame navigation (`data-turbo-action="advance"`).
 - Treat the native select as the source of truth for the selection, and act on
   the exact option used so duplicate values select and deselect correctly.
 - Emit no change when re-picking the current value; keep already selected

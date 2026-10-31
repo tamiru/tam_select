@@ -329,7 +329,8 @@ declare class TamSelect {
   /** Deselect an item, or the first item with a value */
   deselect(value: string | TamSelectItem): void
   /** Create a new option from a label */
-  createItem(label: string, value?: string): TamSelectItem
+  /** Returns `null` while the select is disabled. */
+  createItem(label: string, value?: string): TamSelectItem | null
   /** Remove all generated markup and restore the native select */
   destroy(): void
 
