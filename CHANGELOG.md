@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Add a `tamSelectOptions` getter to the Stimulus controller, so an app can
+  subclass it (`import TamSelectController from "tam-select/stimulus"`) and
+  add its own defaults, theme or computed options while the rest of the
+  controller keeps updating with the package.
+- The helper and Simple Form input no longer send `searchable: true` unless
+  it is given, leaving the decision to the JavaScript default or the app's
+  controller.
 - Serve the Rails integration from the gem, so `bundle update tam_select` is
   the whole update. With importmap, the engine pins the library and the
   Stimulus controller, autoloads the helper, the Simple Form input (when Simple

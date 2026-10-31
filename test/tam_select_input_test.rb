@@ -52,6 +52,7 @@ class TamSelectInputTest < Minitest::Test
     assert_equal "nested tam-select", html_options.dig(:data, :controller)
     assert_equal false, JSON.parse(html_options.dig(:data, :tam_select_options_value))["closeAfterSelect"]
     assert_equal "auto", JSON.parse(html_options.dig(:data, :tam_select_options_value))["theme"]
+    assert_equal true, JSON.parse(html_options.dig(:data, :tam_select_options_value))["searchable"], "an explicit searchable is passed"
     refute html_options.key?(:tam_options)
   end
 end
