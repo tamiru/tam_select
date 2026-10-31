@@ -253,7 +253,8 @@ export class TamSelect {
       remoteParams: {},
       cacheRemote: false,
       dropdownParent: null,
-      dropdownWidth: "trigger",
+      dropdownWidth: "auto",
+      maxDropdownWidth: 480,
       maxDropdownHeight: 360,
       viewportPadding: 8,
       width: "resolve",
@@ -337,6 +338,13 @@ export class TamSelect {
     this.bind()
     this.readNativeOptions()
     this.renderSelection()
+    this.applyFitWidth()
+    // Canvas measurements use fallback fonts until web fonts finish loading.
+    document.fonts?.ready?.then(() => {
+      if (this.destroyed) return
+      this.textWidthCache?.clear()
+      this.applyFitWidth()
+    })
     TamSelect.instances.set(select, this)
   }
 
@@ -353,9 +361,18 @@ export class TamSelect {
     this.wrapper.className = this.classes.wrapper
     this.wrapper.dataset.tamSelectRoot = ""
     this.wrapper.setAttribute("dir", this.dir)
-    this.wrapper.style.width = this.options.width === "resolve" ? "100%" : this.options.width
+    // "resolve" follows an inline width on the native select, like Select2,
+    // and otherwise fills the container. "auto"/"fit" size the control to its
+    // widest option the way a native select sizes itself.
+    const requestedWidth = this.options.width === "resolve" ? (this.select.style.width || "100%") : this.options.width
+    this.fitWidth = ["auto", "fit"].includes(String(requestedWidth).trim())
+    this.wrapper.style.width = this.fitWidth ? "auto" : requestedWidth
     this.wrapper.style.maxWidth = "100%"
     this.wrapper.style.minWidth = "0"
+    if (this.fitWidth) {
+      this.wrapper.style.display = "inline-block"
+      this.wrapper.style.verticalAlign = "middle"
+    }
 
     this.control = document.createElement("div")
     this.control.className = [
@@ -647,12 +664,15 @@ export class TamSelect {
     }
     this.onFormReset = () => queueMicrotask(() => this.refresh())
     this.onViewportChange = event => {
-      if (!this.opened || !this.portalDropdown) return
+      if (!this.opened) return
       // The window scroll listener uses capture so it can follow scrolling
       // containers. It also sees the results panel's own scroll events, which
       // do not change the control's viewport position and must not resize it.
       if (event?.type === "scroll" && event.target === this.results) return
-      this.updateDropdownPosition()
+      if (this.portalDropdown) this.updateDropdownPosition()
+      // An inline menu scrolls with its control, so only a resize can push
+      // it past the viewport edge.
+      else if (event?.type !== "scroll") this.updateInlineDropdownWidth()
     }
 
     this.control.addEventListener("click", this.onControlClick)
@@ -700,18 +720,61 @@ export class TamSelect {
     })
   }
 
+  viewportBox() {
+    const padding = Math.max(0, Number(this.options.viewportPadding) || 0)
+    const visualViewport = window.visualViewport
+    const left = visualViewport?.offsetLeft || 0
+    const top = visualViewport?.offsetTop || 0
+    const width = visualViewport?.width || document.documentElement.clientWidth || window.innerWidth
+    const height = visualViewport?.height || document.documentElement.clientHeight || window.innerHeight
+    return { left, top, width, height, right: left + width, bottom: top + height, padding }
+  }
+
+  // Like a native select, the menu is never narrower than its control and
+  // grows to fit its widest option, within maxDropdownWidth and the viewport.
+  resolveDropdownWidth(triggerWidth, availableWidth) {
+    const viewportLimit = availableWidth || triggerWidth
+    if (!["auto", "content"].includes(this.options.dropdownWidth)) return Math.min(triggerWidth, viewportLimit)
+    if (this.dropdownContentWidth == null) this.dropdownContentWidth = this.measureDropdownContentWidth()
+    const configuredMaximum = Number(this.options.maxDropdownWidth)
+    const maximum = configuredMaximum > 0 ? Math.max(triggerWidth, configuredMaximum) : Infinity
+    return Math.min(Math.max(triggerWidth, this.dropdownContentWidth), maximum, viewportLimit)
+  }
+
+  // Align the menu with the control's start edge, then keep it on screen.
+  resolveDropdownLeft(rect, width, viewport) {
+    const start = this.dir === "rtl" ? rect.right - width : rect.left
+    const minimum = viewport.left + viewport.padding
+    const maximum = Math.max(minimum, viewport.right - viewport.padding - width)
+    return Math.min(Math.max(start, minimum), maximum)
+  }
+
+  updateInlineDropdownWidth() {
+    if (this.portalDropdown || !this.opened) return
+    const rect = this.control.getBoundingClientRect()
+    if (!rect.width) return
+    const viewport = this.viewportBox()
+    const width = this.resolveDropdownWidth(rect.width, Math.max(0, viewport.width - (viewport.padding * 2)))
+    if (width <= rect.width + 0.5) {
+      this.dropdown.style.width = "100%"
+      this.dropdown.style.maxWidth = "100%"
+      this.dropdown.style.left = ""
+      this.dropdown.style.right = ""
+      return
+    }
+    const offsetParentLeft = this.wrapper.getBoundingClientRect().left
+    this.dropdown.style.width = `${width}px`
+    this.dropdown.style.maxWidth = "none"
+    this.dropdown.style.left = `${this.resolveDropdownLeft(rect, width, viewport) - offsetParentLeft}px`
+    this.dropdown.style.right = "auto"
+  }
+
   updateDropdownPosition() {
     if (!this.portalDropdown) return
     const rect = this.control.getBoundingClientRect()
     const gap = 6
-    const padding = Math.max(0, Number(this.options.viewportPadding) || 0)
-    const visualViewport = window.visualViewport
-    const viewportLeft = visualViewport?.offsetLeft || 0
-    const viewportTop = visualViewport?.offsetTop || 0
-    const viewportWidth = visualViewport?.width || document.documentElement.clientWidth || window.innerWidth
-    const viewportHeight = visualViewport?.height || document.documentElement.clientHeight || window.innerHeight
-    const viewportRight = viewportLeft + viewportWidth
-    const viewportBottom = viewportTop + viewportHeight
+    const viewport = this.viewportBox()
+    const { padding, top: viewportTop, bottom: viewportBottom } = viewport
     const maximumHeight = Math.max(96, Number(this.options.maxDropdownHeight) || 360)
     const searchHeight = this.searchPanel && !this.searchPanel.classList.contains("hidden")
       ? (this.searchPanel.getBoundingClientRect().height || 44)
@@ -730,12 +793,9 @@ export class TamSelect {
     const placeAbove = availableBelow < Math.min(desiredHeight, 192) && availableAbove > availableBelow
     const availableHeight = placeAbove ? availableAbove : availableBelow
     const dropdownHeight = Math.max(96, Math.min(desiredHeight, availableHeight || desiredHeight))
-    const availableWidth = Math.max(0, viewportWidth - (padding * 2))
-    const dropdownWidth = ["auto", "content"].includes(this.options.dropdownWidth)
-      ? this.measureDropdownContentWidth(rect.width, availableWidth || rect.width)
-      : Math.min(rect.width, availableWidth || rect.width)
-    const maximumLeft = viewportRight - padding - dropdownWidth
-    const left = Math.min(Math.max(rect.left, viewportLeft + padding), Math.max(viewportLeft + padding, maximumLeft))
+    const availableWidth = Math.max(0, viewport.width - (padding * 2))
+    const dropdownWidth = this.resolveDropdownWidth(rect.width, availableWidth)
+    const left = this.resolveDropdownLeft(rect, dropdownWidth, viewport)
 
     this.dropdown.style.left = `${left}px`
     this.dropdown.style.width = `${dropdownWidth}px`
@@ -746,8 +806,48 @@ export class TamSelect {
     this.dropdown.dataset.placement = placeAbove ? "top" : "bottom"
   }
 
-  measureDropdownContentWidth(triggerWidth, maximumWidth) {
-    let measuredWidth = triggerWidth
+  // Returns a function measuring text in `element`'s font. Canvas is exact;
+  // environments without it (jsdom) fall back to an average glyph width.
+  textMeasurer(element, fallbackFontSize = 16) {
+    const view = this.select.ownerDocument.defaultView
+    const style = element ? view.getComputedStyle(element) : null
+    const fontSize = Number.parseFloat(style?.fontSize) || fallbackFontSize
+    const averageCharacterWidth = fontSize * 0.58
+    if (this.measureContext === undefined) {
+      this.measureContext = null
+      if (!/jsdom/i.test(view.navigator.userAgent)) {
+        try {
+          this.measureContext = this.select.ownerDocument.createElement("canvas").getContext("2d")
+        } catch {
+          this.measureContext = null
+        }
+      }
+    }
+    const context = this.measureContext
+    const font = style?.font || `${style?.fontWeight || 400} ${fontSize}px ${style?.fontFamily || "sans-serif"}`
+    // Menus re-measure on every keystroke, so cache widths per font. The cache
+    // is bounded so long-lived remote selects cannot grow it without limit.
+    this.textWidthCache ||= new Map()
+    if (this.textWidthCache.size > 5000) this.textWidthCache.clear()
+    return value => {
+      const text = String(value ?? "")
+      if (!text) return 0
+      if (!context) return Array.from(text).length * averageCharacterWidth
+      const key = `${font}\u0000${text}`
+      let width = this.textWidthCache.get(key)
+      if (width === undefined) {
+        context.font = font
+        width = context.measureText(text).width
+        this.textWidthCache.set(key, width)
+      }
+      return width
+    }
+  }
+
+  // The natural width of the open menu: its widest row plus option padding,
+  // icons, and the scrollbar. Callers clamp it to the control and viewport.
+  measureDropdownContentWidth() {
+    let measuredWidth = 0
     const renderedEntries = this.results.querySelectorAll("[data-tam-select-entry]")
     renderedEntries.forEach(entry => {
       let widestContent = 0
@@ -762,42 +862,54 @@ export class TamSelect {
         }
       })
       // Reserve room for option padding, gaps, metadata, images, and checks.
-      measuredWidth = Math.max(measuredWidth, widestContent + 72)
+      if (widestContent) measuredWidth = Math.max(measuredWidth, widestContent + 72)
     })
 
-    // Virtual scrolling may not have rendered the widest row yet. Estimate all
-    // visible labels as a safe fallback; rendered DOM measurements win when
-    // available and the viewport remains the final upper bound.
-    const option = renderedEntries[0]
-    const view = this.select.ownerDocument.defaultView
-    const optionStyle = option ? view.getComputedStyle(option) : null
-    const fontSize = Number.parseFloat(optionStyle?.fontSize || "16") || 16
-    const averageCharacterWidth = fontSize * 0.58
-    let context = null
-    if (!/jsdom/i.test(view.navigator.userAgent)) {
-      try {
-        context = this.select.ownerDocument.createElement("canvas").getContext("2d")
-        if (context) {
-          context.font = optionStyle?.font || `${optionStyle?.fontWeight || 400} ${fontSize}px ${optionStyle?.fontFamily || "sans-serif"}`
-        }
-      } catch {
-        context = null
-      }
-    }
-    const textWidth = value => {
-      const text = String(value || "")
-      return context ? context.measureText(text).width : Array.from(text).length * averageCharacterWidth
-    }
+    // Virtual scrolling may not have rendered the widest row yet, and wrapped
+    // labels never overflow. Estimate every visible label as well.
+    const textWidth = this.textMeasurer(renderedEntries[0] || this.results)
     this.visibleItems.forEach(entry => {
       const item = entry.item
       const primaryWidth = item
         ? Math.max(textWidth(item.label), textWidth(item.detail))
         : textWidth(entry.label)
-      const accessories = 48 + (item?.image ? 40 : 0) + (item?.meta ? textWidth(item.meta) + 20 : 0)
+      // Option and list padding, the dropdown border, and the selected check.
+      const accessories = 56 + (item?.image ? 40 : 0) + (item?.meta ? textWidth(item.meta) + 20 : 0)
       measuredWidth = Math.max(measuredWidth, primaryWidth + accessories)
     })
 
-    return Math.min(Math.ceil(measuredWidth), maximumWidth)
+    const scrollbarWidth = Math.max(0, (this.results.offsetWidth || 0) - (this.results.clientWidth || 0))
+    return Math.ceil(measuredWidth + scrollbarWidth)
+  }
+
+  // width: "auto" sizes the closed control to its widest option, so picking
+  // a different option never resizes it, exactly like a native select.
+  applyFitWidth() {
+    if (!this.fitWidth) return
+    const view = this.select.ownerDocument.defaultView
+    const style = view.getComputedStyle(this.control)
+    const length = (value, fallback) => {
+      const number = Number.parseFloat(value)
+      return Number.isFinite(number) ? number : fallback
+    }
+    const textWidth = this.textMeasurer(this.control, 14)
+    let widest = textWidth(this.options.placeholder)
+    let hasImage = false
+    this.items.forEach(item => {
+      widest = Math.max(widest, textWidth(item.label))
+      if (item.image) hasImage = true
+    })
+    const gap = length(style.columnGap, 6)
+    const chrome = length(style.paddingLeft, 12) + length(style.paddingRight, 12) +
+      length(style.borderLeftWidth, 1) + length(style.borderRightWidth, 1)
+    const chevron = this.chevron.getBoundingClientRect().width || 14
+    // Reserve the clear button even while it is hidden so the width is stable.
+    const clear = this.options.clearable && this.canClear() ? (this.clearButton.getBoundingClientRect().width || 20) + gap : 0
+    // Tags add their own padding and a remove button around the label.
+    const tag = this.multiple ? 32 : 0
+    const image = hasImage && !this.multiple ? 40 : 0
+    const width = Math.ceil(widest + tag + image + chrome + gap + chevron + clear + 2)
+    this.wrapper.style.width = `${width}px`
   }
 
   detectDirection() {
@@ -1231,7 +1343,9 @@ export class TamSelect {
 
   finishDropdownRender() {
     this.syncActiveDescendant()
+    this.dropdownContentWidth = null
     if (this.portalDropdown) this.updateDropdownPosition()
+    else this.updateInlineDropdownWidth()
     // A short first page never scrolls, so the scroll listener would never
     // ask for the next one. Load it as soon as the panel has room.
     if (this.options.remoteUrl && this.hasMore && !this.loading && this.results.clientHeight > 0 &&
@@ -2240,6 +2354,7 @@ export class TamSelect {
     this.readNativeOptions()
     this.applyDisabled()
     this.renderSelection()
+    this.applyFitWidth()
     this.renderDropdown()
   }
 

@@ -226,7 +226,9 @@ new TamSelect(select, { animationPreset: "spring" })
 | `highlightMatches` | `true` | Highlight search matches |
 | `sortByRelevance` | `true` | Rank strong matches first |
 | `dropdownParent` | `null` | Portal target used to escape clipped containers |
-| `dropdownWidth` | `"trigger"` | `"trigger"` or viewport-clamped `"auto"` width (`"content"` alias supported) |
+| `width` | `"resolve"` | `"resolve"` fills the container (or uses the native select's inline `style="width: …"`); `"auto"` sizes the control to its widest option like a native select; or any CSS width |
+| `dropdownWidth` | `"auto"` | `"auto"` is at least the control's width and grows to fit the widest option, like a native select; `"trigger"` always matches the control (`"content"` aliases `"auto"`) |
+| `maxDropdownWidth` | `480` | Widest an `"auto"` menu grows (px) before long options wrap; never narrower than the control, and always kept inside the viewport |
 | `maxDropdownHeight` | `360` | Maximum menu height before results scroll |
 | `viewportPadding` | `8` | Space kept between a portaled menu and viewport edges |
 
