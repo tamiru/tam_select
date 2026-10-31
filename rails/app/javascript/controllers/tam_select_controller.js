@@ -8,9 +8,18 @@ export default class extends Controller {
 
   connect() {
     this.instance = TamSelect.getInstance(this.element) || new TamSelect(this.element, this.optionsValue)
+    // Turbo snapshots the page before Stimulus disconnects. Restore the native
+    // select first so a cached page never holds a dead, duplicate control.
+    this.beforeCache = () => this.teardown()
+    document.addEventListener("turbo:before-cache", this.beforeCache)
   }
 
   disconnect() {
+    document.removeEventListener("turbo:before-cache", this.beforeCache)
+    this.teardown()
+  }
+
+  teardown() {
     this.instance?.destroy()
     this.instance = null
   }

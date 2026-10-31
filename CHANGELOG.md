@@ -2,6 +2,38 @@
 
 ## Unreleased
 
+- Treat the native select as the source of truth for the selection, and act on
+  the exact option used so duplicate values select and deselect correctly.
+- Emit no change when re-picking the current value; keep already selected
+  options when `selectOnClose` runs, and select only once in single mode.
+- Clear a single select to its empty option, and hide Clear when it has none.
+- Reopen a single select on its selection, keep growing type-ahead matches,
+  toggle Ctrl+A off at the selection limit, and honour sorters in optgroups.
+- Render the active row in virtual lists on navigation and open, and keep
+  focus and `aria-activedescendant` on the trigger when search is hidden.
+- Prefer `noResultsState` over `emptyState` for searches with no matches, and
+  inherit direction from the nearest `dir` ancestor.
+- Fix tag drag highlighting, special-character values, and cross-group drops.
+- Make Load more a button, load the next page when the first cannot scroll,
+  and keep loaded pages after picking a remote option with no query.
+- Close and lock an open select when it is disabled; make `destroy()`
+  idempotent and safe for newer instances; recover markup from page snapshots
+  and tear down before `turbo:before-cache` in the Stimulus controller.
+- Keep the selected option in single-select lists, marked with its check, and
+  open on it like a native select; `hideSelected` now hides it in either mode.
+- Keep selected-option styling when the active option moves, and style the
+  active option distinctly from the selected one.
+- Polish default styles: matching dropdown radius, inset option list, valid
+  `origin-top` animation origin, a coloured check, and higher-contrast details,
+  group headers, messages, and dark-mode spinner.
+- Omit blank `detail`, `meta`, and `image` values from `tam_select_payload` so
+  remote options never render empty details or broken images.
+- Merge string-keyed `tam_options`/`options` without duplicate JSON keys, and
+  add `selectAll`/`deselectAll` actions to the generated Stimulus controller.
+- Fix Space being blocked in the single-select search input; Space now opens
+  the dropdown only from the focused trigger.
+- Run type-ahead only from the trigger, so keys typed into the search input
+  filter results without also moving the active option ahead of the filter.
 - Add multiline wrapping for long option labels and details, plus native title
   tooltips; wrapped lists avoid fixed-height virtualization so rows stay aligned.
 - Add viewport-clamped automatic dropdown widths, measured with the rendered

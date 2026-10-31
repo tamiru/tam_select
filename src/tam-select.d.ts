@@ -65,7 +65,7 @@ export interface TamSelectOptions {
   searchable?: boolean
   /** Allow typed values to become options. Default: `false` */
   creatable?: boolean
-  /** Display the clear button. Default: `true` */
+  /** Display the clear button. A single select needs an empty (`value=""`) option to clear to. Default: `true` */
   clearable?: boolean
   /** Keep dropdown open after selection in multi-select. Default: `!select.multiple` */
   closeAfterSelect?: boolean
@@ -131,7 +131,7 @@ export interface TamSelectOptions {
   animationDuration?: number
   /** CSS easing function for animations. Default: `"ease-out"` */
   animationEasing?: string
-  /** Custom content for empty option list. Default: `null` */
+  /** Custom content for an empty option list (also for searches with no matches unless `noResultsState` is set). Default: `null` */
   emptyState?: string | ((el: HTMLDivElement) => void) | null
   /** Custom content when no results match. Default: `null` */
   noResultsState?: string | ((el: HTMLDivElement) => void) | null
@@ -145,7 +145,7 @@ export interface TamSelectOptions {
   bulkActions?: boolean
   /** Show a live selected count in the multi-select dropdown. Default: `false` */
   showSelectionCount?: boolean
-  /** Hide selected results in multi-selects. Default: `false` */
+  /** Hide selected results from the option list. Default: `false` */
   hideSelected?: boolean
   /** Bulk selection label or formatter receiving the eligible match count. */
   selectAllText?: string | ((matchCount: number) => string)
@@ -244,6 +244,8 @@ export interface TamSelectBulkChangeEventDetail extends TamSelectEventDetail {
 declare class TamSelect {
   static instances: WeakMap<HTMLSelectElement, TamSelect>
   static getInstance(element: HTMLSelectElement): TamSelect | null
+  /** Remove markup left on a select by an instance that no longer exists (e.g. a restored page snapshot). */
+  static recoverStaleMarkup(select: HTMLSelectElement): void
 
   constructor(select: HTMLSelectElement, options?: TamSelectOptions)
 
@@ -306,7 +308,7 @@ declare class TamSelect {
   blur(): void
   /** Set the selected value(s) */
   setValue(value: string | string[] | null): void
-  /** Clear all selections */
+  /** Clear all selections (a single select selects its empty option; without one this does nothing) */
   clear(): void
   /** Select loaded matches, respecting disabled options, cancellation, and limits. */
   selectAll(): void
@@ -320,10 +322,10 @@ declare class TamSelect {
   removeData(values: string | string[]): void
   /** Clear cached remote responses */
   clearRemoteCache(): void
-  /** Select a value programmatically */
-  selectValue(value: string): void
-  /** Deselect a value */
-  deselect(value: string): void
+  /** Select an item, or the first item with a value. Re-selecting the current value emits no change. */
+  selectValue(value: string | TamSelectItem): void
+  /** Deselect an item, or the first item with a value */
+  deselect(value: string | TamSelectItem): void
   /** Create a new option from a label */
   createItem(label: string, value?: string): TamSelectItem
   /** Remove all generated markup and restore the native select */

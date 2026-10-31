@@ -205,7 +205,7 @@ new TamSelect(select, { animationPreset: "spring" })
 |---|---:|---|
 | `searchable` | `true` | Enable text filtering |
 | `creatable` | `false` | Allow typed values to become options |
-| `clearable` | `true` | Show clear button |
+| `clearable` | `true` | Show clear button (single selects need an empty `value=""` option) |
 | `closeAfterSelect` | `true` (single) | Close dropdown after selection |
 | `placeholder` | `"Select…"` | Placeholder text |
 | `remoteUrl` | `null` | Remote search endpoint |
@@ -214,7 +214,7 @@ new TamSelect(select, { animationPreset: "spring" })
 | `maximumSelectionLength` | `0` | Max selectable items (0 = unlimited) |
 | `bulkActions` | `false` | Show count-aware Select all / Clear actions on multi-selects |
 | `showSelectionCount` | `false` | Show live selected count and configured limit |
-| `hideSelected` | `false` | Hide selected multi-select results |
+| `hideSelected` | `false` | Hide selected results from the option list (single or multiple) |
 | `theme` | `"auto"` | `"default"`, `"select2"`, or `"auto"` |
 | `classes` | `{}` | Override any Tailwind class group |
 | `animationPreset` | `null` | Built-in animation preset |

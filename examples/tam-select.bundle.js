@@ -20,7 +20,7 @@ var THEME_CLASSES = {
     dropdown: "absolute z-50 mt-1 flex w-full min-w-0 max-w-full flex-col overflow-hidden rounded-md border border-gray-300 bg-white shadow-lg",
     dropdownSearch: "mb-0.5 flex w-full min-w-0 max-w-full shrink-0 items-center gap-1.5 rounded bg-gray-50 px-2 py-1.5",
     results: "max-h-56 w-full min-w-0 max-w-full overflow-y-auto overscroll-contain scroll-py-0.5",
-    dropdownAnimation: "origin-top-center",
+    dropdownAnimation: "origin-top",
     dropdownClosed: "mt-1 max-h-64 w-full scale-y-[0.97] opacity-0 pointer-events-none",
     dropdownOpen: "scale-y-100 opacity-100 pointer-events-auto",
     groupHeader: "px-2.5 pt-2.5 pb-0.5 text-[11px] font-semibold uppercase tracking-wider text-gray-400 select-none",
@@ -35,10 +35,12 @@ var THEME_CLASSES = {
     optionMeta: "shrink-0 rounded bg-gray-200 px-1.5 py-0.5 text-[11px] font-medium text-gray-600",
     optionActive: "bg-blue-500 text-white [&_*]:text-white",
     optionSelected: "bg-gray-100 font-normal text-gray-800",
+    optionCheck: "shrink-0",
     optionDisabled: "pointer-events-none cursor-not-allowed opacity-50",
     highlight: "rounded-sm bg-amber-200/80 px-0.5 text-inherit",
     status: "sr-only",
     message: "px-2.5 py-5 text-center text-sm text-gray-400",
+    loadMore: "block w-full cursor-pointer rounded px-2.5 py-2 text-center text-sm text-blue-600 hover:bg-gray-100",
     spinner: "size-3.5 animate-spin rounded-full border-2 border-gray-200 border-t-blue-600",
     error: "px-2.5 py-2.5 text-sm text-red-600",
     tagDragging: "opacity-50 ring-1 ring-blue-400",
@@ -62,26 +64,27 @@ var DEFAULT_CLASSES = {
   clear: "relative z-20 inline-flex size-5 shrink-0 touch-manipulation items-center justify-center rounded text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:text-zinc-500 dark:hover:bg-zinc-800 dark:hover:text-zinc-200 dark:focus:ring-blue-400",
   chevron: "pointer-events-none relative z-10 size-3.5 shrink-0 text-zinc-400 transition-transform",
   chevronOpen: "rotate-180",
-  dropdown: "absolute z-50 mt-1 flex w-full min-w-0 max-w-full flex-col overflow-hidden rounded-md border border-zinc-200 bg-white shadow-lg dark:border-zinc-700 dark:bg-zinc-900 dark:shadow-black/50",
+  dropdown: "absolute z-50 mt-1 flex w-full min-w-0 max-w-full flex-col overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-lg dark:border-zinc-700 dark:bg-zinc-900 dark:shadow-black/50",
   dropdownSearch: "mb-0.5 flex w-full min-w-0 max-w-full shrink-0 items-center gap-1.5 rounded bg-zinc-50 px-2 py-1.5 transition dark:bg-zinc-800/70",
-  results: "max-h-56 w-full min-w-0 max-w-full overflow-y-auto overscroll-contain scroll-py-0.5",
-  dropdownAnimation: "origin-top-center",
+  results: "max-h-56 w-full min-w-0 max-w-full overflow-y-auto overscroll-contain scroll-py-1 p-1",
+  dropdownAnimation: "origin-top",
   dropdownClosed: "mt-1 max-h-64 w-full scale-y-[0.97] opacity-0 pointer-events-none",
   dropdownOpen: "scale-y-100 opacity-100 pointer-events-auto",
-  groupHeader: "px-2.5 pt-2.5 pb-0.5 text-[11px] font-semibold uppercase tracking-wider text-zinc-400 select-none dark:text-zinc-500",
+  groupHeader: "px-2.5 pt-2.5 pb-0.5 text-[11px] font-semibold uppercase tracking-wider text-zinc-500 select-none dark:text-zinc-400",
   option: "flex min-h-8 touch-manipulation cursor-pointer select-none items-center justify-between gap-2 rounded px-2.5 py-1.5 text-sm leading-5 text-zinc-700 outline-none transition-colors duration-75 hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-800",
   optionContent: "flex min-w-0 flex-1 items-center gap-2",
   optionText: "flex min-w-0 flex-1 flex-col",
   optionLabel: "font-normal",
   optionLabelWrap: "whitespace-normal break-words [overflow-wrap:anywhere]",
-  optionDetail: "text-xs font-normal text-zinc-400 dark:text-zinc-500",
+  optionDetail: "text-xs font-normal text-zinc-500 dark:text-zinc-400",
   optionDetailWrap: "whitespace-normal break-words [overflow-wrap:anywhere]",
   selectionContent: "flex min-w-0 flex-1 items-center overflow-hidden",
   selectionLabel: "truncate text-sm font-normal",
   optionImage: "size-8 shrink-0 rounded-full bg-zinc-100 object-cover dark:bg-zinc-800",
   optionMeta: "shrink-0 rounded bg-zinc-100 px-1.5 py-0.5 text-[11px] font-medium text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400",
-  optionActive: "bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300",
+  optionActive: "bg-zinc-100 text-zinc-900 dark:bg-zinc-800 dark:text-white",
   optionSelected: "bg-blue-50 font-normal text-blue-700 dark:bg-blue-950/60 dark:text-blue-300",
+  optionCheck: "shrink-0 text-blue-600 dark:text-blue-400",
   optionDisabled: "pointer-events-none cursor-not-allowed opacity-50",
   highlight: "rounded-sm bg-amber-200/80 px-0.5 text-inherit dark:bg-amber-400/30",
   status: "sr-only",
@@ -92,8 +95,9 @@ var DEFAULT_CLASSES = {
   selectionActionIcon: "size-3.5 shrink-0",
   selectionShortcut: "hidden rounded border border-zinc-200 bg-white px-1.5 py-0.5 font-mono text-[10px] text-zinc-400 shadow-sm sm:inline-flex dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-500",
   selectionCount: "ms-auto rounded-full bg-zinc-200/70 px-2 py-1 text-[11px] font-semibold text-zinc-600 dark:bg-zinc-700 dark:text-zinc-300",
-  message: "px-2.5 py-5 text-center text-sm text-zinc-400 dark:text-zinc-500",
-  spinner: "size-3.5 animate-spin rounded-full border-2 border-zinc-200 border-t-blue-500",
+  message: "px-2.5 py-5 text-center text-sm text-zinc-500 dark:text-zinc-400",
+  loadMore: "block w-full touch-manipulation cursor-pointer rounded px-2.5 py-2 text-center text-sm font-medium text-blue-600 hover:bg-zinc-100 focus:outline-none focus-visible:outline-2 focus-visible:outline-blue-500 dark:text-blue-400 dark:hover:bg-zinc-800",
+  spinner: "size-3.5 animate-spin rounded-full border-2 border-zinc-200 border-t-blue-500 dark:border-zinc-700 dark:border-t-blue-400",
   error: "px-2.5 py-2.5 text-sm text-red-600 dark:text-red-400",
   tagDragging: "opacity-50 ring-1 ring-blue-400",
   tagDragOver: "border-l-2 border-l-blue-500"
@@ -144,6 +148,31 @@ var toggleClasses = (element, classNames, force) => {
 var hasOwn = (object, key) => Object.prototype.hasOwnProperty.call(object, key);
 var TamSelect = class _TamSelect {
   static instances = /* @__PURE__ */ new WeakMap();
+  /**
+   * Undo markup left by an instance that no longer exists, e.g. a select
+   * restored from a page snapshot taken while it was enhanced.
+   */
+  static recoverStaleMarkup(select) {
+    const saved = select.dataset.tamSelectState;
+    if (!saved || _TamSelect.instances.has(select)) return;
+    let state;
+    try {
+      state = JSON.parse(saved);
+    } catch {
+      state = null;
+    }
+    const stale = select.nextElementSibling;
+    if (stale?.hasAttribute("data-tam-select-root")) stale.remove();
+    if (state) {
+      if (!state.srOnly) select.classList.remove("sr-only");
+      if (state.tabindex === null) select.removeAttribute("tabindex");
+      else select.setAttribute("tabindex", state.tabindex);
+      if (state.ariaHidden === null) select.removeAttribute("aria-hidden");
+      else select.setAttribute("aria-hidden", state.ariaHidden);
+      if (state.id === null) select.removeAttribute("id");
+    }
+    delete select.dataset.tamSelectState;
+  }
   static getInstance(element) {
     return this.instances.get(element) || null;
   }
@@ -271,10 +300,17 @@ var TamSelect = class _TamSelect {
     this.optionIds = /* @__PURE__ */ new WeakMap();
     this.optionIdSequence = 0;
     this.invalidFromEvent = false;
+    _TamSelect.recoverStaleMarkup(select);
     this.originalTabIndex = select.getAttribute("tabindex");
     this.originalAriaHidden = select.getAttribute("aria-hidden");
     this.originalId = select.getAttribute("id");
     this.hadSrOnlyClass = select.classList.contains("sr-only");
+    select.dataset.tamSelectState = JSON.stringify({
+      tabindex: this.originalTabIndex,
+      ariaHidden: this.originalAriaHidden,
+      id: this.originalId,
+      srOnly: this.hadSrOnlyClass
+    });
     this.typeaheadBuffer = "";
     this.typeaheadTimer = null;
     this.groupTree = [];
@@ -573,11 +609,7 @@ var TamSelect = class _TamSelect {
       this.focusTarget.focus();
     };
     this.onScroll = () => {
-      if (this.options.remoteUrl && this.hasMore && !this.loading) {
-        if (this.results.scrollTop + this.results.clientHeight >= this.results.scrollHeight - 32) {
-          this.loadRemote(this.nextPage || this.page + 1, true);
-        }
-      }
+      if (this.results.scrollTop + this.results.clientHeight >= this.results.scrollHeight - 32) this.loadNextPage();
       if (this.isVirtualScroll) {
         this.rerenderVirtualItems();
       }
@@ -714,7 +746,7 @@ var TamSelect = class _TamSelect {
     return Math.min(Math.ceil(measuredWidth), maximumWidth);
   }
   detectDirection() {
-    const selectDir = this.select.getAttribute("dir");
+    const selectDir = this.select.closest("[dir]")?.getAttribute("dir");
     if (selectDir) return selectDir;
     const docDir = document.documentElement.getAttribute("dir") || document.body?.getAttribute("dir");
     if (docDir) return docDir;
@@ -788,7 +820,7 @@ var TamSelect = class _TamSelect {
     return existing ? Object.assign(existing, attributes) : attributes;
   }
   selectedItems() {
-    return this.items.filter((item) => item.option?.selected || item.selected);
+    return this.items.filter((item) => item.option ? item.option.selected : item.selected);
   }
   matchesLocalItem(item) {
     if (typeof this.options.matcher === "function") return Boolean(this.options.matcher(item, this.query));
@@ -842,26 +874,25 @@ var TamSelect = class _TamSelect {
   }
   updateVisibleItems(candidateItems, preserveActive = true) {
     this.matchedItems = candidateItems;
-    candidateItems = candidateItems.filter((item) => !(this.multiple && this.options.hideSelected && item.selected));
+    candidateItems = candidateItems.filter((item) => !(this.options.hideSelected && item.selected));
     const previousId = preserveActive ? this.visibleItems[this.activeIndex]?.id : null;
     const hasGroups = this.groupTree.some((group) => group.type !== "ungrouped");
     let entries;
     if (!hasGroups) {
-      entries = candidateItems.filter((item) => this.multiple || !item.selected).map((item) => ({ type: "item", id: item.id, item, disabled: Boolean(item.disabled) }));
+      entries = candidateItems.map((item) => ({ type: "item", id: item.id, item, disabled: Boolean(item.disabled) }));
     } else {
-      const visibleValues = new Set(candidateItems.map((item) => String(item.value)));
+      const rank = new Map(candidateItems.map((item, index) => [item.id, index]));
+      const byRank = (left, right) => rank.get(left.item.id) - rank.get(right.item.id);
       entries = [];
       for (const group of this.groupTree) {
         if (group.type === "ungrouped") {
           for (const entry of group.entries) {
-            if (visibleValues.has(String(entry.item.value)) && (this.multiple || !entry.item.selected)) {
+            if (rank.has(entry.item.id)) {
               entries.push(entry);
             }
           }
         } else {
-          const groupEntries = group.entries.filter(
-            (entry) => visibleValues.has(String(entry.item.value)) && (this.multiple || !entry.item.selected)
-          );
+          const groupEntries = group.entries.filter((entry) => rank.has(entry.item.id)).sort(byRank);
           if (groupEntries.length > 0) {
             entries.push({ type: "group-header", id: `group-${group.label}`, group: group.label });
             entries.push(...groupEntries);
@@ -873,7 +904,9 @@ var TamSelect = class _TamSelect {
     if (createEntry) entries.push(createEntry);
     this.visibleItems = entries;
     const preservedIndex = previousId ? entries.findIndex((entry) => entry.id === previousId && !entry.disabled) : -1;
-    this.activeIndex = preservedIndex >= 0 ? preservedIndex : entries.findIndex((entry) => !entry.disabled && entry.type !== "group-header");
+    const selectedIndex = !this.multiple && !this.query.trim() ? entries.findIndex((entry) => entry.type === "item" && entry.item.selected && !entry.disabled) : -1;
+    const firstIndex = entries.findIndex((entry) => !entry.disabled && entry.type !== "group-header");
+    this.activeIndex = [preservedIndex, selectedIndex, firstIndex].find((index) => index >= 0) ?? -1;
   }
   createEntry() {
     const label = this.query.trim();
@@ -894,7 +927,8 @@ var TamSelect = class _TamSelect {
       this.typeaheadBuffer = "";
     }, 500);
     const query = normalize(this.typeaheadBuffer);
-    const startIndex = this.activeIndex >= 0 ? this.activeIndex + 1 : 0;
+    const offset = this.typeaheadBuffer.length > 1 ? 0 : 1;
+    const startIndex = this.activeIndex >= 0 ? this.activeIndex + offset : 0;
     const candidates = [...this.visibleItems.slice(startIndex), ...this.visibleItems.slice(0, startIndex)];
     const match = candidates.find(
       (entry) => entry.type !== "group-header" && !entry.disabled && normalize(entry.item?.label ?? entry.label).startsWith(query)
@@ -929,7 +963,7 @@ var TamSelect = class _TamSelect {
       this.input.placeholder = this.multiple && !hasValue ? this.options.placeholder : this.options.searchPlaceholder;
       this.input.disabled = this.select.disabled;
     }
-    this.clearButton.classList.toggle("hidden", !this.options.clearable || !hasValue || this.select.disabled);
+    this.clearButton.classList.toggle("hidden", !this.options.clearable || !hasValue || !this.canClear() || this.select.disabled);
     this.updateSelectionToolbar();
     this.syncAria();
   }
@@ -957,7 +991,7 @@ var TamSelect = class _TamSelect {
     remove.innerHTML = ICONS.close;
     remove.addEventListener("click", (event) => {
       event.stopPropagation();
-      this.deselect(item.value);
+      this.deselect(item);
     });
     tag.append(label, remove);
     if (this.options.draggable && this.multiple && !this.select.disabled) {
@@ -978,13 +1012,14 @@ var TamSelect = class _TamSelect {
     this.draggedItem = item;
     const scheduleFrame = window.requestAnimationFrame || ((callback) => window.setTimeout(callback, 0));
     scheduleFrame(() => {
-      event.target.classList.add(this.classes.tagDragging);
+      toggleClasses(event.target, this.classes.tagDragging, true);
     });
   }
   onTagDragEnd() {
     this.draggedItem = null;
     this.values.querySelectorAll("[data-tag-value]").forEach((el) => {
-      el.classList.remove(this.classes.tagDragging, this.classes.tagDragOver);
+      toggleClasses(el, this.classes.tagDragging, false);
+      toggleClasses(el, this.classes.tagDragOver, false);
     });
   }
   onTagDragOver(event) {
@@ -995,23 +1030,23 @@ var TamSelect = class _TamSelect {
     event.preventDefault();
     const tag = event.target.closest("[data-tag-value]");
     if (tag && tag.dataset.tagValue !== this.draggedItem?.value) {
-      tag.classList.add(this.classes.tagDragOver);
+      toggleClasses(tag, this.classes.tagDragOver, true);
     }
   }
   onTagDragLeave(event) {
     const tag = event.target.closest("[data-tag-value]");
-    if (tag) tag.classList.remove(this.classes.tagDragOver);
+    if (tag) toggleClasses(tag, this.classes.tagDragOver, false);
   }
   onTagDrop(event, targetItem) {
     event.preventDefault();
     const sourceItem = this.draggedItem;
-    if (!sourceItem || sourceItem.value === targetItem.value) return;
-    const sourceIndex = this.selectedItems().findIndex((i) => i.value === sourceItem.value);
-    const targetIndex = this.selectedItems().findIndex((i) => i.value === targetItem.value);
+    if (!sourceItem || sourceItem === targetItem) return;
+    const sourceIndex = this.selectedItems().indexOf(sourceItem);
+    const targetIndex = this.selectedItems().indexOf(targetItem);
     if (sourceIndex < 0 || targetIndex < 0) return;
-    const option = this.select.querySelector(`option[value="${sourceItem.value}"]`);
-    const targetOption = this.select.querySelector(`option[value="${targetItem.value}"]`);
-    if (option && targetOption) {
+    const option = sourceItem.option;
+    const targetOption = targetItem.option;
+    if (option && targetOption && option.parentElement === targetOption.parentElement) {
       if (sourceIndex < targetIndex) {
         targetOption.after(option);
       } else {
@@ -1048,7 +1083,8 @@ var TamSelect = class _TamSelect {
       this.updateStatus(this.options.loadingText);
       return this.finishDropdownRender();
     }
-    if (this.options.emptyState && !this.visibleItems.length && !this.loading) {
+    const searching = Boolean(this.query.trim()) && Boolean(this.options.noResultsState);
+    if (this.options.emptyState && !this.visibleItems.length && !this.loading && !searching) {
       const empty = document.createElement("div");
       empty.className = this.classes.message;
       if (typeof this.options.emptyState === "function") this.options.emptyState(empty);
@@ -1078,7 +1114,7 @@ var TamSelect = class _TamSelect {
       }
     }
     if (this.loading && this.loadingPage > 1) this.renderMessage(this.options.loadingText, true);
-    else if (this.hasMore) this.renderMessage(this.options.loadMoreText);
+    else if (this.hasMore) this.renderLoadMore();
     const resultCount = this.visibleItems.filter((entry) => entry.type === "item").length;
     const statusText = resultCount || this.visibleItems.length ? typeof this.options.resultsText === "function" ? this.options.resultsText(resultCount) : this.options.resultsText : this.options.noResultsText;
     this.updateStatus(statusText);
@@ -1087,6 +1123,28 @@ var TamSelect = class _TamSelect {
   finishDropdownRender() {
     this.syncActiveDescendant();
     if (this.portalDropdown) this.updateDropdownPosition();
+    if (this.options.remoteUrl && this.hasMore && !this.loading && this.results.clientHeight > 0 && this.results.scrollHeight <= this.results.clientHeight + 32) {
+      const scheduleFrame = window.requestAnimationFrame || ((callback) => window.setTimeout(callback, 0));
+      scheduleFrame(() => {
+        if (this.opened && !this.destroyed) this.onScroll();
+      });
+    }
+  }
+  loadNextPage() {
+    if (this.options.remoteUrl && this.hasMore && !this.loading) this.loadRemote(this.nextPage || this.page + 1, true);
+  }
+  renderLoadMore() {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = this.classes.loadMore;
+    button.textContent = this.options.loadMoreText;
+    button.dataset.tamSelectLoadMore = "";
+    button.addEventListener("pointerdown", (event) => event.preventDefault());
+    button.addEventListener("click", (event) => {
+      event.stopPropagation();
+      this.loadNextPage();
+    });
+    this.results.append(button);
   }
   renderStandardDropdown() {
     for (const entry of this.visibleItems) {
@@ -1129,9 +1187,9 @@ var TamSelect = class _TamSelect {
       container.append(bottomSpacer);
     }
   }
-  rerenderVirtualItems() {
+  rerenderVirtualItems(targetScrollTop = null) {
     if (!this.isVirtualScroll || !this.opened) return;
-    const scrollTop = this.results.scrollTop || 0;
+    const scrollTop = targetScrollTop ?? (this.results.scrollTop || 0);
     const fragment = document.createDocumentFragment();
     this.renderVirtualDropdown(scrollTop, fragment);
     this.results.replaceChildren(fragment);
@@ -1174,6 +1232,7 @@ var TamSelect = class _TamSelect {
       }
       if (item.selected) {
         const check = document.createElement("span");
+        check.className = this.classes.optionCheck;
         check.innerHTML = ICONS.check;
         option.append(check);
       }
@@ -1378,7 +1437,7 @@ var TamSelect = class _TamSelect {
       event.preventDefault();
       if (!this.opened) return this.open();
       this.activateEntry(this.visibleItems[this.activeIndex]);
-    } else if (event.key === " " && this.trigger) {
+    } else if (event.key === " " && event.target === this.trigger) {
       event.preventDefault();
       this.open();
     } else if (event.key === "Escape" && this.opened) {
@@ -1387,7 +1446,7 @@ var TamSelect = class _TamSelect {
       this.focusTarget.focus();
     } else if (event.key === "Backspace" && this.multiple && this.input && !this.input.value) {
       const last = this.selectedItems().at(-1);
-      if (last) this.deselect(last.value);
+      if (last) this.deselect(last);
     } else if (event.key === "Tab") {
       const action = this.selectionToolbar?.querySelector("button:not(:disabled)");
       if (this.opened && !event.shiftKey && action) {
@@ -1407,7 +1466,7 @@ var TamSelect = class _TamSelect {
       this.toggleAll();
     } else if (event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) {
       if (this.opened) {
-        this.typeahead(event.key);
+        if (event.target !== this.input) this.typeahead(event.key);
       } else if (this.input) {
         this.open(false);
       }
@@ -1443,7 +1502,8 @@ var TamSelect = class _TamSelect {
   }
   toggleAll() {
     const matches = this.bulkCandidates();
-    if (matches.length && matches.every((item) => item.selected)) this.deselectAll();
+    const atLimit = this.options.maximumSelectionLength > 0 && this.selectedItems().length >= this.options.maximumSelectionLength;
+    if (matches.length && (matches.every((item) => item.selected) || atLimit && matches.some((item) => item.selected))) this.deselectAll();
     else this.selectAll();
   }
   bulkCandidates() {
@@ -1482,15 +1542,37 @@ var TamSelect = class _TamSelect {
       const index = Number(option.dataset.tamSelectEntry);
       const entry = this.visibleItems[index];
       if (entry && entry.type !== "group-header") {
-        toggleClasses(option, this.classes.optionActive, index === this.activeIndex);
+        const active = index === this.activeIndex;
+        const selected = !active && entry.type === "item" && entry.item.selected;
+        toggleClasses(option, this.classes.optionActive, false);
+        toggleClasses(option, this.classes.optionSelected, false);
+        if (active) toggleClasses(option, this.classes.optionActive, true);
+        if (selected) toggleClasses(option, this.classes.optionSelected, true);
       }
     });
     this.syncActiveDescendant(scroll);
   }
+  /** Whether the single-select search input inside the dropdown is in use. */
+  searchPanelActive() {
+    return Boolean(this.searchable && !this.multiple && this.input && this.searchVisible);
+  }
   syncActiveDescendant(scroll = false) {
     const entry = this.visibleItems[this.activeIndex];
-    const active = entry && this.results.querySelector(`[data-tam-select-entry="${this.activeIndex}"]`);
-    const activeTarget = this.opened && this.input && !this.multiple ? this.input : this.focusTarget;
+    let active = entry && this.results.querySelector(`[data-tam-select-entry="${this.activeIndex}"]`);
+    if (scroll && entry && !active && this.isVirtualScroll && this.opened && !this.syncingVirtualWindow) {
+      const itemHeight = this.options.virtualItemHeight;
+      const viewportHeight = this.results.clientHeight || 288;
+      const maxScrollTop = Math.max(0, this.visibleItems.length * itemHeight - viewportHeight);
+      this.results.scrollTop = Math.min(maxScrollTop, Math.max(0, this.activeIndex * itemHeight - viewportHeight / 2));
+      this.syncingVirtualWindow = true;
+      try {
+        this.rerenderVirtualItems(this.results.scrollTop);
+      } finally {
+        this.syncingVirtualWindow = false;
+      }
+      active = this.results.querySelector(`[data-tam-select-entry="${this.activeIndex}"]`);
+    }
+    const activeTarget = this.opened && this.searchPanelActive() ? this.input : this.focusTarget;
     this.focusTarget.removeAttribute("aria-activedescendant");
     if (this.input && this.input !== this.focusTarget) this.input.removeAttribute("aria-activedescendant");
     if (this.opened && active && !entry.disabled && entry.type !== "group-header") {
@@ -1506,7 +1588,7 @@ var TamSelect = class _TamSelect {
   toggleItem(item) {
     if (item.disabled) return;
     if (this.multiple && item.selected) {
-      this.deselect(item.value);
+      this.deselect(item);
     } else if (this.multiple && this.options.maximumSelectionLength > 0) {
       const selectedCount = this.selectedItems().length;
       if (selectedCount >= this.options.maximumSelectionLength) {
@@ -1514,14 +1596,22 @@ var TamSelect = class _TamSelect {
         this.updateStatus(text);
         return;
       }
-      this.selectValue(item.value);
+      this.selectValue(item);
     } else {
-      this.selectValue(item.value);
+      this.selectValue(item);
     }
   }
+  /** Select an item, or the first item with a value (creating it if needed). */
   selectValue(value) {
-    const item = this.ensureNativeOption(value);
+    if (this.select.disabled) return;
+    const item = this.items.includes(value) ? value : this.ensureNativeOption(value);
     if (item.disabled) return;
+    const alreadySelected = item.option?.selected && (this.multiple || this.selectedItems().length === 1);
+    if (alreadySelected) {
+      if (this.options.closeAfterSelect) this.close();
+      else this.resetQueryAfterSelection();
+      return;
+    }
     if (!this.emit("tam-select:selecting", { item }, true)) return;
     if (this.multiple && this.options.maximumSelectionLength > 0) {
       if (this.selectedItems().length >= this.options.maximumSelectionLength) {
@@ -1541,13 +1631,17 @@ var TamSelect = class _TamSelect {
     else this.resetQueryAfterSelection();
   }
   resetQueryAfterSelection() {
+    const hadQuery = Boolean(this.query);
     if (this.input) this.input.value = "";
     this.query = "";
-    if (this.options.remoteUrl) this.scheduleRemote();
-    else this.filterLocal();
+    if (!this.options.remoteUrl) this.filterLocal();
+    else if (hadQuery) this.scheduleRemote();
+    else this.renderDropdown();
   }
+  /** Deselect an item, or the first item with a value. */
   deselect(value) {
-    const item = this.items.find((entry) => String(entry.value) === String(value));
+    if (this.select.disabled) return;
+    const item = this.items.includes(value) ? value : this.items.find((entry) => String(entry.value) === String(value));
     if (!item) return;
     if (!this.emit("tam-select:unselecting", { item }, true)) return;
     item.selected = false;
@@ -1555,19 +1649,29 @@ var TamSelect = class _TamSelect {
     this.commit();
     this.emit("tam-select:unselect", { item });
   }
+  /** The empty option a single select falls back to when cleared. */
+  emptyOption() {
+    return Array.from(this.select.options).find((option) => option.value === "") || null;
+  }
+  canClear() {
+    return this.multiple || Boolean(this.emptyOption());
+  }
   clear() {
+    if (this.select.disabled) return;
     const items = this.selectedItems();
-    if (!items.length || !this.emit("tam-select:clearing", { items }, true)) return;
+    if (!items.length || !this.canClear() || !this.emit("tam-select:clearing", { items }, true)) return;
     Array.from(this.select.options).forEach((option) => {
       option.selected = false;
     });
     this.items.forEach((item) => {
       item.selected = false;
     });
+    if (!this.multiple) this.emptyOption().selected = true;
     this.commit();
     this.emit("tam-select:clear", { items });
   }
   createItem(label, candidateValue = void 0) {
+    if (this.select.disabled) return null;
     const value = candidateValue ?? (typeof this.options.createValue === "function" ? this.options.createValue(label) : label);
     const existing = this.items.find((item2) => normalize(item2.value) === normalize(value) || normalize(item2.label) === normalize(label));
     if (existing) {
@@ -1717,7 +1821,8 @@ var TamSelect = class _TamSelect {
         if (this.opened) this.updateDropdownPosition();
       });
     }
-    const openTarget = this.searchable && !this.multiple ? this.input : this.focusTarget;
+    if (this.isVirtualScroll) this.syncActiveDescendant(true);
+    const openTarget = this.searchPanelActive() ? this.input : this.focusTarget;
     openTarget.focus({ preventScroll: true });
     this.emit("tam-select:open");
   }
@@ -1727,7 +1832,8 @@ var TamSelect = class _TamSelect {
     this.opened = false;
     if (this.options.selectOnClose && this.activeIndex >= 0) {
       const entry = this.visibleItems[this.activeIndex];
-      if (entry && entry.type !== "group-header" && !entry.disabled) this.activateEntry(entry);
+      const alreadySelected = entry?.type === "item" && entry.item.option?.selected;
+      if (entry && entry.type !== "group-header" && !entry.disabled && !alreadySelected) this.activateEntry(entry);
     }
     this.cancelRemoteWork();
     this.focusTarget.setAttribute("aria-expanded", "false");
@@ -1749,6 +1855,7 @@ var TamSelect = class _TamSelect {
       this.updateVisibleItems([]);
     } else {
       this.filterLocal(false);
+      if (!this.multiple) this.updateVisibleItems(this.matchedItems, false);
     }
     this.renderSelection();
     if (restoreFocus && !this.multiple && this.input && document.activeElement === this.input) {
@@ -1923,6 +2030,7 @@ var TamSelect = class _TamSelect {
     toggleClasses(this.control, this.classes.controlInvalid, invalid);
   }
   applyDisabled() {
+    if (this.select.disabled && this.opened) this.close(false);
     toggleClasses(this.control, this.classes.controlDisabled, this.select.disabled);
     this.focusTarget.disabled = this.select.disabled;
     this.clearButton.disabled = this.select.disabled;
@@ -1998,6 +2106,7 @@ var TamSelect = class _TamSelect {
     }
   }
   destroy() {
+    if (this.destroyed) return;
     this.destroyed = true;
     this.cancelRemoteWork();
     clearTimeout(this.closeTimer);
@@ -2036,7 +2145,8 @@ var TamSelect = class _TamSelect {
     if (this.originalAriaHidden === null) this.select.removeAttribute("aria-hidden");
     else this.select.setAttribute("aria-hidden", this.originalAriaHidden);
     if (this.originalId === null) this.select.removeAttribute("id");
-    _TamSelect.instances.delete(this.select);
+    delete this.select.dataset.tamSelectState;
+    if (_TamSelect.instances.get(this.select) === this) _TamSelect.instances.delete(this.select);
   }
 };
 var tam_select_default = TamSelect;
