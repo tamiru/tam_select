@@ -13,9 +13,9 @@ module TamSelectPaginatable
         {
           value: tam_select_record_value(record, value).to_s,
           label: tam_select_record_value(record, label).to_s,
-          detail: detail && tam_select_record_value(record, detail).to_s,
-          meta: meta && tam_select_record_value(record, meta).to_s,
-          image: image && tam_select_record_value(record, image).to_s
+          detail: tam_select_optional_value(record, detail),
+          meta: tam_select_optional_value(record, meta),
+          image: tam_select_optional_value(record, image)
         }.compact
       end,
       pagination: {
@@ -24,6 +24,12 @@ module TamSelectPaginatable
         has_more: has_more
       }
     }
+  end
+
+  # Blank optional fields are omitted so the client never renders an empty
+  # detail line, meta badge, or an <img> with an empty src.
+  def tam_select_optional_value(record, resolver)
+    resolver && tam_select_record_value(record, resolver).to_s.presence
   end
 
   def tam_select_record_value(record, resolver)

@@ -22,11 +22,14 @@ test("single selection uses the rendered visible item for arrows and Enter", () 
     const select = document.querySelector("select")
     const tamSelect = new TamSelect(select)
 
-    assert.deepEqual(tamSelect.visibleItems.map(entry => entry.item.value), ["or", "ti", "sn", "cf"])
-    assert.equal(tamSelect.activeIndex, 0)
+    assert.deepEqual(tamSelect.visibleItems.map(entry => entry.item.value), ["aa", "or", "ti", "sn", "cf"])
+    assert.equal(tamSelect.visibleItems[tamSelect.activeIndex].item.value, "aa", "opens on the current selection")
 
     keydown(tamSelect.input, "ArrowDown")
     assert.equal(tamSelect.opened, true)
+    assert.equal(tamSelect.visibleItems[tamSelect.activeIndex].item.value, "aa")
+
+    keydown(tamSelect.input, "ArrowDown")
     assert.equal(tamSelect.visibleItems[tamSelect.activeIndex].item.value, "or")
 
     keydown(tamSelect.input, "ArrowDown")
@@ -594,7 +597,7 @@ test("dropdown gets animation classes when opened and closed", () => {
   const cleanup = setupDOM(localSelect())
   try {
     const tamSelect = new TamSelect(document.querySelector("select"))
-    assert.ok(tamSelect.dropdown.classList.contains("origin-top-center"))
+    assert.ok(tamSelect.dropdown.classList.contains("origin-top"))
 
     tamSelect.open()
     assert.ok(tamSelect.dropdown.classList.contains("scale-y-100"))
@@ -614,7 +617,7 @@ test("animations can be disabled", () => {
   const cleanup = setupDOM(localSelect())
   try {
     const tamSelect = new TamSelect(document.querySelector("select"), { animations: false })
-    assert.equal(tamSelect.dropdown.classList.contains("origin-top-center"), false)
+    assert.equal(tamSelect.dropdown.classList.contains("origin-top"), false)
 
     tamSelect.open()
     assert.equal(tamSelect.dropdown.classList.contains("scale-y-100"), false)
@@ -1293,7 +1296,7 @@ test("pointer hover updates the active option without scrolling it", () => {
 
     assert.equal(tamSelect.activeIndex, targetIndex)
     assert.equal(scrollCount, 0)
-    assert.ok(target.classList.contains("bg-blue-50"))
+    assert.ok(target.classList.contains("bg-zinc-100"))
     assert.ok(target.className.includes("hover:bg-zinc-100"))
   } finally {
     cleanup()
@@ -2184,6 +2187,40 @@ test("single selection search input accepts spaces while the trigger opens on Sp
     tamSelect.input.dispatchEvent(inputSpace)
     assert.equal(inputSpace.defaultPrevented, false, "Space must reach the search input")
     assert.equal(tamSelect.visibleItems[tamSelect.activeIndex].id, activeBefore, "Space in the search input must not move the active option")
+  } finally {
+    cleanup()
+  }
+})
+
+test("single selection lists the selected option with selected styling and a check", () => {
+  const cleanup = setupDOM(localSelect({ selected: "or" }))
+  try {
+    const tamSelect = new TamSelect(document.querySelector("select"))
+    tamSelect.open()
+
+    const option = () => tamSelect.results.querySelector('[role="option"][data-value="or"]')
+    assert.ok(option(), "the selected option stays in the list")
+    assert.equal(option().getAttribute("aria-selected"), "true")
+    assert.ok(option().querySelector("svg"), "the selected option shows a check")
+    assert.equal(tamSelect.visibleItems[tamSelect.activeIndex].item.value, "or")
+
+    keydown(tamSelect.input, "ArrowDown")
+    assert.ok(option().classList.contains("bg-blue-50"), "selected styling returns when the active option moves away")
+    assert.equal(option().classList.contains("bg-zinc-100"), false)
+
+    input(tamSelect.input, "sid")
+    assert.equal(tamSelect.visibleItems[tamSelect.activeIndex].item.value, "sn", "a query starts on the best match")
+  } finally {
+    cleanup()
+  }
+})
+
+test("hideSelected removes the selected option from a single selection list", () => {
+  const cleanup = setupDOM(localSelect({ selected: "or" }))
+  try {
+    const tamSelect = new TamSelect(document.querySelector("select"), { hideSelected: true })
+    tamSelect.open()
+    assert.equal(tamSelect.visibleItems.some(entry => entry.item?.value === "or"), false)
   } finally {
     cleanup()
   }

@@ -5,7 +5,7 @@ class TamSelectInput < SimpleForm::Inputs::CollectionSelectInput
     tam_options = attributes.delete(:tam_options) || {}
     data = attributes[:data] ||= {}
     data[:controller] = (data[:controller].to_s.split + ["tam-select"]).uniq.join(" ")
-    data[:tam_select_options_value] = defaults.merge(tam_options).to_json
+    data[:tam_select_options_value] = defaults.merge(tam_options.to_h.symbolize_keys).to_json
 
     @builder.collection_select(
       attribute_name,
