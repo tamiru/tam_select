@@ -1503,7 +1503,7 @@ export class TamSelect {
       event.preventDefault()
       if (!this.opened) return this.open()
       this.activateEntry(this.visibleItems[this.activeIndex])
-    } else if (event.key === " " && this.trigger) {
+    } else if (event.key === " " && event.target === this.trigger) {
       event.preventDefault()
       this.open()
     } else if (event.key === "Escape" && this.opened) {
@@ -1532,7 +1532,10 @@ export class TamSelect {
       this.toggleAll()
     } else if (event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) {
       if (this.opened) {
-        this.typeahead(event.key)
+        // Keys typed into the search input are query text that the input
+        // event filters on; typeahead there would move the active option
+        // ahead of the filter. Typeahead is for a focused trigger only.
+        if (event.target !== this.input) this.typeahead(event.key)
       } else if (this.input) {
         this.open(false)
       }

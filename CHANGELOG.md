@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Fix Space being blocked in the single-select search input; Space now opens
+  the dropdown only from the focused trigger.
+- Run type-ahead only from the trigger, so keys typed into the search input
+  filter results without also moving the active option ahead of the filter.
 - Add multiline wrapping for long option labels and details, plus native title
   tooltips; wrapped lists avoid fixed-height virtualization so rows stay aligned.
 - Add viewport-clamped automatic dropdown widths, measured with the rendered

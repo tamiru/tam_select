@@ -1378,7 +1378,7 @@ var TamSelect = class _TamSelect {
       event.preventDefault();
       if (!this.opened) return this.open();
       this.activateEntry(this.visibleItems[this.activeIndex]);
-    } else if (event.key === " " && this.trigger) {
+    } else if (event.key === " " && event.target === this.trigger) {
       event.preventDefault();
       this.open();
     } else if (event.key === "Escape" && this.opened) {
@@ -1407,7 +1407,7 @@ var TamSelect = class _TamSelect {
       this.toggleAll();
     } else if (event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) {
       if (this.opened) {
-        this.typeahead(event.key);
+        if (event.target !== this.input) this.typeahead(event.key);
       } else if (this.input) {
         this.open(false);
       }

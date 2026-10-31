@@ -653,10 +653,10 @@ test("the operating system reduced-motion preference disables dropdown animation
 test("type-ahead jumps to the first matching option on rapid typing", () => {
   const cleanup = setupDOM(localSelect())
   try {
-    const tamSelect = new TamSelect(document.querySelector("select"))
+    const tamSelect = new TamSelect(document.querySelector("select"), { searchable: false })
     tamSelect.open()
 
-    keydown(tamSelect.input, "s")
+    keydown(tamSelect.trigger, "s")
     assert.equal(tamSelect.visibleItems[tamSelect.activeIndex].item.value, "sn")
   } finally {
     cleanup()
@@ -672,16 +672,30 @@ test("type-ahead buffers rapid characters and resets after 500ms", async () => {
     </select>
   `)
   try {
-    const tamSelect = new TamSelect(document.querySelector("select"))
+    const tamSelect = new TamSelect(document.querySelector("select"), { searchable: false })
     tamSelect.open()
 
-    keydown(tamSelect.input, "s")
-    keydown(tamSelect.input, "o")
+    keydown(tamSelect.trigger, "s")
+    keydown(tamSelect.trigger, "o")
     assert.equal(tamSelect.visibleItems[tamSelect.activeIndex].item.value, "south")
 
     await flush(600)
-    keydown(tamSelect.input, "s")
+    keydown(tamSelect.trigger, "s")
     assert.equal(tamSelect.visibleItems[tamSelect.activeIndex].item.value, "sidama")
+  } finally {
+    cleanup()
+  }
+})
+
+test("type-ahead does not run on keys typed into the search input", () => {
+  const cleanup = setupDOM(localSelect())
+  try {
+    const tamSelect = new TamSelect(document.querySelector("select"))
+    tamSelect.open()
+    const activeBefore = tamSelect.activeIndex
+
+    keydown(tamSelect.input, "s")
+    assert.equal(tamSelect.activeIndex, activeBefore, "the search filter, not typeahead, decides the active option")
   } finally {
     cleanup()
   }
@@ -2149,6 +2163,27 @@ test("language localizes visible messages and accessible control labels", () => 
 
     input(tamSelect.input, "missing")
     assert.equal(tamSelect.status.textContent, "ውጤት አልተገኘም")
+  } finally {
+    cleanup()
+  }
+})
+
+test("single selection search input accepts spaces while the trigger opens on Space", () => {
+  const cleanup = setupDOM(localSelect())
+  try {
+    const tamSelect = new TamSelect(document.querySelector("select"))
+
+    const space = () => new KeyboardEvent("keydown", { key: " ", bubbles: true, cancelable: true })
+    const triggerSpace = space()
+    tamSelect.trigger.dispatchEvent(triggerSpace)
+    assert.equal(triggerSpace.defaultPrevented, true)
+    assert.equal(tamSelect.opened, true)
+
+    const activeBefore = tamSelect.visibleItems[tamSelect.activeIndex].id
+    const inputSpace = space()
+    tamSelect.input.dispatchEvent(inputSpace)
+    assert.equal(inputSpace.defaultPrevented, false, "Space must reach the search input")
+    assert.equal(tamSelect.visibleItems[tamSelect.activeIndex].id, activeBefore, "Space in the search input must not move the active option")
   } finally {
     cleanup()
   }
