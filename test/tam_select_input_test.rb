@@ -9,6 +9,21 @@ end
 load File.expand_path("../rails/app/inputs/tam_select_input.rb", __dir__)
 
 class TamSelectInputTest < Minitest::Test
+  def test_keeps_the_blank_option_when_a_selection_is_given
+    skip_blank = lambda do |options, multiple: false|
+      input = TamSelectInput.allocate
+      input.define_singleton_method(:options) { options }
+      input.define_singleton_method(:multiple?) { multiple }
+      input.send(:skip_include_blank?)
+    end
+
+    refute skip_blank.call({ selected: 1 }), "selected: keeps the blank option so the field can be cleared"
+    refute skip_blank.call({ default: 1 })
+    assert skip_blank.call({ prompt: "Pick" })
+    assert skip_blank.call({ include_blank: false })
+    assert skip_blank.call({}, multiple: true)
+  end
+
   Builder = Struct.new(:arguments) do
     def collection_select(*arguments)
       self.arguments = arguments

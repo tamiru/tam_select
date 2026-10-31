@@ -19,6 +19,14 @@ class TamSelectInput < SimpleForm::Inputs::CollectionSelectInput
 
   private
 
+  # Simple Form adds a blank option to single selects unless `prompt`,
+  # `include_blank`, `selected` or `default` is given. Keep it for `selected`
+  # and `default` too: the blank option is what lets the field be cleared and
+  # show its placeholder.
+  def skip_include_blank?
+    (options.keys & %i[prompt include_blank]).any? || multiple?
+  end
+
   def defaults
     {
       creatable: options.fetch(:creatable, false),

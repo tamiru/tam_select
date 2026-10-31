@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Add a blank option to single selects by default in `tam_select_tag` and the
+  Simple Form input (also when `selected:` or `default:` is given), so they
+  can be cleared and show their placeholder. Pass `include_blank: false` or
+  a `prompt` to control it.
 - Add a `tamSelectOptions` getter to the Stimulus controller, so an app can
   subclass it (`import TamSelectController from "tam-select/stimulus"`) and
   add its own defaults, theme or computed options while the rest of the
