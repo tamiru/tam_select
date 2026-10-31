@@ -19,6 +19,24 @@ class TamSelectInputTest < Minitest::Test
     SimpleForm::Inputs::CollectionSelectInput.remove_method(:input)
   end
 
+  def test_a_single_select_prompt_becomes_an_always_present_blank_option
+    builder = Builder.new
+    input = TamSelectInput.allocate
+    input.instance_variable_set(:@builder, builder)
+    input.define_singleton_method(:input_html_options) { {} }
+    input.define_singleton_method(:merge_wrapper_options) { |attributes, _wrapper| attributes }
+    input.define_singleton_method(:detect_collection_methods) { %i[name id] }
+    input.define_singleton_method(:attribute_name) { :region_id }
+    input.define_singleton_method(:collection) { [["Addis", 1]] }
+    input.define_singleton_method(:input_options) { { prompt: "Select region", selected: 1 } }
+    input.define_singleton_method(:options) { { prompt: "Select region" } }
+
+    input.input
+    select_options = builder.arguments[4]
+    assert_equal "Select region", select_options[:include_blank], "Rails drops prompt: once a value is set, so it becomes include_blank:"
+    refute select_options.key?(:prompt)
+  end
+
   def test_keeps_the_blank_option_when_a_selection_is_given
     skip_blank = lambda do |options, multiple: false|
       input = TamSelectInput.allocate

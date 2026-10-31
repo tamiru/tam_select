@@ -50,6 +50,17 @@ class DefaultSelectTest < Minitest::Test
     assert_includes html, '<option value="" label=" "></option>'
   end
 
+  def test_a_prompt_stays_as_a_blank_option_after_a_value_is_chosen
+    person = Struct.new(:region).new("1")
+    html = @view.select(:person, :region, [["Addis", "1"]], { prompt: "Select region", object: person }, {})
+    assert_includes html, '<option value="">Select region</option>', "the blank option survives a selected value"
+    assert_includes html, '<option selected="selected" value="1">Addis</option>'
+    assert_equal 1, html.scan('value=""').length
+
+    html = @view.select(:person, :regions, [["Addis", "1"]], { prompt: "Pick" }, multiple: true)
+    assert_equal 1, html.scan('<option value="">Pick</option>').length, "multiple selects keep Rails' own prompt handling"
+  end
+
   def test_a_field_opts_out_with_data_tam_select_false
     html = @view.select_tag(:region, @view.options_for_select([["Addis", 1]]), data: { controller: "tom-select", tam_select: false })
     assert_includes html, 'data-controller="tom-select"'

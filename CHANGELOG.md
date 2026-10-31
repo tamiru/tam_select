@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Keep a single select's `prompt:` as an always-present blank option. Rails
+  renders a prompt only while the field is empty, so after choosing a value
+  and re-rendering (filters, validation errors) the clear button disappeared.
 - Add `config.tam_select.default_select`, which renders every select as a Tam
   Select: Simple Form's `:select` type and Rails' `select_tag`, `select`,
   `collection_select` and `grouped_collection_select` (so `f.select` too),

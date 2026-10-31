@@ -51,10 +51,21 @@ module TamSelect
 
       # Adds include_blank to the options hash of select/collection_select.
       def select_options(options, html, choices: nil)
-        options = (options || {}).to_h.transform_keys(&:to_sym)
+        options = prompt_as_blank((options || {}).to_h.transform_keys(&:to_sym), html)
         return options unless add_blank?(options, html, choices: choices)
 
         options.merge(include_blank: true)
+      end
+
+      # Rails renders `prompt:` only while the field has no value, so once a
+      # value is chosen and the form re-renders the blank option is gone and
+      # the select can no longer be cleared. For single selects, render the
+      # prompt as an always-present blank option with the same text instead.
+      def prompt_as_blank(options, html)
+        return options if html[:multiple] || options.key?(:include_blank) || !options[:prompt]
+
+        prompt = options[:prompt]
+        options.except(:prompt).merge(include_blank: prompt.is_a?(String) ? prompt : true)
       end
 
       # A single select needs a blank option to be cleared and to show its

@@ -16,7 +16,7 @@ class TamSelectInput < SimpleForm::Inputs::CollectionSelectInput
       collection,
       value_method,
       label_method,
-      input_options,
+      TamSelect::DefaultSelect.prompt_as_blank(input_options, attributes),
       attributes
     )
   end
