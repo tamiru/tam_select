@@ -21,11 +21,13 @@ class TamSelectInput < SimpleForm::Inputs::CollectionSelectInput
 
   def defaults
     {
-      searchable: options.fetch(:searchable, true),
       creatable: options.fetch(:creatable, false),
       clearable: options.fetch(:clearable, true),
       theme: options.fetch(:theme, "auto"),
       placeholder: options[:placeholder] || options[:prompt] || "Select…"
-    }
+    }.tap do |defaults|
+      # Left to the JavaScript default (true) unless given.
+      defaults[:searchable] = options[:searchable] if options.key?(:searchable)
+    end
   end
 end

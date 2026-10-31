@@ -7,8 +7,9 @@ module TamSelectHelper
   end
 
   def tam_select_options(**overrides)
+    # `searchable` is left to the JavaScript default (true) unless given, so
+    # an app's Stimulus controller can decide it, e.g. by option count.
     {
-      searchable: true,
       clearable: true,
       creatable: false,
       theme: "auto",
