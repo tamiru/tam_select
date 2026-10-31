@@ -65,6 +65,10 @@ module TamSelect
         end
       end
 
+      def copy_initializer
+        copy_file "tam_select.rb", "config/initializers/tam_select.rb", skip: true
+      end
+
       def copy_remote_controller
         copy_file "tam_select_remote_controller.rb", "app/controllers/tam_select_remote_controller.rb", skip: true
       end

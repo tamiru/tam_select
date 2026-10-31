@@ -9,6 +9,16 @@ end
 load File.expand_path("../rails/app/inputs/tam_select_input.rb", __dir__)
 
 class TamSelectInputTest < Minitest::Test
+  def test_a_field_can_opt_out_to_a_native_select
+    input = TamSelectInput.allocate
+    input.define_singleton_method(:input_html_options) { { data: { tam_select: false } } }
+    input.define_singleton_method(:merge_wrapper_options) { |attributes, _wrapper| attributes }
+    SimpleForm::Inputs::CollectionSelectInput.define_method(:input) { |_wrapper = nil| :native_select }
+    assert_equal :native_select, input.input
+  ensure
+    SimpleForm::Inputs::CollectionSelectInput.remove_method(:input)
+  end
+
   def test_keeps_the_blank_option_when_a_selection_is_given
     skip_blank = lambda do |options, multiple: false|
       input = TamSelectInput.allocate

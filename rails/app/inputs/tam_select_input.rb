@@ -1,6 +1,10 @@
 class TamSelectInput < SimpleForm::Inputs::CollectionSelectInput
   def input(wrapper_options = nil)
     attributes = merge_wrapper_options(input_html_options, wrapper_options)
+    # With config.tam_select.default_select this input renders every select;
+    # `input_html: { data: { tam_select: false } }` keeps one native.
+    return super if TamSelect::DefaultSelect.opted_out?(attributes)
+
     label_method, value_method = detect_collection_methods
     tam_options = attributes.delete(:tam_options) || {}
     data = attributes[:data] ||= {}

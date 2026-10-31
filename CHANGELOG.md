@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Add `config.tam_select.default_select`, which renders every select as a Tam
+  Select: Simple Form's `:select` type and Rails' `select_tag`, `select`,
+  `collection_select` and `grouped_collection_select` (so `f.select` too),
+  each with a blank option unless given. Opt a field out with
+  `data: { tam_select: false }`. `tam_select:install` generates
+  `config/initializers/tam_select.rb` with it enabled.
 - Add a blank option to single selects by default in `tam_select_tag` and the
   Simple Form input (also when `selected:` or `default:` is given), so they
   can be cleared and show their placeholder. Pass `include_blank: false` or

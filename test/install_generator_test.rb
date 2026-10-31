@@ -40,9 +40,17 @@ class InstallGeneratorTest < Rails::Generators::TestCase
     assert_no_file "app/inputs/tam_select_input.rb"
     assert_no_file "app/controllers/concerns/tam_select_paginatable.rb"
     assert_file "app/controllers/tam_select_remote_controller.rb", /include TamSelectRemote/
+    assert_file "config/initializers/tam_select.rb", /config\.tam_select\.default_select = true/
     assert_file "config/importmap.rb" do |importmap|
       refute_match(/tam_select/, importmap, "the gem pins tam_select itself")
     end
+  end
+
+  test "an existing initializer is kept" do
+    importmap_app
+    write "config/initializers/tam_select.rb", "# mine\n"
+    run_generator
+    assert_file "config/initializers/tam_select.rb", /\A# mine\n\z/
   end
 
   test "Tailwind imports the gem's sources right after tailwindcss, once" do

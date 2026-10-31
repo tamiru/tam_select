@@ -23,8 +23,6 @@ module TamSelectHelper
   private
 
   def tam_select_add_blank?(option_tags, html_options)
-    return false if html_options[:multiple] || html_options.key?(:include_blank) || html_options.key?(:prompt)
-
-    !option_tags.to_s.match?(/<option\b[^>]*\bvalue=(""|'')/)
+    TamSelect::DefaultSelect.add_blank?(html_options, html_options, option_tags: option_tags.to_s)
   end
 end
