@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.4.0
 
 - Keep a single select's `prompt:` as an always-present blank option. Rails
   renders a prompt only while the field is empty, so after choosing a value
