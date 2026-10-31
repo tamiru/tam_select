@@ -6,7 +6,7 @@ module SimpleForm
   end
 end
 
-load File.expand_path("../lib/generators/tam_select/templates/tam_select_input.rb", __dir__)
+load File.expand_path("../rails/app/inputs/tam_select_input.rb", __dir__)
 
 class TamSelectInputTest < Minitest::Test
   Builder = Struct.new(:arguments) do

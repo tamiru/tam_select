@@ -20,7 +20,7 @@ Gem::Specification.new do |spec|
   }
 
   spec.files = Dir.chdir(__dir__) do
-    Dir["{lib,rails,src,examples}/**/*", "CHANGELOG.md", "LICENSE", "README.md", "Rakefile", "package.json"]
+    Dir["{app,config,lib,rails,src,examples}/**/*", "CHANGELOG.md", "LICENSE", "README.md", "Rakefile", "package.json"]
   end
   spec.require_paths = ["lib"]
 

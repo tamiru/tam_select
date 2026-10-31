@@ -1,0 +1,4 @@
+/* Lets Tailwind find the classes Tam Select renders. tailwindcss-rails links
+   this file into app/assets/builds/tailwind/tam_select.css; the app imports
+   it with: @import "../builds/tailwind/tam_select"; */
+@source "../../../../src/tam-select.js";

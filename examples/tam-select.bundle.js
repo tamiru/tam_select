@@ -142,6 +142,10 @@ var boundedDistance = (left, right, maximum) => {
   }
   return previous[right.length];
 };
+var setHidden = (element, hidden) => {
+  element.classList.toggle("hidden", hidden);
+  element.style.display = hidden ? "none" : "";
+};
 var toggleClasses = (element, classNames, force) => {
   String(classNames).split(/\s+/).filter(Boolean).forEach((className) => element.classList.toggle(className, force));
 };
@@ -422,7 +426,8 @@ var TamSelect = class _TamSelect {
     this.dropdown = document.createElement("div");
     this.dropdown.id = `${this.id}-dropdown`;
     this.dropdown.dataset.tamSelectDropdown = "";
-    this.dropdown.className = `${this.classes.dropdown} hidden`;
+    this.dropdown.className = this.classes.dropdown;
+    setHidden(this.dropdown, true);
     this.dropdown.style.width = "100%";
     this.dropdown.style.minWidth = "0";
     this.dropdown.style.maxWidth = "100%";
@@ -1099,14 +1104,14 @@ var TamSelect = class _TamSelect {
     const atLimit = this.multiple && this.options.maximumSelectionLength > 0 && selected.length >= this.options.maximumSelectionLength;
     this.selectionLimitReached = atLimit;
     this.values.classList.remove("hidden");
-    this.searchIcon.classList.toggle("hidden", !this.searchable || !this.searchVisible);
-    if (this.searchPanel) this.searchPanel.classList.toggle("hidden", !this.searchVisible);
+    setHidden(this.searchIcon, !this.searchable || !this.searchVisible);
+    if (this.searchPanel) setHidden(this.searchPanel, !this.searchVisible);
     if (this.input) {
       toggleClasses(this.input, this.classes.inputClosed, false);
       this.input.placeholder = this.multiple && !hasValue ? this.options.placeholder : this.options.searchPlaceholder;
       this.input.disabled = this.select.disabled;
     }
-    this.clearButton.classList.toggle("hidden", !this.options.clearable || !hasValue || !this.canClear() || this.select.disabled);
+    setHidden(this.clearButton, !this.options.clearable || !hasValue || !this.canClear() || this.select.disabled);
     this.updateSelectionToolbar();
     this.syncAria();
   }
@@ -1965,7 +1970,7 @@ var TamSelect = class _TamSelect {
       this.renderSelection();
     }
     if (this.portalDropdown) this.dropdown.style.visibility = "hidden";
-    this.dropdown.classList.remove("hidden");
+    setHidden(this.dropdown, false);
     if (this.animationsEnabled) {
       toggleClasses(this.dropdown, this.classes.dropdownClosed, false);
       toggleClasses(this.dropdown, this.classes.dropdownOpen, true);
@@ -2029,7 +2034,7 @@ var TamSelect = class _TamSelect {
       toggleClasses(this.dropdown, this.classes.dropdownClosed, true);
       const hide = () => {
         if (this.opened) return;
-        this.dropdown.classList.add("hidden");
+        setHidden(this.dropdown, true);
         this.dropdown.removeEventListener("transitionend", hide);
         if (this.closeTransitionHandler === hide) this.closeTransitionHandler = null;
       };
@@ -2037,7 +2042,7 @@ var TamSelect = class _TamSelect {
       this.dropdown.addEventListener("transitionend", hide, { once: true });
       this.closeTimer = setTimeout(hide, this.options.animationDuration + 50);
     } else {
-      this.dropdown.classList.add("hidden");
+      setHidden(this.dropdown, true);
     }
     this.emit("tam-select:close");
   }

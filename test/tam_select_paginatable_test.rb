@@ -2,7 +2,7 @@ require "test_helper"
 require "active_support/concern"
 require "active_support/core_ext/object/blank"
 
-load File.expand_path("../lib/generators/tam_select/templates/tam_select_paginatable.rb", __dir__)
+load File.expand_path("../rails/app/controllers/concerns/tam_select_paginatable.rb", __dir__)
 
 class TamSelectPaginatableTest < Minitest::Test
   Record = Struct.new(:id, :name, :email, :avatar_url, keyword_init: true)

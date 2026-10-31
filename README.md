@@ -290,6 +290,50 @@ bundle install
 bin/rails generate tam_select:install
 ```
 
+With importmap, the gem serves everything itself: the JavaScript, the
+`tam-select` Stimulus controller, `TamSelectHelper`, the Simple Form input
+(when Simple Form is installed), and the `TamSelectPaginatable` and
+`TamSelectRemote` concerns. The generator adds one line to
+`app/assets/tailwind/application.css` so Tailwind (tailwindcss-rails 4.4+)
+finds the classes Tam Select renders:
+
+```css
+@import "tailwindcss";
+@import "../builds/tailwind/tam_select";
+```
+
+With jsbundling (esbuild and similar), the generator adds the `tam-select`
+npm package to `package.json` and a one-line controller that re-exports it.
+Run your package manager's install, then `bin/rails stimulus:manifest:update`
+if you use a controllers manifest. For Tailwind, add an `@source` for
+`node_modules/tam-select/src` to your CSS entry point.
+
+### Updating
+
+```bash
+bundle update tam_select                            # importmap
+bundle update tam_select && npm update tam-select   # jsbundling
+```
+
+Nothing is copied into your app, so there is nothing else to update. To
+customize a piece, add a file with the same path to your app (for example
+`app/helpers/tam_select_helper.rb` or
+`app/javascript/controllers/tam_select_controller.js`); the app's file wins
+over the gem's.
+
+#### Upgrading from 1.3 or earlier
+
+Earlier versions copied every file into the app. Run this once:
+
+```bash
+bundle update tam_select
+bin/rails generate tam_select:update
+```
+
+It removes each copied file you never changed, and the old `tam_select` pin
+or esbuild alias, so the gem's versions load instead. Files you changed are
+kept and listed; they keep overriding the gem's version until you delete them.
+
 ### Usage
 
 ```erb

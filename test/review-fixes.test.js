@@ -571,3 +571,19 @@ test("inline auto-width menus stay inside an overflow-clipping ancestor", () => 
     cleanup()
   }
 })
+
+test("hidden parts stay hidden even when a display utility outranks the hidden class", () => {
+  const cleanup = setupDOM(regions("aa", { empty: false }))
+  try {
+    const tamSelect = new TamSelect(document.querySelector("select"), { animations: false })
+    // Tailwind v4 can emit `inline-flex` after `hidden`, so the inline style must hide it.
+    assert.equal(tamSelect.clearButton.style.display, "none", "no empty option means nothing to clear")
+    assert.equal(tamSelect.dropdown.style.display, "none")
+    tamSelect.open()
+    assert.equal(tamSelect.dropdown.style.display, "")
+    tamSelect.close(false)
+    assert.equal(tamSelect.dropdown.style.display, "none")
+  } finally {
+    cleanup()
+  }
+})

@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+- Serve the Rails integration from the gem, so `bundle update tam_select` is
+  the whole update. With importmap, the engine pins the library and the
+  Stimulus controller, autoloads the helper, the Simple Form input (when Simple
+  Form is present) and the controller concerns, and ships a Tailwind entry
+  point for tailwindcss-rails 4.4+. An app file with the same path overrides
+  the gem's. jsbundling apps now depend on the `tam-select` npm package.
+- Add `bin/rails generate tam_select:update` to upgrade apps installed by
+  1.3 or earlier: it removes copies that were never changed and reports the
+  ones that were. `tam_select:install` is safe to re-run.
+- Hide the clear button, search icon, and menu with an inline style as well
+  as the `hidden` class. In Tailwind v4 the clear button's `inline-flex`
+  outranked `hidden`, so it showed even with nothing to clear.
 - Size the open menu like a native select: it is at least as wide as the
   control and grows to fit its widest option, up to the new
   `maxDropdownWidth` (default `480`), shifting to stay inside the viewport.
