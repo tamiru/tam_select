@@ -2044,6 +2044,132 @@ test("auto-width portaled dropdown expands for its largest option without resizi
   }
 })
 
+test("inline dropdowns grow past a narrow control to fit their widest option", () => {
+  const cleanup = setupDOM(`<select>
+    <option value="">Pick</option>
+    <option value="a">A</option>
+    <option value="long">An option label noticeably wider than its control</option>
+  </select>`)
+  try {
+    const tamSelect = new TamSelect(document.querySelector("select"))
+    tamSelect.control.getBoundingClientRect = () => ({ left: 40, top: 20, right: 120, bottom: 64, width: 80, height: 44 })
+    tamSelect.wrapper.getBoundingClientRect = () => ({ left: 40, top: 20, right: 120, bottom: 64, width: 80, height: 44 })
+
+    tamSelect.open()
+
+    const width = parseFloat(tamSelect.dropdown.style.width)
+    assert.ok(width > 80, "the menu is wider than its control")
+    assert.ok(width <= 480, "the menu respects maxDropdownWidth")
+    assert.equal(tamSelect.dropdown.style.maxWidth, "none")
+    assert.equal(tamSelect.dropdown.style.left, "0px", "the menu stays aligned with its control")
+  } finally {
+    cleanup()
+  }
+})
+
+test("inline auto-width dropdowns shift left instead of overflowing the viewport", () => {
+  const cleanup = setupDOM(`<select>
+    <option value="">Pick</option>
+    <option value="long">An option label noticeably wider than its narrow control near the edge</option>
+  </select>`)
+  try {
+    const tamSelect = new TamSelect(document.querySelector("select"), { viewportPadding: 8 })
+    const rect = { left: 940, top: 20, right: 1020, bottom: 64, width: 80, height: 44 }
+    tamSelect.control.getBoundingClientRect = () => rect
+    tamSelect.wrapper.getBoundingClientRect = () => rect
+
+    tamSelect.open()
+
+    const width = parseFloat(tamSelect.dropdown.style.width)
+    const left = parseFloat(tamSelect.dropdown.style.left)
+    assert.ok(left < 0, "the menu moves toward the start of the viewport")
+    assert.ok(940 + left + width <= window.innerWidth - 8 + 0.5, "the menu ends inside the viewport padding")
+  } finally {
+    cleanup()
+  }
+})
+
+test("inline dropdowns keep the control width when options already fit", () => {
+  const cleanup = setupDOM(localSelect())
+  try {
+    const tamSelect = new TamSelect(document.querySelector("select"))
+    tamSelect.control.getBoundingClientRect = () => ({ left: 0, top: 0, right: 600, bottom: 44, width: 600, height: 44 })
+    tamSelect.open()
+    assert.equal(tamSelect.dropdown.style.width, "100%")
+    assert.equal(tamSelect.dropdown.style.maxWidth, "100%")
+  } finally {
+    cleanup()
+  }
+})
+
+test("dropdownWidth trigger keeps inline menus at the control width", () => {
+  const cleanup = setupDOM(`<select>
+    <option value="">Pick</option>
+    <option value="long">An option label noticeably wider than its control</option>
+  </select>`)
+  try {
+    const tamSelect = new TamSelect(document.querySelector("select"), { dropdownWidth: "trigger" })
+    tamSelect.control.getBoundingClientRect = () => ({ left: 0, top: 0, right: 80, bottom: 44, width: 80, height: 44 })
+    tamSelect.open()
+    assert.equal(tamSelect.dropdown.style.width, "100%")
+  } finally {
+    cleanup()
+  }
+})
+
+test("RTL portaled auto-width dropdowns align with the control's right edge", () => {
+  const cleanup = setupDOM(`<div id="portal"></div><div dir="rtl"><select>
+    <option value="">اختر</option>
+    <option value="long">An option label noticeably wider than its control</option>
+  </select></div>`)
+  try {
+    const tamSelect = new TamSelect(document.querySelector("select"), { dropdownParent: document.querySelector("#portal") })
+    tamSelect.control.getBoundingClientRect = () => ({ left: 700, top: 20, right: 780, bottom: 64, width: 80, height: 44 })
+    tamSelect.open()
+    const width = parseFloat(tamSelect.dropdown.style.width)
+    assert.ok(width > 80)
+    assert.equal(parseFloat(tamSelect.dropdown.style.left) + width, 780)
+  } finally {
+    cleanup()
+  }
+})
+
+test("width auto sizes the control to its widest option like a native select", () => {
+  const cleanup = setupDOM(`<select>
+    <option value="">Pick</option>
+    <option value="a">A</option>
+    <option value="long">A considerably longer option</option>
+  </select>`)
+  try {
+    const select = document.querySelector("select")
+    const tamSelect = new TamSelect(select, { width: "auto" })
+    const width = parseFloat(tamSelect.wrapper.style.width)
+    assert.equal(tamSelect.wrapper.style.display, "inline-block")
+    assert.equal(tamSelect.wrapper.style.maxWidth, "100%", "narrow containers can still constrain it")
+    assert.ok(width > 0)
+
+    tamSelect.selectValue("a")
+    assert.equal(parseFloat(tamSelect.wrapper.style.width), width, "picking a shorter option never resizes it")
+
+    const option = new Option("An option that is much, much longer than every other option", "longest")
+    select.append(option)
+    tamSelect.refresh()
+    assert.ok(parseFloat(tamSelect.wrapper.style.width) > width, "new options resize it on refresh")
+  } finally {
+    cleanup()
+  }
+})
+
+test("width resolve honours an inline width on the native select", () => {
+  const cleanup = setupDOM(localSelect({ extra: 'style="width: 12rem"' }))
+  try {
+    const tamSelect = new TamSelect(document.querySelector("select"))
+    assert.equal(tamSelect.wrapper.style.width, "12rem")
+  } finally {
+    cleanup()
+  }
+})
+
 test("portaled dropdowns fit the visual viewport and react to mobile viewport changes", async () => {
   const cleanup = setupDOM(`<div id="portal"></div>${localSelect()}`)
   try {
@@ -2062,6 +2188,7 @@ test("portaled dropdowns fit the visual viewport and react to mobile viewport ch
     const portal = document.querySelector("#portal")
     const tamSelect = new TamSelect(document.querySelector("select"), {
       dropdownParent: portal,
+      dropdownWidth: "trigger",
       maxDropdownHeight: 360,
       viewportPadding: 8
     })

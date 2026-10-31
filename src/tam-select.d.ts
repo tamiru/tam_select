@@ -177,14 +177,16 @@ export interface TamSelectOptions {
   cacheRemote?: boolean
   /** Element or selector used to portal the dropdown beyond clipping containers. */
   dropdownParent?: Element | string | null
-  /** Open-menu width: match the trigger or fit the widest option. `"content"` aliases `"auto"`. Default: `"trigger"` */
+  /** Open-menu width. `"auto"` is at least the control's width and grows to fit the widest option, like a native select; `"trigger"` always matches the control. `"content"` aliases `"auto"`. Default: `"auto"` */
   dropdownWidth?: "trigger" | "auto" | "content"
+  /** Widest an auto-width menu grows, in CSS pixels, before long options wrap. Never narrower than the control. Default: `480` */
+  maxDropdownWidth?: number
   /** Maximum dropdown height in CSS pixels before results scroll. Default: `360` */
   maxDropdownHeight?: number
   /** Minimum gap between a portaled dropdown and the visible viewport edge. Default: `8` */
   viewportPadding?: number
-  /** Container width (CSS value or `"resolve"` for the full available width). Default: `"resolve"` */
-  width?: string
+  /** Control width. `"resolve"` fills the container, or follows an inline width on the native select; `"auto"` (alias `"fit"`) sizes it to the widest option like a native select; any other value is a CSS width. Default: `"resolve"` */
+  width?: "resolve" | "auto" | "fit" | (string & {})
   /** Text direction: `"ltr"`, `"rtl"`, or `"auto"`. Default: `"auto"` */
   dir?: "ltr" | "rtl" | "auto"
   /** Enable drag-and-drop reordering of selected tags. Default: `false` */

@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- Size the open menu like a native select: it is at least as wide as the
+  control and grows to fit its widest option, up to the new
+  `maxDropdownWidth` (default `480`), shifting to stay inside the viewport.
+  This is now the default (`dropdownWidth: "auto"`) for inline and portaled
+  menus, and RTL menus grow from the control's right edge. Use
+  `dropdownWidth: "trigger"` to keep the previous behaviour.
+- Add `width: "auto"` (alias `"fit"`), which sizes the closed control to its
+  widest option so choosing a shorter one never resizes it. `width: "resolve"`
+  now honours an inline width on the native select.
 - Treat the native select as the source of truth for the selection, and act on
   the exact option used so duplicate values select and deselect correctly.
 - Emit no change when re-picking the current value; keep already selected
