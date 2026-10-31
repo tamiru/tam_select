@@ -9,6 +9,20 @@ module TamSelect
     # this name; Rails would otherwise call it "tam_select_engine".
     engine_name "tam_select"
 
+    # config.tam_select.default_select = true renders every select as a Tam
+    # Select (Rails helpers and Simple Form). See TamSelect::DefaultSelect.
+    config.tam_select = ActiveSupport::OrderedOptions.new
+    config.tam_select.default_select = false
+
+    initializer "tam_select.default_select" do |app|
+      next unless app.config.tam_select.default_select
+
+      ActiveSupport.on_load(:action_view) { prepend TamSelect::DefaultSelect }
+      if defined?(::SimpleForm::FormBuilder)
+        app.config.to_prepare { ::SimpleForm::FormBuilder.map_type :select, to: ::TamSelectInput }
+      end
+    end
+
     # The Rails integration lives in rails/app; the npm package ships the same
     # files from there.
     paths.add "rails/app", eager_load: true, glob: "{*,*/concerns}", exclude: %w[javascript inputs]

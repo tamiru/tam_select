@@ -1,6 +1,10 @@
 class TamSelectInput < SimpleForm::Inputs::CollectionSelectInput
   def input(wrapper_options = nil)
     attributes = merge_wrapper_options(input_html_options, wrapper_options)
+    # With config.tam_select.default_select this input renders every select;
+    # `input_html: { data: { tam_select: false } }` keeps one native.
+    return super if TamSelect::DefaultSelect.opted_out?(attributes)
+
     label_method, value_method = detect_collection_methods
     tam_options = attributes.delete(:tam_options) || {}
     data = attributes[:data] ||= {}
@@ -12,12 +16,20 @@ class TamSelectInput < SimpleForm::Inputs::CollectionSelectInput
       collection,
       value_method,
       label_method,
-      input_options,
+      TamSelect::DefaultSelect.prompt_as_blank(input_options, attributes),
       attributes
     )
   end
 
   private
+
+  # Simple Form adds a blank option to single selects unless `prompt`,
+  # `include_blank`, `selected` or `default` is given. Keep it for `selected`
+  # and `default` too: the blank option is what lets the field be cleared and
+  # show its placeholder.
+  def skip_include_blank?
+    (options.keys & %i[prompt include_blank]).any? || multiple?
+  end
 
   def defaults
     {

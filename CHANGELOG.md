@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+- Keep a single select's `prompt:` as an always-present blank option. Rails
+  renders a prompt only while the field is empty, so after choosing a value
+  and re-rendering (filters, validation errors) the clear button disappeared.
+- Add `config.tam_select.default_select`, which renders every select as a Tam
+  Select: Simple Form's `:select` type and Rails' `select_tag`, `select`,
+  `collection_select` and `grouped_collection_select` (so `f.select` too),
+  each with a blank option unless given. Opt a field out with
+  `data: { tam_select: false }`. `tam_select:install` generates
+  `config/initializers/tam_select.rb` with it enabled.
+- Add a blank option to single selects by default in `tam_select_tag` and the
+  Simple Form input (also when `selected:` or `default:` is given), so they
+  can be cleared and show their placeholder. Pass `include_blank: false` or
+  a `prompt` to control it.
 - Add a `tamSelectOptions` getter to the Stimulus controller, so an app can
   subclass it (`import TamSelectController from "tam-select/stimulus"`) and
   add its own defaults, theme or computed options while the rest of the

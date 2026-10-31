@@ -9,6 +9,49 @@ end
 load File.expand_path("../rails/app/inputs/tam_select_input.rb", __dir__)
 
 class TamSelectInputTest < Minitest::Test
+  def test_a_field_can_opt_out_to_a_native_select
+    input = TamSelectInput.allocate
+    input.define_singleton_method(:input_html_options) { { data: { tam_select: false } } }
+    input.define_singleton_method(:merge_wrapper_options) { |attributes, _wrapper| attributes }
+    SimpleForm::Inputs::CollectionSelectInput.define_method(:input) { |_wrapper = nil| :native_select }
+    assert_equal :native_select, input.input
+  ensure
+    SimpleForm::Inputs::CollectionSelectInput.remove_method(:input)
+  end
+
+  def test_a_single_select_prompt_becomes_an_always_present_blank_option
+    builder = Builder.new
+    input = TamSelectInput.allocate
+    input.instance_variable_set(:@builder, builder)
+    input.define_singleton_method(:input_html_options) { {} }
+    input.define_singleton_method(:merge_wrapper_options) { |attributes, _wrapper| attributes }
+    input.define_singleton_method(:detect_collection_methods) { %i[name id] }
+    input.define_singleton_method(:attribute_name) { :region_id }
+    input.define_singleton_method(:collection) { [["Addis", 1]] }
+    input.define_singleton_method(:input_options) { { prompt: "Select region", selected: 1 } }
+    input.define_singleton_method(:options) { { prompt: "Select region" } }
+
+    input.input
+    select_options = builder.arguments[4]
+    assert_equal "Select region", select_options[:include_blank], "Rails drops prompt: once a value is set, so it becomes include_blank:"
+    refute select_options.key?(:prompt)
+  end
+
+  def test_keeps_the_blank_option_when_a_selection_is_given
+    skip_blank = lambda do |options, multiple: false|
+      input = TamSelectInput.allocate
+      input.define_singleton_method(:options) { options }
+      input.define_singleton_method(:multiple?) { multiple }
+      input.send(:skip_include_blank?)
+    end
+
+    refute skip_blank.call({ selected: 1 }), "selected: keeps the blank option so the field can be cleared"
+    refute skip_blank.call({ default: 1 })
+    assert skip_blank.call({ prompt: "Pick" })
+    assert skip_blank.call({ include_blank: false })
+    assert skip_blank.call({}, multiple: true)
+  end
+
   Builder = Struct.new(:arguments) do
     def collection_select(*arguments)
       self.arguments = arguments

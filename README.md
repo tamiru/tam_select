@@ -308,6 +308,22 @@ Run your package manager's install, then `bin/rails stimulus:manifest:update`
 if you use a controllers manifest. For Tailwind, add an `@source` for
 `node_modules/tam-select/src` to your CSS entry point.
 
+### Every select as a Tam Select
+
+The generated `config/initializers/tam_select.rb` enables:
+
+```ruby
+config.tam_select.default_select = true
+```
+
+With it, every select is a Tam Select without changing views: Simple Form's
+`f.input :region, collection: ...` and `as: :select`, and Rails'
+`select_tag`, `f.select`, `collection_select` and `grouped_collection_select`.
+Single selects get a blank option (so they can be cleared and show their
+placeholder) unless you pass `include_blank` or `prompt`, or the choices
+already contain one. Keep a field native with `data: { tam_select: false }`
+(for Simple Form: `input_html: { data: { tam_select: false } }`).
+
 ### Updating
 
 ```bash
