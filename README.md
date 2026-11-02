@@ -411,20 +411,27 @@ The CI workflow validates Ruby, JavaScript, TypeScript declarations, and npm pac
 
 ### Publishing
 
-A matching `v*.*.*` tag publishes both the gem and npm package.
+A matching `v*.*.*` tag publishes both the gem and npm package using trusted
+publishing (OIDC), so the repository needs no registry secrets.
 
-**Required secrets** in the `release` environment:
+**Register a trusted publisher** on [RubyGems](https://rubygems.org/gems/tam_select)
+and [npm](https://www.npmjs.com/package/tam-select) with these values:
 
-| Secret | Description |
+| Field | Value |
 |---|---|
-| `RUBYGEMS_API_KEY` | Push-only key scoped to `tam_select` |
-| `NPM_TOKEN` | Automation token with publish access to `tam-select` |
+| Repository | `tamiru/tam_select` |
+| Workflow | `release.yml` |
+| Environment | `release` |
 
 ```bash
-# Release
-git tag v1.3.1
-git push origin v1.3.1
+# Release: bump the version in lib/tam_select/version.rb, package.json and the
+# lockfiles, then
+git tag v1.4.1
+git push origin v1.4.1
 ```
+
+If a publish fails, re-run the failed jobs. A version that already reached a
+registry is skipped, so a partial release can be finished safely.
 
 ### Local development
 
