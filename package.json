@@ -1,0 +1,64 @@
+{
+  "name": "tam-select",
+  "version": "1.4.1",
+  "description": "Accessible, searchable select component for Ruby on Rails, Simple Form, Stimulus, Turbo, and Tailwind CSS",
+  "homepage": "https://github.com/tamiru/tam_select",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tamiru/tam_select.git"
+  },
+  "type": "module",
+  "main": "./src/tam-select.js",
+  "types": "./src/tam-select.d.ts",
+  "exports": {
+    ".": {
+      "types": "./src/tam-select.d.ts",
+      "default": "./src/tam-select.js"
+    },
+    "./rails-controller": {
+      "types": "./rails/app/javascript/controllers/tam_select_controller.d.ts",
+      "default": "./rails/app/javascript/controllers/tam_select_controller.js"
+    },
+    "./stimulus": {
+      "types": "./rails/app/javascript/controllers/tam_select_controller.d.ts",
+      "default": "./rails/app/javascript/controllers/tam_select_controller.js"
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "src",
+    "rails",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "check": "node --check src/tam-select.js && node --check rails/app/javascript/controllers/tam_select_controller.js",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "keywords": [
+    "select",
+    "tailwindcss",
+    "stimulus",
+    "turbo",
+    "rails",
+    "combobox"
+  ],
+  "license": "MIT",
+  "peerDependencies": {
+    "@hotwired/stimulus": ">=3.2.0"
+  },
+  "peerDependenciesMeta": {
+    "@hotwired/stimulus": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@hotwired/stimulus": "^3.2.2",
+    "esbuild": "^0.28.1",
+    "jsdom": "^29.1.1",
+    "typescript": "^7.0.2"
+  }
+}

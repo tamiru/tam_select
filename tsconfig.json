@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "noEmit": true,
+    "target": "ES2023",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "lib": ["DOM", "ES2023"],
+    "skipLibCheck": false
+  },
+  "files": [
+    "src/tam-select.d.ts",
+    "rails/app/javascript/controllers/tam_select_controller.d.ts"
+  ]
+}

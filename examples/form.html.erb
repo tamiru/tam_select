@@ -1,0 +1,30 @@
+<%= simple_form_for @student do |form| %>
+  <%= form.input :region_id,
+        as: :tam_select,
+        collection: Region.order(:name),
+        label_method: :name,
+        value_method: :id,
+        prompt: "Select region",
+        input_html: {
+          tam_options: {
+            remoteUrl: regions_path,
+            minQueryLength: 1,
+            placeholder: "Select region…",
+            searchPlaceholder: "Search regions…"
+          }
+        } %>
+
+  <%= form.input :skill_ids,
+        as: :tam_select,
+        collection: Skill.order(:name),
+        label_method: :name,
+        value_method: :id,
+        input_html: {
+          multiple: true,
+          tam_options: {
+            creatable: true,
+            closeAfterSelect: false,
+            placeholder: "Add skills…"
+          }
+        } %>
+<% end %>
