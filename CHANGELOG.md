@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.4.1
+
+- Publish the gem and npm package with trusted publishing (OIDC) instead of
+  stored API tokens, and skip a registry that already has the version so a
+  failed release can be re-run.
+- 1.4.0 was tagged but its release failed, so it never reached RubyGems or npm.
+  This is the first published release containing the 1.4.0 changes below.
+
 ## 1.4.0
 
 - Keep a single select's `prompt:` as an always-present blank option. Rails
