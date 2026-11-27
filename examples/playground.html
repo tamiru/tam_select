@@ -435,7 +435,7 @@
 
     // ─── Select2 theme demos (always use select2 theme) ──────
     const s2Single = new TamSelect(document.getElementById('s2-single'), { theme: 'select2' })
-    s2Single.on('tam-select:select', (e) => log(`Select2: selected ${e.detail.item.label}`))
+    s2Single.select.addEventListener('tam-select:select', (e) => log(`Select2: selected ${e.detail.item.label}`))
     instances.push(s2Single)
     instances.push(new TamSelect(document.getElementById('s2-multi'), { theme: 'select2', closeAfterSelect: false }))
     instances.push(new TamSelect(document.getElementById('s2-detail'), { theme: 'select2' }))
@@ -474,9 +474,9 @@
       },
       headers: { 'Accept': 'application/vnd.github.v3+json' }
     })
-    githubSelect.on('tam-select:load', (e) => log(`GitHub: loaded ${e.detail.items.length} repos`))
-    githubSelect.on('tam-select:select', (e) => log(`GitHub: selected ${e.detail.item.label}`))
-    githubSelect.on('tam-select:error', (e) => log(`GitHub: error — ${e.detail.error}`))
+    githubSelect.select.addEventListener('tam-select:load', (e) => log(`GitHub: loaded ${e.detail.items.length} repos`))
+    githubSelect.select.addEventListener('tam-select:select', (e) => log(`GitHub: selected ${e.detail.item.label}`))
+    githubSelect.select.addEventListener('tam-select:error', (e) => log(`GitHub: error — ${e.detail.error}`))
     instances.push(githubSelect)
 
     // 2) Custom Transport — mock API with simulated delay
@@ -511,7 +511,7 @@
         return { items }
       }
     })
-    transportSelect.on('tam-select:select', (e) => log(`Transport: selected ${e.detail.item.label}`))
+    transportSelect.select.addEventListener('tam-select:select', (e) => log(`Transport: selected ${e.detail.item.label}`))
     instances.push(transportSelect)
 
     // 3) Paginated — infinite scroll with cacheRemote
@@ -589,8 +589,8 @@
         return { items: MOCK_COUNTRIES.filter(c => c.label.toLowerCase().includes(q) || c.detail.toLowerCase().includes(q)) }
       }
     })
-    paginatedSelect.on('tam-select:load', (e) => log(`Paginated: loaded page of ${e.detail.items.length} countries`))
-    paginatedSelect.on('tam-select:select', (e) => log(`Paginated: selected ${e.detail.item.label}`))
+    paginatedSelect.select.addEventListener('tam-select:load', (e) => log(`Paginated: loaded page of ${e.detail.items.length} countries`))
+    paginatedSelect.select.addEventListener('tam-select:select', (e) => log(`Paginated: selected ${e.detail.item.label}`))
     instances.push(paginatedSelect)
 
     // ─── Virtual scroll demos ─────────────────────────────────
@@ -631,9 +631,9 @@
       debounce: 100
     })
     const t1a = performance.now()
-    virtual1500.on('tam-select:select', (e) => log(`Virtual 1.5k: selected ${e.detail.item.label}`))
-    virtual1500.on('tam-select:open', () => log(`Virtual 1.5k: opened — DOM nodes in listbox: ${virtual1500.results.children.length}`))
-    virtual1500.on('tam-select:close', () => log(`Virtual 1.5k: closed`))
+    virtual1500.select.addEventListener('tam-select:select', (e) => log(`Virtual 1.5k: selected ${e.detail.item.label}`))
+    virtual1500.select.addEventListener('tam-select:open', () => log(`Virtual 1.5k: opened — DOM nodes in listbox: ${virtual1500.results.children.length}`))
+    virtual1500.select.addEventListener('tam-select:close', () => log(`Virtual 1.5k: closed`))
     instances.push(virtual1500)
 
     // 5000 multi-select with virtual scroll
@@ -648,8 +648,8 @@
       closeAfterSelect: false
     })
     const t1b = performance.now()
-    virtual5000.on('tam-select:select', (e) => log(`Virtual 5k: selected ${e.detail.item.label}`))
-    virtual5000.on('tam-select:open', () => log(`Virtual 5k: opened — DOM nodes: ${virtual5000.results.children.length}`))
+    virtual5000.select.addEventListener('tam-select:select', (e) => log(`Virtual 5k: selected ${e.detail.item.label}`))
+    virtual5000.select.addEventListener('tam-select:open', () => log(`Virtual 5k: opened — DOM nodes: ${virtual5000.results.children.length}`))
     instances.push(virtual5000)
 
     // Show init perf
@@ -684,7 +684,7 @@
       placeholder: 'اختر مدينة…',
       clearable: true
     })
-    rtlArabic.on('tam-select:select', (e) => log(`RTL Arabic: ${e.detail.item.label}`))
+    rtlArabic.select.addEventListener('tam-select:select', (e) => log(`RTL Arabic: ${e.detail.item.label}`))
     instances.push(rtlArabic)
 
     // Hebrew cities
@@ -705,7 +705,7 @@
       clearable: true,
       closeAfterSelect: false
     })
-    rtlHebrew.on('tam-select:select', (e) => log(`RTL Hebrew: ${e.detail.item.label}`))
+    rtlHebrew.select.addEventListener('tam-select:select', (e) => log(`RTL Hebrew: ${e.detail.item.label}`))
     instances.push(rtlHebrew)
 
     // Mixed direction (auto-detect)
@@ -725,7 +725,7 @@
       placeholder: 'Mix of directions…',
       clearable: true
     })
-    rtlAuto.on('tam-select:select', (e) => log(`RTL Auto: ${e.detail.item.label}`))
+    rtlAuto.select.addEventListener('tam-select:select', (e) => log(`RTL Auto: ${e.detail.item.label}`))
     instances.push(rtlAuto)
 
     // Dark mode toggle
