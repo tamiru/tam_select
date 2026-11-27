@@ -256,6 +256,7 @@ export class TamSelect {
       maximumInputLength: 0,
       minimumResultsForSearch: 0,
       selectOnClose: false,
+      selectOnTab: false,
       tokenSeparators: [],
       sorter: null,
       templateResult: null,
@@ -620,8 +621,8 @@ export class TamSelect {
       this.deselectAllLabel.textContent = deselectText
       this.selectAllButton.setAttribute("aria-label", selectText)
       this.deselectAllButton.setAttribute("aria-label", deselectText)
-      this.selectAllButton.disabled = this.select.disabled || (limit > 0 && count >= limit) || selectableMatches === 0
-      this.deselectAllButton.disabled = this.select.disabled || selectedMatches === 0
+      this.selectAllButton.disabled = this.disabled || (limit > 0 && count >= limit) || selectableMatches === 0
+      this.deselectAllButton.disabled = this.disabled || selectedMatches === 0
       this.selectAllButton.setAttribute("aria-disabled", String(this.selectAllButton.disabled))
       this.deselectAllButton.setAttribute("aria-disabled", String(this.deselectAllButton.disabled))
     }
@@ -629,7 +630,7 @@ export class TamSelect {
 
   bind() {
     this.onControlClick = event => {
-      if (!this.searchable || this.select.disabled || event.target.closest("button")) return
+      if (!this.searchable || this.disabled || event.target.closest("button")) return
       this.open()
       this.input.focus()
     }
@@ -722,6 +723,10 @@ export class TamSelect {
       attributes: true,
       attributeFilter: ["disabled", "label", "value", "selected", "required", "aria-invalid", "aria-describedby", "data-detail", "data-meta", "data-image"]
     })
+    // A disabled <fieldset> disables the select without touching it.
+    for (let fieldset = this.select.parentElement?.closest("fieldset"); fieldset; fieldset = fieldset.parentElement?.closest("fieldset")) {
+      this.mutationObserver.observe(fieldset, { attributes: true, attributeFilter: ["disabled"] })
+    }
   }
 
   resolveDropdownParent() {
@@ -1228,9 +1233,9 @@ export class TamSelect {
     if (this.input) {
       toggleClasses(this.input, this.classes.inputClosed, false)
       this.input.placeholder = this.multiple && !hasValue ? this.options.placeholder : this.options.searchPlaceholder
-      this.input.disabled = this.select.disabled
+      this.input.disabled = this.disabled
     }
-    setHidden(this.clearButton, !this.options.clearable || !hasValue || !this.canClear() || this.select.disabled)
+    setHidden(this.clearButton, !this.options.clearable || !hasValue || !this.canClear() || this.disabled)
     this.updateSelectionToolbar()
     this.syncAria()
   }
@@ -1253,13 +1258,13 @@ export class TamSelect {
     const remove = document.createElement("button")
     remove.type = "button"
     remove.className = this.classes.tagRemove
-    remove.disabled = this.select.disabled
+    remove.disabled = this.disabled
     const removeLabel = typeof this.options.removeLabel === "function" ? this.options.removeLabel(item) : this.options.removeLabel
     remove.setAttribute("aria-label", removeLabel)
     remove.innerHTML = ICONS.close
     remove.addEventListener("click", event => { event.stopPropagation(); this.deselect(item) })
     tag.append(label, remove)
-    if (this.options.draggable && this.multiple && !this.select.disabled) {
+    if (this.options.draggable && this.multiple && !this.disabled) {
       tag.setAttribute("draggable", "true")
       tag.style.cursor = "grab"
       tag.addEventListener("dragstart", event => this.onTagDragStart(event, item))
@@ -1751,7 +1756,7 @@ export class TamSelect {
 
   handleKeydown(event) {
     if (this.composing || event.isComposing || event.keyCode === 229) return
-    if (this.select.disabled || event.target.closest("button") && event.target !== this.trigger) return
+    if (this.disabled || event.target.closest("button") && event.target !== this.trigger) return
 
     if (["ArrowDown", "ArrowUp"].includes(event.key)) {
       event.preventDefault()
@@ -1774,6 +1779,14 @@ export class TamSelect {
       const last = this.selectedItems().at(-1)
       if (last) this.deselect(last)
     } else if (event.key === "Tab") {
+      if (this.opened && !event.shiftKey && this.options.selectOnTab) {
+        // Select through close's select-on-close step: the dropdown is already
+        // marked closed, so selecting neither pulls focus back to the trigger
+        // nor re-filters into a second pick, and Tab then leaves the field.
+        this.selectActiveOnClose = true
+        try { this.close(false) } finally { this.selectActiveOnClose = false }
+        return
+      }
       const action = this.selectionToolbar?.querySelector("button:not(:disabled)")
       if (this.opened && !event.shiftKey && action) {
         event.preventDefault()
@@ -1850,7 +1863,7 @@ export class TamSelect {
   }
 
   changeMatchingSelection(selected) {
-    if (!this.multiple || this.select.disabled || this.destroyed) return
+    if (!this.multiple || this.disabled || this.destroyed) return
     const changed = []
     let count = this.selectedItems().length
     for (const item of this.bulkCandidates()) {
@@ -1946,7 +1959,7 @@ export class TamSelect {
 
   /** Select an item, or the first item with a value (creating it if needed). */
   selectValue(value) {
-    if (this.select.disabled) return
+    if (this.disabled) return
     const item = this.resolveItem(value)
     if (!item || item.disabled) return
     // Re-picking the current choice changes nothing, so like a native select
@@ -1987,7 +2000,7 @@ export class TamSelect {
 
   /** Deselect an item, or the first item with a value. */
   deselect(value) {
-    if (this.select.disabled) return
+    if (this.disabled) return
     const item = this.items.includes(value) ? value : this.items.find(entry => String(entry.value) === String(value))
     if (!item) return
     if (!this.emit("tam-select:unselecting", { item }, true)) return
@@ -2007,7 +2020,7 @@ export class TamSelect {
   }
 
   clear() {
-    if (this.select.disabled) return
+    if (this.disabled) return
     const items = this.selectedItems()
     // Without an empty option the browser re-selects the first option, so a
     // single select has no empty state to clear to.
@@ -2020,7 +2033,7 @@ export class TamSelect {
   }
 
   createItem(label, candidateValue = undefined) {
-    if (this.select.disabled) return null
+    if (this.disabled) return null
     const value = candidateValue ?? (typeof this.options.createValue === "function" ? this.options.createValue(label) : label)
     const existing = this.items.find(item => normalize(item.value) === normalize(value) || normalize(item.label) === normalize(label))
     if (existing) {
@@ -2162,7 +2175,7 @@ export class TamSelect {
   }
 
   open(loadRemote = true) {
-    if (this.opened || this.select.disabled) return
+    if (this.opened || this.disabled) return
     if (!this.emit("tam-select:opening", {}, true)) return
     clearTimeout(this.closeTimer)
     if (this.closeTransitionHandler) {
@@ -2202,11 +2215,13 @@ export class TamSelect {
     this.emit("tam-select:open")
   }
 
-  close(restoreFocus = true) {
+  close(restoreFocus = true, force = false) {
     if (!this.opened) return
-    if (!this.emit("tam-select:closing", {}, true)) return
+    // A forced close (the select was disabled) still announces itself, but
+    // cannot be cancelled: a disabled control must not stay open.
+    if (!this.emit("tam-select:closing", {}, !force)) return
     this.opened = false
-    if (this.options.selectOnClose && this.activeIndex >= 0) {
+    if ((this.options.selectOnClose || this.selectActiveOnClose) && this.activeIndex >= 0) {
       const entry = this.visibleItems[this.activeIndex]
       const alreadySelected = entry?.type === "item" && entry.item.option?.selected
       if (entry && entry.type !== "group-header" && !entry.disabled && !alreadySelected) this.activateEntry(entry)
@@ -2256,8 +2271,36 @@ export class TamSelect {
     this.emit("tam-select:close")
   }
 
+  toggle() {
+    if (this.opened) this.close()
+    else this.open()
+  }
+
+  // Disabled directly or through a disabled <fieldset> ancestor, as the
+  // browser sees it (a select in the fieldset's first <legend> stays enabled).
+  get disabled() {
+    return this.select.matches(":disabled")
+  }
+
+  enable() {
+    this.setDisabled(false)
+  }
+
+  disable() {
+    this.setDisabled(true)
+  }
+
+  setDisabled(disabled) {
+    if (this.destroyed || this.select.disabled === disabled) return
+    this.select.disabled = disabled
+    // Apply now rather than waiting for the mutation observer, so callers can
+    // rely on the new state as soon as the call returns.
+    this.applyDisabled()
+    this.renderSelection()
+  }
+
   focus() {
-    if (!this.select.disabled) this.focusTarget.focus()
+    if (!this.disabled) this.focusTarget.focus()
   }
 
   blur() {
@@ -2424,7 +2467,7 @@ export class TamSelect {
     else this.focusTarget.removeAttribute("aria-describedby")
 
     this.focusTarget.setAttribute("aria-required", String(Boolean(this.select.required)))
-    this.focusTarget.setAttribute("aria-disabled", String(Boolean(this.select.disabled)))
+    this.focusTarget.setAttribute("aria-disabled", String(Boolean(this.disabled)))
     const nativeInvalid = this.select.getAttribute("aria-invalid")
     const invalid = this.invalidFromEvent || nativeInvalid === "true"
     if (this.invalidFromEvent) this.focusTarget.setAttribute("aria-invalid", "true")
@@ -2434,10 +2477,10 @@ export class TamSelect {
   }
 
   applyDisabled() {
-    if (this.select.disabled && this.opened) this.close(false)
-    toggleClasses(this.control, this.classes.controlDisabled, this.select.disabled)
-    this.focusTarget.disabled = this.select.disabled
-    this.clearButton.disabled = this.select.disabled
+    if (this.disabled && this.opened) this.close(false, true)
+    toggleClasses(this.control, this.classes.controlDisabled, this.disabled)
+    this.focusTarget.disabled = this.disabled
+    this.clearButton.disabled = this.disabled
     this.syncAria()
   }
 

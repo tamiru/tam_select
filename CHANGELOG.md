@@ -1,5 +1,18 @@
 # Changelog
 
+## Unreleased
+
+- Add `enable()`, `disable()`, `toggle()` and a `disabled` getter. Disabling
+  takes effect immediately and closes an open dropdown. The Stimulus
+  controller exposes them as `toggle`, `enable` and `disable` actions.
+- Honour a disabled `<fieldset>`: a select inside one is shown disabled and
+  cannot be opened or changed, and toggling the fieldset updates it, as
+  with a native select. `disabled` reports it too.
+- Disabling a select always closes its dropdown. `tam-select:closing` is
+  still dispatched but can no longer cancel that close.
+- Add `selectOnTab` (default `false`): Tab selects the highlighted option
+  and closes the dropdown before focus moves on, as in Select2 and Tom Select.
+
 ## 1.4.1
 
 - Publish the gem and npm package with trusted publishing (OIDC) instead of

@@ -13,6 +13,9 @@ export default class TamSelectController extends Controller<HTMLSelectElement> {
   refresh(): void
   open(): void
   close(): void
+  toggle(): void
+  enable(): void
+  disable(): void
   focus(): void
   clear(): void
   selectAll(): void
