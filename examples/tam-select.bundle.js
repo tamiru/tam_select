@@ -246,6 +246,7 @@ var TamSelect = class _TamSelect {
       maximumInputLength: 0,
       minimumResultsForSearch: 0,
       selectOnClose: false,
+      selectOnTab: false,
       tokenSeparators: [],
       sorter: null,
       templateResult: null,
@@ -1605,6 +1606,11 @@ var TamSelect = class _TamSelect {
       const last = this.selectedItems().at(-1);
       if (last) this.deselect(last);
     } else if (event.key === "Tab") {
+      if (this.opened && !event.shiftKey && this.options.selectOnTab) {
+        const entry = this.visibleItems[this.activeIndex];
+        const alreadySelected = entry?.type === "item" && entry.item.option?.selected;
+        if (entry && entry.type !== "group-header" && !entry.disabled && !alreadySelected) this.activateEntry(entry);
+      }
       const action = this.selectionToolbar?.querySelector("button:not(:disabled)");
       if (this.opened && !event.shiftKey && action) {
         event.preventDefault();
@@ -2045,6 +2051,25 @@ var TamSelect = class _TamSelect {
       setHidden(this.dropdown, true);
     }
     this.emit("tam-select:close");
+  }
+  toggle() {
+    if (this.opened) this.close();
+    else this.open();
+  }
+  get disabled() {
+    return this.select.disabled;
+  }
+  enable() {
+    this.setDisabled(false);
+  }
+  disable() {
+    this.setDisabled(true);
+  }
+  setDisabled(disabled) {
+    if (this.select.disabled === disabled) return;
+    this.select.disabled = disabled;
+    this.applyDisabled();
+    this.renderSelection();
   }
   focus() {
     if (!this.select.disabled) this.focusTarget.focus();

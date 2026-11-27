@@ -214,6 +214,7 @@ new TamSelect(select, { animationPreset: "spring" })
 | `maximumSelectionLength` | `0` | Max selectable items (0 = unlimited) |
 | `bulkActions` | `false` | Show count-aware Select all / Clear actions on multi-selects |
 | `showSelectionCount` | `false` | Show live selected count and configured limit |
+| `selectOnTab` | `false` | Tab selects the highlighted option before focus moves on |
 | `hideSelected` | `false` | Hide selected results from the option list (single or multiple) |
 | `theme` | `"auto"` | `"default"`, `"select2"`, or `"auto"` |
 | `classes` | `{}` | Override any Tailwind class group |
@@ -239,6 +240,9 @@ const instance = new TamSelect(select, options)
 
 instance.open()              // Open dropdown
 instance.close()             // Close dropdown
+instance.toggle()            // Open or close dropdown
+instance.disable()           // Disable the select and control
+instance.enable()            // Re-enable it (instance.disabled reads the state)
 instance.focus()             // Focus search input
 instance.blur()              // Remove focus
 instance.setValue("apple")   // Set selected value

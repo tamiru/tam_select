@@ -159,6 +159,8 @@ export interface TamSelectOptions {
   minimumResultsForSearch?: number
   /** Auto-select active option when dropdown closes. Default: `false` */
   selectOnClose?: boolean
+  /** Tab selects the highlighted option before moving focus on. Default: `false` */
+  selectOnTab?: boolean
   /** Characters that trigger tag creation (e.g. `[",", " "]`). Default: `[]` */
   tokenSeparators?: string[]
   /** Custom sort function for filtered results. Default: `null` */
@@ -304,6 +306,14 @@ declare class TamSelect {
   open(loadRemote?: boolean): void
   /** Close the dropdown */
   close(): void
+  /** Open the dropdown when closed, close it when open */
+  toggle(): void
+  /** Whether the native select is disabled */
+  readonly disabled: boolean
+  /** Enable the native select and the control */
+  enable(): void
+  /** Disable the native select and the control, closing an open dropdown */
+  disable(): void
   /** Focus the search input or trigger */
   focus(): void
   /** Remove focus */

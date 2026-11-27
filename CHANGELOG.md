@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Add `enable()`, `disable()`, `toggle()` and a `disabled` getter. Disabling
+  takes effect immediately and closes an open dropdown.
+- Add `selectOnTab` (default `false`): Tab selects the highlighted option
+  before focus moves on, as in Select2 and Tom Select.
+
 ## 1.4.1
 
 - Publish the gem and npm package with trusted publishing (OIDC) instead of
