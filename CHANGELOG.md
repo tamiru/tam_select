@@ -3,9 +3,10 @@
 ## Unreleased
 
 - Add `enable()`, `disable()`, `toggle()` and a `disabled` getter. Disabling
-  takes effect immediately and closes an open dropdown.
+  takes effect immediately and closes an open dropdown. The Stimulus
+  controller exposes them as `toggle`, `enable` and `disable` actions.
 - Add `selectOnTab` (default `false`): Tab selects the highlighted option
-  before focus moves on, as in Select2 and Tom Select.
+  and closes the dropdown before focus moves on, as in Select2 and Tom Select.
 
 ## 1.4.1
 

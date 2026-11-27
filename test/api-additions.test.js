@@ -107,3 +107,67 @@ test("selectOnTab adds to a multi-select without removing an already selected op
     cleanup()
   }
 })
+
+test("selectOnTab leaves focus where Tab started instead of pulling it back to the trigger", () => {
+  const cleanup = setupDOM(fruits())
+  try {
+    const select = document.querySelector("select")
+    const tamSelect = new TamSelect(select, { animations: false, selectOnTab: true })
+    tamSelect.open()
+    assert.equal(document.activeElement, tamSelect.input)
+    while (activeValue(tamSelect) !== "banana") tamSelect.moveActive(1)
+    const event = new KeyboardEvent("keydown", { key: "Tab", bubbles: true, cancelable: true })
+    tamSelect.input.dispatchEvent(event)
+    assert.equal(select.value, "banana")
+    assert.equal(event.defaultPrevented, false)
+    // The browser moves focus on from where Tab was pressed: the search input.
+    assert.equal(document.activeElement, tamSelect.input)
+  } finally {
+    cleanup()
+  }
+})
+
+test("selectOnTab with hideSelected and selectOnClose picks only the highlighted option", () => {
+  const cleanup = setupDOM(fruits(true))
+  try {
+    const select = document.querySelector("select")
+    const tamSelect = new TamSelect(select, { animations: false, selectOnTab: true, selectOnClose: true, hideSelected: true })
+    tamSelect.open()
+    while (activeValue(tamSelect) !== "apple") tamSelect.moveActive(1)
+    keydown(tamSelect.input, "Tab")
+    assert.deepEqual(tamSelect.value, ["apple"])
+    assert.equal(tamSelect.opened, false)
+  } finally {
+    cleanup()
+  }
+})
+
+test("selectOnTab with bulkActions selects and lets focus leave instead of entering the toolbar", () => {
+  const cleanup = setupDOM(fruits(true))
+  try {
+    const select = document.querySelector("select")
+    const tamSelect = new TamSelect(select, { animations: false, selectOnTab: true, bulkActions: true })
+    tamSelect.open()
+    while (activeValue(tamSelect) !== "apple") tamSelect.moveActive(1)
+    const event = new KeyboardEvent("keydown", { key: "Tab", bubbles: true, cancelable: true })
+    tamSelect.input.dispatchEvent(event)
+    assert.deepEqual(tamSelect.value, ["apple"])
+    assert.equal(event.defaultPrevented, false)
+    assert.equal(tamSelect.opened, false)
+  } finally {
+    cleanup()
+  }
+})
+
+test("enable() and disable() do nothing after destroy()", () => {
+  const cleanup = setupDOM(fruits())
+  try {
+    const select = document.querySelector("select")
+    const tamSelect = new TamSelect(select)
+    tamSelect.destroy()
+    tamSelect.disable()
+    assert.equal(select.disabled, false)
+  } finally {
+    cleanup()
+  }
+})

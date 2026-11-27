@@ -62,6 +62,18 @@ export default class extends Controller {
     this.instance?.close()
   }
 
+  toggle() {
+    this.instance?.toggle()
+  }
+
+  enable() {
+    this.instance?.enable()
+  }
+
+  disable() {
+    this.instance?.disable()
+  }
+
   focus() {
     this.instance?.focus()
   }

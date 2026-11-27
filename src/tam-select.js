@@ -1776,9 +1776,12 @@ export class TamSelect {
       if (last) this.deselect(last)
     } else if (event.key === "Tab") {
       if (this.opened && !event.shiftKey && this.options.selectOnTab) {
-        const entry = this.visibleItems[this.activeIndex]
-        const alreadySelected = entry?.type === "item" && entry.item.option?.selected
-        if (entry && entry.type !== "group-header" && !entry.disabled && !alreadySelected) this.activateEntry(entry)
+        // Select through close's select-on-close step: the dropdown is already
+        // marked closed, so selecting neither pulls focus back to the trigger
+        // nor re-filters into a second pick, and Tab then leaves the field.
+        this.selectActiveOnClose = true
+        try { this.close(false) } finally { this.selectActiveOnClose = false }
+        return
       }
       const action = this.selectionToolbar?.querySelector("button:not(:disabled)")
       if (this.opened && !event.shiftKey && action) {
@@ -2212,7 +2215,7 @@ export class TamSelect {
     if (!this.opened) return
     if (!this.emit("tam-select:closing", {}, true)) return
     this.opened = false
-    if (this.options.selectOnClose && this.activeIndex >= 0) {
+    if ((this.options.selectOnClose || this.selectActiveOnClose) && this.activeIndex >= 0) {
       const entry = this.visibleItems[this.activeIndex]
       const alreadySelected = entry?.type === "item" && entry.item.option?.selected
       if (entry && entry.type !== "group-header" && !entry.disabled && !alreadySelected) this.activateEntry(entry)
@@ -2280,7 +2283,7 @@ export class TamSelect {
   }
 
   setDisabled(disabled) {
-    if (this.select.disabled === disabled) return
+    if (this.destroyed || this.select.disabled === disabled) return
     this.select.disabled = disabled
     // Apply now rather than waiting for the mutation observer, so callers can
     // rely on the new state as soon as the call returns.
