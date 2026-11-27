@@ -308,7 +308,7 @@ declare class TamSelect {
   close(): void
   /** Open the dropdown when closed, close it when open */
   toggle(): void
-  /** Whether the native select is disabled */
+  /** Whether the native select is disabled, directly or by a disabled `<fieldset>` */
   readonly disabled: boolean
   /** Enable the native select and the control */
   enable(): void

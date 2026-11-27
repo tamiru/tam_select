@@ -576,15 +576,15 @@ var TamSelect = class _TamSelect {
       this.deselectAllLabel.textContent = deselectText;
       this.selectAllButton.setAttribute("aria-label", selectText);
       this.deselectAllButton.setAttribute("aria-label", deselectText);
-      this.selectAllButton.disabled = this.select.disabled || limit > 0 && count >= limit || selectableMatches === 0;
-      this.deselectAllButton.disabled = this.select.disabled || selectedMatches === 0;
+      this.selectAllButton.disabled = this.disabled || limit > 0 && count >= limit || selectableMatches === 0;
+      this.deselectAllButton.disabled = this.disabled || selectedMatches === 0;
       this.selectAllButton.setAttribute("aria-disabled", String(this.selectAllButton.disabled));
       this.deselectAllButton.setAttribute("aria-disabled", String(this.deselectAllButton.disabled));
     }
   }
   bind() {
     this.onControlClick = (event) => {
-      if (!this.searchable || this.select.disabled || event.target.closest("button")) return;
+      if (!this.searchable || this.disabled || event.target.closest("button")) return;
       this.open();
       this.input.focus();
     };
@@ -677,6 +677,9 @@ var TamSelect = class _TamSelect {
       attributes: true,
       attributeFilter: ["disabled", "label", "value", "selected", "required", "aria-invalid", "aria-describedby", "data-detail", "data-meta", "data-image"]
     });
+    for (let fieldset = this.select.parentElement?.closest("fieldset"); fieldset; fieldset = fieldset.parentElement?.closest("fieldset")) {
+      this.mutationObserver.observe(fieldset, { attributes: true, attributeFilter: ["disabled"] });
+    }
   }
   resolveDropdownParent() {
     if (!this.options.dropdownParent) return null;
@@ -1110,9 +1113,9 @@ var TamSelect = class _TamSelect {
     if (this.input) {
       toggleClasses(this.input, this.classes.inputClosed, false);
       this.input.placeholder = this.multiple && !hasValue ? this.options.placeholder : this.options.searchPlaceholder;
-      this.input.disabled = this.select.disabled;
+      this.input.disabled = this.disabled;
     }
-    setHidden(this.clearButton, !this.options.clearable || !hasValue || !this.canClear() || this.select.disabled);
+    setHidden(this.clearButton, !this.options.clearable || !hasValue || !this.canClear() || this.disabled);
     this.updateSelectionToolbar();
     this.syncAria();
   }
@@ -1134,7 +1137,7 @@ var TamSelect = class _TamSelect {
     const remove = document.createElement("button");
     remove.type = "button";
     remove.className = this.classes.tagRemove;
-    remove.disabled = this.select.disabled;
+    remove.disabled = this.disabled;
     const removeLabel = typeof this.options.removeLabel === "function" ? this.options.removeLabel(item) : this.options.removeLabel;
     remove.setAttribute("aria-label", removeLabel);
     remove.innerHTML = ICONS.close;
@@ -1143,7 +1146,7 @@ var TamSelect = class _TamSelect {
       this.deselect(item);
     });
     tag.append(label, remove);
-    if (this.options.draggable && this.multiple && !this.select.disabled) {
+    if (this.options.draggable && this.multiple && !this.disabled) {
       tag.setAttribute("draggable", "true");
       tag.style.cursor = "grab";
       tag.addEventListener("dragstart", (event) => this.onTagDragStart(event, item));
@@ -1584,7 +1587,7 @@ var TamSelect = class _TamSelect {
   }
   handleKeydown(event) {
     if (this.composing || event.isComposing || event.keyCode === 229) return;
-    if (this.select.disabled || event.target.closest("button") && event.target !== this.trigger) return;
+    if (this.disabled || event.target.closest("button") && event.target !== this.trigger) return;
     if (["ArrowDown", "ArrowUp"].includes(event.key)) {
       event.preventDefault();
       const wasOpen = this.opened;
@@ -1686,7 +1689,7 @@ var TamSelect = class _TamSelect {
     this.changeMatchingSelection(false);
   }
   changeMatchingSelection(selected) {
-    if (!this.multiple || this.select.disabled || this.destroyed) return;
+    if (!this.multiple || this.disabled || this.destroyed) return;
     const changed = [];
     let count = this.selectedItems().length;
     for (const item of this.bulkCandidates()) {
@@ -1770,7 +1773,7 @@ var TamSelect = class _TamSelect {
   }
   /** Select an item, or the first item with a value (creating it if needed). */
   selectValue(value) {
-    if (this.select.disabled) return;
+    if (this.disabled) return;
     const item = this.resolveItem(value);
     if (!item || item.disabled) return;
     const alreadySelected = item.option?.selected && (this.multiple || this.selectedItems().length === 1);
@@ -1807,7 +1810,7 @@ var TamSelect = class _TamSelect {
   }
   /** Deselect an item, or the first item with a value. */
   deselect(value) {
-    if (this.select.disabled) return;
+    if (this.disabled) return;
     const item = this.items.includes(value) ? value : this.items.find((entry) => String(entry.value) === String(value));
     if (!item) return;
     if (!this.emit("tam-select:unselecting", { item }, true)) return;
@@ -1824,7 +1827,7 @@ var TamSelect = class _TamSelect {
     return this.multiple || Boolean(this.emptyOption());
   }
   clear() {
-    if (this.select.disabled) return;
+    if (this.disabled) return;
     const items = this.selectedItems();
     if (!items.length || !this.canClear() || !this.emit("tam-select:clearing", { items }, true)) return;
     Array.from(this.select.options).forEach((option) => {
@@ -1838,7 +1841,7 @@ var TamSelect = class _TamSelect {
     this.emit("tam-select:clear", { items });
   }
   createItem(label, candidateValue = void 0) {
-    if (this.select.disabled) return null;
+    if (this.disabled) return null;
     const value = candidateValue ?? (typeof this.options.createValue === "function" ? this.options.createValue(label) : label);
     const existing = this.items.find((item2) => normalize(item2.value) === normalize(value) || normalize(item2.label) === normalize(label));
     if (existing) {
@@ -1965,7 +1968,7 @@ var TamSelect = class _TamSelect {
     this.commit();
   }
   open(loadRemote = true) {
-    if (this.opened || this.select.disabled) return;
+    if (this.opened || this.disabled) return;
     if (!this.emit("tam-select:opening", {}, true)) return;
     clearTimeout(this.closeTimer);
     if (this.closeTransitionHandler) {
@@ -2004,9 +2007,9 @@ var TamSelect = class _TamSelect {
     openTarget.focus({ preventScroll: true });
     this.emit("tam-select:open");
   }
-  close(restoreFocus = true) {
+  close(restoreFocus = true, force = false) {
     if (!this.opened) return;
-    if (!this.emit("tam-select:closing", {}, true)) return;
+    if (!this.emit("tam-select:closing", {}, !force)) return;
     this.opened = false;
     if ((this.options.selectOnClose || this.selectActiveOnClose) && this.activeIndex >= 0) {
       const entry = this.visibleItems[this.activeIndex];
@@ -2060,8 +2063,10 @@ var TamSelect = class _TamSelect {
     if (this.opened) this.close();
     else this.open();
   }
+  // Disabled directly or through a disabled <fieldset> ancestor, as the
+  // browser sees it (a select in the fieldset's first <legend> stays enabled).
   get disabled() {
-    return this.select.disabled;
+    return this.select.matches(":disabled");
   }
   enable() {
     this.setDisabled(false);
@@ -2076,7 +2081,7 @@ var TamSelect = class _TamSelect {
     this.renderSelection();
   }
   focus() {
-    if (!this.select.disabled) this.focusTarget.focus();
+    if (!this.disabled) this.focusTarget.focus();
   }
   blur() {
     this.focusTarget.blur();
@@ -2220,7 +2225,7 @@ var TamSelect = class _TamSelect {
     if (describedBy) this.focusTarget.setAttribute("aria-describedby", describedBy);
     else this.focusTarget.removeAttribute("aria-describedby");
     this.focusTarget.setAttribute("aria-required", String(Boolean(this.select.required)));
-    this.focusTarget.setAttribute("aria-disabled", String(Boolean(this.select.disabled)));
+    this.focusTarget.setAttribute("aria-disabled", String(Boolean(this.disabled)));
     const nativeInvalid = this.select.getAttribute("aria-invalid");
     const invalid = this.invalidFromEvent || nativeInvalid === "true";
     if (this.invalidFromEvent) this.focusTarget.setAttribute("aria-invalid", "true");
@@ -2229,10 +2234,10 @@ var TamSelect = class _TamSelect {
     toggleClasses(this.control, this.classes.controlInvalid, invalid);
   }
   applyDisabled() {
-    if (this.select.disabled && this.opened) this.close(false);
-    toggleClasses(this.control, this.classes.controlDisabled, this.select.disabled);
-    this.focusTarget.disabled = this.select.disabled;
-    this.clearButton.disabled = this.select.disabled;
+    if (this.disabled && this.opened) this.close(false, true);
+    toggleClasses(this.control, this.classes.controlDisabled, this.disabled);
+    this.focusTarget.disabled = this.disabled;
+    this.clearButton.disabled = this.disabled;
     this.syncAria();
   }
   refresh() {
